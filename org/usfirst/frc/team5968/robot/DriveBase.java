@@ -58,4 +58,12 @@ public class DriveBase {
     	leftEncoder.reset();
     	rightEncoder.reset();
     }
+    
+    public double getDistance(){
+		return Math.abs((getRightEncoder() + getLeftEncoder()) / 2.0);
+	}
+    
+    public NavXMXP getNavX() {
+    	return navX;
+    }
 }
