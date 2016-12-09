@@ -7,6 +7,7 @@ import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tInst
 import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
 import edu.wpi.first.wpilibj.communication.UsageReporting;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the IterativeRobot
@@ -60,18 +61,29 @@ public class Robot extends RobotBase {
     	}
     }
     
-    public void autoInit(){
-    	
+    private enum AutoState {
+    	DRIVING,
+    	TURNING,
+    	IDLE;
     }
     
-    public void autoPeriodic(){
-    	
+    private AutoState autoState = AutoState.TURNING;
+    
+    private void autoInit(){
+    }
+    
+    private void autoPeriodic(){
+    	if(autoState == AutoState.DRIVING && DriveBase.driveDistance(13*12)){
+    		autoState = AutoState.IDLE;
+    	}
+    	else if(autoState == AutoState.TURNING && DriveBase.driveRotation(180)){
+    		autoState = AutoState.DRIVING;
+    	}
     }
     public void teleopInit(){
-    	
     }
     
     public void teleopPeriodic(){
-    	DriveBase.setRaw(HumanInterface.getLeftStick(), HumanInterface.getRightStick());
+    	
     }
 }
