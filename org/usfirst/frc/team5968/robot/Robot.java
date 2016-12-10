@@ -1,6 +1,7 @@
 
 package org.usfirst.frc.team5968.robot;
 
+import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary;
 import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tInstances;
@@ -21,6 +22,7 @@ public class Robot extends RobotBase {
     	UsageReporting.report(tResourceType.kResourceType_Framework, tInstances.kFramework_Iterative);
     	FRCNetworkCommunicationsLibrary.FRCNetworkCommunicationObserveUserProgramStarting();
     	LiveWindow.setEnabled(false);
+    	robotInit();
     	
     	boolean autoInitialized = false;
     	boolean teleopInitialized = false;
@@ -61,6 +63,13 @@ public class Robot extends RobotBase {
     	}
     }
     
+    private CameraVision cv = new CameraVision();
+    
+    private void robotInit(){
+    	UsbCamera.init();
+    	cv.init();
+    }
+    
     private enum AutoState {
     	DRIVING,
     	TURNING,
@@ -84,6 +93,7 @@ public class Robot extends RobotBase {
     }
     
     public void teleopPeriodic(){
-    	
+    	UsbCamera.getImage();
+    	cv.getTarget();
     }
 }

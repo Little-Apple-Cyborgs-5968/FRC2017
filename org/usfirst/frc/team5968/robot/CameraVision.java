@@ -23,7 +23,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  *
  * Sample omages can be found here: http://wp.wpi.edu/wpilib/2015/01/16/sample-images-for-vision-projects/ 
  */
-public class visionRobot extends SampleRobot {
+public class CameraVision extends SampleRobot {
 		//A structure to hold measurements of a particle
 		public class ParticleReport implements Comparator<ParticleReport>, Comparable<ParticleReport>{
 			double PercentAreaToImageArea;
@@ -70,8 +70,9 @@ public class visionRobot extends SampleRobot {
 		NIVision.ParticleFilterCriteria2 criteria[] = new NIVision.ParticleFilterCriteria2[1];
 		NIVision.ParticleFilterOptions2 filterOptions = new NIVision.ParticleFilterOptions2(0,0,1,1);
 		Scores scores = new Scores();
-
-		public void visionInit() {
+		private boolean initialized = false;
+		
+		public void init() {
 		    // create images
 			frame = NIVision.imaqCreateImage(ImageType.IMAGE_RGB, 0);
 			binaryFrame = NIVision.imaqCreateImage(ImageType.IMAGE_U8, 0);
@@ -85,88 +86,82 @@ public class visionRobot extends SampleRobot {
 			SmartDashboard.putNumber("Tote val min", TOTE_VAL_RANGE.minValue);
 			SmartDashboard.putNumber("Tote val max", TOTE_VAL_RANGE.maxValue);
 			SmartDashboard.putNumber("Area min %", AREA_MINIMUM);
+			initialized = true;
 		}
-
-		public void visionAutonomous() {
-			while (isAutonomous() && isEnabled())
-			{
-				//read file in from disk. For this example to run you need to copy image20.jpg from the SampleImages folder to the
-				//directory shown below using FTP or SFTP: http://wpilib.screenstepslive.com/s/4485/m/24166/l/282299-roborio-ftp
-				NIVision.imaqReadFile(frame, "/home/lvuser/SampleImages/image20.jpg");
-
-				//Update threshold values from SmartDashboard. For performance reasons it is recommended to remove this after calibration is finished.
-				TOTE_HUE_RANGE.minValue = (int)SmartDashboard.getNumber("Tote hue min", TOTE_HUE_RANGE.minValue);
-				TOTE_HUE_RANGE.maxValue = (int)SmartDashboard.getNumber("Tote hue max", TOTE_HUE_RANGE.maxValue);
-				TOTE_SAT_RANGE.minValue = (int)SmartDashboard.getNumber("Tote sat min", TOTE_SAT_RANGE.minValue);
-				TOTE_SAT_RANGE.maxValue = (int)SmartDashboard.getNumber("Tote sat max", TOTE_SAT_RANGE.maxValue);
-				TOTE_VAL_RANGE.minValue = (int)SmartDashboard.getNumber("Tote val min", TOTE_VAL_RANGE.minValue);
-				TOTE_VAL_RANGE.maxValue = (int)SmartDashboard.getNumber("Tote val max", TOTE_VAL_RANGE.maxValue);
-
-				//Threshold the image looking for yellow (tote color)
-				NIVision.imaqColorThreshold(binaryFrame, frame, 255, NIVision.ColorMode.HSV, TOTE_HUE_RANGE, TOTE_SAT_RANGE, TOTE_VAL_RANGE);
-
-				//Send particle count to dashboard
-				int numParticles = NIVision.imaqCountParticles(binaryFrame, 1);
-				SmartDashboard.putNumber("Masked particles", numParticles);
-
-				//Send masked image to dashboard to assist in tweaking mask.
-				CameraServer.getInstance().setImage(binaryFrame);
-
-				//filter out small particles
-				float areaMin = (float)SmartDashboard.getNumber("Area min %", AREA_MINIMUM);
-				criteria[0].lower = areaMin;
-				imaqError = NIVision.imaqParticleFilter4(binaryFrame, binaryFrame, criteria, filterOptions, null);
-
-				//Send particle count after filtering to dashboard
-				numParticles = NIVision.imaqCountParticles(binaryFrame, 1);
-				SmartDashboard.putNumber("Filtered particles", numParticles);
-
-				if(numParticles > 0)
-				{
-					//Measure particles and sort by particle size
-					Vector<ParticleReport> particles = new Vector<ParticleReport>();
-					for(int particleIndex = 0; particleIndex < numParticles; particleIndex++)
-					{
-						ParticleReport par = new ParticleReport();
-						par.PercentAreaToImageArea = NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_AREA_BY_IMAGE_AREA);
-						par.Area = NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_AREA);
-						par.ConvexHullArea = NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_CONVEX_HULL_AREA);
-						par.BoundingRectTop = NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_BOUNDING_RECT_TOP);
-						par.BoundingRectLeft = NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_BOUNDING_RECT_LEFT);
-						par.BoundingRectBottom = NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_BOUNDING_RECT_BOTTOM);
-						par.BoundingRectRight = NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_BOUNDING_RECT_RIGHT);
-						particles.add(par);
-					}
-					particles.sort(null);
-
-					//This example only scores the largest particle. Extending to score all particles and choosing the desired one is left as an exercise
-					//for the reader. Note that the long and short side scores expect a single tote and will not work for a stack of 2 or more totes.
-					//Modification of the code to accommodate 2 or more stacked totes is left as an exercise for the reader.
-					scores.Trapezoid = TrapezoidScore(particles.elementAt(0));
-					SmartDashboard.putNumber("Trapezoid", scores.Trapezoid);
-					scores.LongAspect = LongSideScore(particles.elementAt(0));
-					SmartDashboard.putNumber("Long Aspect", scores.LongAspect);
-					scores.ShortAspect = ShortSideScore(particles.elementAt(0));
-					SmartDashboard.putNumber("Short Aspect", scores.ShortAspect);
-					scores.AreaToConvexHullArea = ConvexHullAreaScore(particles.elementAt(0));
-					SmartDashboard.putNumber("Convex Hull Area", scores.AreaToConvexHullArea);
-					boolean isTote = scores.Trapezoid > SCORE_MIN && (scores.LongAspect > SCORE_MIN || scores.ShortAspect > SCORE_MIN) && scores.AreaToConvexHullArea > SCORE_MIN;
-					boolean isLong = scores.LongAspect > scores.ShortAspect;
-
-					//Send distance and tote status to dashboard. The bounding rect, particularly the horizontal center (left - right) may be useful for rotating/driving towards a tote
-					SmartDashboard.putBoolean("IsTote", isTote);
-					SmartDashboard.putNumber("Distance", computeDistance(binaryFrame, particles.elementAt(0), isLong));
-				} else {
-					SmartDashboard.putBoolean("IsTote", false);
-				}
-
-				Timer.delay(0.005);				// wait for a motor update time
+		
+		public void getTarget() {
+			if(!initialized){
+				init();
 			}
-		}
+			
+			//read file in from disk. For this example to run you need to copy image20.jpg from the SampleImages folder to the
+			//directory shown below using FTP or SFTP: http://wpilib.screenstepslive.com/s/4485/m/24166/l/282299-roborio-ftp
+			frame = UsbCamera.getImage();
 
-		public void operatorControl() {
-			while(isOperatorControl() && isEnabled()) {
-				Timer.delay(0.005);				// wait for a motor update time
+			//Update threshold values from SmartDashboard. For performance reasons it is recommended to remove this after calibration is finished.
+			TOTE_HUE_RANGE.minValue = (int)SmartDashboard.getNumber("Tote hue min", TOTE_HUE_RANGE.minValue);
+			TOTE_HUE_RANGE.maxValue = (int)SmartDashboard.getNumber("Tote hue max", TOTE_HUE_RANGE.maxValue);
+			TOTE_SAT_RANGE.minValue = (int)SmartDashboard.getNumber("Tote sat min", TOTE_SAT_RANGE.minValue);
+			TOTE_SAT_RANGE.maxValue = (int)SmartDashboard.getNumber("Tote sat max", TOTE_SAT_RANGE.maxValue);
+			TOTE_VAL_RANGE.minValue = (int)SmartDashboard.getNumber("Tote val min", TOTE_VAL_RANGE.minValue);
+			TOTE_VAL_RANGE.maxValue = (int)SmartDashboard.getNumber("Tote val max", TOTE_VAL_RANGE.maxValue);
+
+			//Threshold the image looking for yellow (tote color)
+			NIVision.imaqColorThreshold(binaryFrame, frame, 255, NIVision.ColorMode.HSV, TOTE_HUE_RANGE, TOTE_SAT_RANGE, TOTE_VAL_RANGE);
+
+			//Send particle count to dashboard
+			int numParticles = NIVision.imaqCountParticles(binaryFrame, 1);
+			SmartDashboard.putNumber("Masked particles", numParticles);
+
+			//Send masked image to dashboard to assist in tweaking mask.
+			CameraServer.getInstance().setImage(binaryFrame);
+
+			//filter out small particles
+			float areaMin = (float)SmartDashboard.getNumber("Area min %", AREA_MINIMUM);
+			criteria[0].lower = areaMin;
+			imaqError = NIVision.imaqParticleFilter4(binaryFrame, binaryFrame, criteria, filterOptions, null);
+
+			//Send particle count after filtering to dashboard
+			numParticles = NIVision.imaqCountParticles(binaryFrame, 1);
+			SmartDashboard.putNumber("Filtered particles", numParticles);
+
+			if(numParticles > 0)
+			{
+				//Measure particles and sort by particle size
+				Vector<ParticleReport> particles = new Vector<ParticleReport>();
+				for(int particleIndex = 0; particleIndex < numParticles; particleIndex++)
+				{
+					ParticleReport par = new ParticleReport();
+					par.PercentAreaToImageArea = NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_AREA_BY_IMAGE_AREA);
+					par.Area = NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_AREA);
+					par.ConvexHullArea = NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_CONVEX_HULL_AREA);
+					par.BoundingRectTop = NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_BOUNDING_RECT_TOP);
+					par.BoundingRectLeft = NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_BOUNDING_RECT_LEFT);
+					par.BoundingRectBottom = NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_BOUNDING_RECT_BOTTOM);
+					par.BoundingRectRight = NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_BOUNDING_RECT_RIGHT);
+					particles.add(par);
+				}
+				particles.sort(null);
+
+				//This example only scores the largest particle. Extending to score all particles and choosing the desired one is left as an exercise
+				//for the reader. Note that the long and short side scores expect a single tote and will not work for a stack of 2 or more totes.
+				//Modification of the code to accommodate 2 or more stacked totes is left as an exercise for the reader.
+				scores.Trapezoid = TrapezoidScore(particles.elementAt(0));
+				SmartDashboard.putNumber("Trapezoid", scores.Trapezoid);
+				scores.LongAspect = LongSideScore(particles.elementAt(0));
+				SmartDashboard.putNumber("Long Aspect", scores.LongAspect);
+				scores.ShortAspect = ShortSideScore(particles.elementAt(0));
+				SmartDashboard.putNumber("Short Aspect", scores.ShortAspect);
+				scores.AreaToConvexHullArea = ConvexHullAreaScore(particles.elementAt(0));
+				SmartDashboard.putNumber("Convex Hull Area", scores.AreaToConvexHullArea);
+				boolean isTote = scores.Trapezoid > SCORE_MIN && (scores.LongAspect > SCORE_MIN || scores.ShortAspect > SCORE_MIN) && scores.AreaToConvexHullArea > SCORE_MIN;
+				boolean isLong = scores.LongAspect > scores.ShortAspect;
+
+				//Send distance and tote status to dashboard. The bounding rect, particularly the horizontal center (left - right) may be useful for rotating/driving towards a tote
+				SmartDashboard.putBoolean("IsTote", isTote);
+				SmartDashboard.putNumber("Distance", computeDistance(binaryFrame, particles.elementAt(0), isLong));
+			} else {
+				SmartDashboard.putBoolean("IsTote", false);
 			}
 		}
 
