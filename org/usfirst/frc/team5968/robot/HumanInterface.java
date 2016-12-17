@@ -14,7 +14,7 @@ public class HumanInterface {
 	 * the only value we use
 	 */
 	public static double getLeftStick(){
-		return leftStick.getY();
+		return leftStick.getY(); 
 	}
 	
 	/*

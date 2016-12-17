@@ -21,9 +21,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * on using the USB camera. To use an Axis Camera, see the AxisCamera example for details on
  * using an Axis Camera.
  *
- * Sample omages can be found here: http://wp.wpi.edu/wpilib/2015/01/16/sample-images-for-vision-projects/ 
+ * Sample images can be found here: http://wp.wpi.edu/wpilib/2015/01/16/sample-images-for-vision-projects/ 
  */
-public class CameraVision extends SampleRobot {
+public class CameraVision {
 		//A structure to hold measurements of a particle
 		public class ParticleReport implements Comparator<ParticleReport>, Comparable<ParticleReport>{
 			double PercentAreaToImageArea;

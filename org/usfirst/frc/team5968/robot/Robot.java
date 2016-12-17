@@ -1,14 +1,13 @@
 
 package org.usfirst.frc.team5968.robot;
 
-import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary;
 import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tInstances;
 import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
 import edu.wpi.first.wpilibj.communication.UsageReporting;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the IterativeRobot
@@ -67,6 +66,9 @@ public class Robot extends RobotBase {
     
     private void robotInit(){
     	UsbCamera.init();
+    	DriveBase.init();
+    	DashboardConnection.init();
+    	UsbCamera.init();
     	cv.init();
     }
     
@@ -82,6 +84,9 @@ public class Robot extends RobotBase {
     }
     
     private void autoPeriodic(){
+    	DashboardConnection.updateCameraView();
+    	DashboardConnection.updateDashboardValues();
+    	
     	if(autoState == AutoState.DRIVING && DriveBase.driveDistance(13*12)){
     		autoState = AutoState.IDLE;
     	}
@@ -93,7 +98,14 @@ public class Robot extends RobotBase {
     }
     
     public void teleopPeriodic(){
-    	UsbCamera.getImage();
+    	DashboardConnection.updateCameraView();
+    	DashboardConnection.updateDashboardValues();
     	cv.getTarget();
+    }
+    
+    public static void waitMillis(long millis){
+    	long start = System.currentTimeMillis();
+    	
+    	while(System.currentTimeMillis() - (millis + start) < 0){}
     }
 }

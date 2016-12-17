@@ -21,6 +21,10 @@ public class PortMap {
 		RIGHT_ENCODER2;
 	}
 	
+	public enum roboRIO_USB {
+		CAMERA;
+	}
+	
 	public static int portOf(USB u){
 		switch(u){
 			case LEFT_JOYSTICK:
@@ -61,6 +65,15 @@ public class PortMap {
 				return 3;
 			default:
 				return -1;
+		}
+	}
+	
+	public static String portOf(roboRIO_USB r){
+		switch(r){
+			case CAMERA:
+				return "cam0";
+			default:
+				return null;
 		}
 	}
 }

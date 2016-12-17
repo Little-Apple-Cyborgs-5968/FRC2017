@@ -22,10 +22,14 @@ public class DriveBase {
 	private static final double TOLERANCE = 0.5; //.5 degrees for angles, .5 inches for distance
 	private static final double P = -.23;
 	private static final double DRIVE_SPEED = .3;
+	private static double leftP = 1;
+	private static double rightP = 1;
+	private static final double MAX_SPEED = 36; //inches/second
+
 	
 	private static boolean initialized = false;
 	
-	private static void init(){
+	public static void init(){
 		initialized = true;
 		leftEncoder.setDistancePerPulse(.042455); //this is in inches
 		rightEncoder.setDistancePerPulse(.042455); //this is in inches
@@ -50,10 +54,12 @@ public class DriveBase {
     }
     
     private static void setRaw(double leftSpeed, double rightSpeed){
-    	leftMotorFront.set(leftSpeed);
-    	leftMotorBack.set(leftSpeed);
-    	rightMotorFront.set(-1 * rightSpeed);
-    	rightMotorBack.set(-1 * rightSpeed);
+    	leftMotorFront.set(leftSpeed * leftP);
+    	leftMotorBack.set(leftSpeed * leftP);
+    	rightMotorFront.set(-1 * rightSpeed * rightP);
+    	rightMotorBack.set(-1 * rightSpeed * rightP);
+    	
+    	
     }
     
     private static void resetEncoders(){
@@ -64,6 +70,14 @@ public class DriveBase {
     private static double getDistance(){
     	return Math.abs((leftEncoder.getDistance() - rightEncoder.getDistance()) / 2.0);
 	}
+    
+    public static double getLeftSpeed(){
+    	return leftEncoder.getRate(); //returns inches/second
+    }
+    
+    public static double getRightSpeed(){
+    	return rightEncoder.getRate(); //returns inches/second
+    }
     
     //The last time this method was called. It will reinitialize if the last call was more than
     //.5 seconds ago
