@@ -23,7 +23,10 @@ public class DashboardConnection {
 	
 	//Update the diagnostics on the dashboard
 	public static void updateDashboardValues(){
-		//update some diagnostics and stuff
+		table.putBoolean("Front left hot", DriveBase.isMotorTooHot(DriveBase.Motor.LEFT_FRONT));
+		table.putBoolean("Front back hot", DriveBase.isMotorTooHot(DriveBase.Motor.LEFT_BACK));
+		table.putBoolean("Front right hot", DriveBase.isMotorTooHot(DriveBase.Motor.RIGHT_FRONT));
+		table.putBoolean("Back right hot", DriveBase.isMotorTooHot(DriveBase.Motor.RIGHT_BACK));
 	}
 	
 	//Update camera view on the dashboard with a processed image

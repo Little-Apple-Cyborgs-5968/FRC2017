@@ -6,7 +6,6 @@ import org.usfirst.frc.team5968.robot.PortMap.DIO;
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.CANTalon.TalonControlMode;
 
 public class DriveBase {
 	
@@ -20,14 +19,21 @@ public class DriveBase {
 	private static Encoder rightEncoder = new Encoder(PortMap.portOf(DIO.RIGHT_ENCODER1), PortMap.portOf(DIO.RIGHT_ENCODER2));
 	
 	private static final double TOLERANCE = 0.5; //.5 degrees for angles, .5 inches for distance
-	private static final double P = -.23;
+	private static final double autoP = -.23;
+	private static double teleopPLeft = 1;
+	private static double teleopPRight = 1;
 	private static final double DRIVE_SPEED = .3;
-	private static double leftP = 1;
-	private static double rightP = 1;
-	private static final double MAX_SPEED = 36; //inches/second
-
+	private static final double MOTOR_MAX_TEMP = 70;
+	private static final double MAX_SPEED = 36;
 	
 	private static boolean initialized = false;
+	
+	public enum Motor{
+		LEFT_FRONT,
+		LEFT_BACK,
+		RIGHT_FRONT,
+		RIGHT_BACK;
+	}
 	
 	public static void init(){
 		initialized = true;
@@ -43,21 +49,36 @@ public class DriveBase {
 		
     	else{
     		if (navX.getYaw() < TOLERANCE){
-    			setRaw(initialSpeed + navX.getYaw() * P, initialSpeed);
+    			setRaw(initialSpeed + navX.getYaw() * autoP, initialSpeed);
     			navX.resetYaw();
     		} 
     		else if (navX.getYaw() > TOLERANCE){
-    			setRaw(initialSpeed, initialSpeed + navX.getYaw() * P);
+    			setRaw(initialSpeed, initialSpeed + navX.getYaw() * autoP);
     			navX.resetYaw();
     		}
     	}
     }
     
+    public static boolean isMotorTooHot(Motor m){
+    	switch(m){
+    		case LEFT_FRONT:
+    			return leftMotorFront.getTemperature() > MOTOR_MAX_TEMP;
+    		case LEFT_BACK:
+    			return leftMotorBack.getTemperature() > MOTOR_MAX_TEMP;
+    		case RIGHT_FRONT:
+    			return rightMotorFront.getTemperature() > MOTOR_MAX_TEMP;
+    		case RIGHT_BACK:
+    			return rightMotorBack.getTemperature() > MOTOR_MAX_TEMP;
+    		default:
+    			return true;
+    	}
+    }
+    
     private static void setRaw(double leftSpeed, double rightSpeed){
-    	leftMotorFront.set(leftSpeed * leftP);
-    	leftMotorBack.set(leftSpeed * leftP);
-    	rightMotorFront.set(-1 * rightSpeed * rightP);
-    	rightMotorBack.set(-1 * rightSpeed * rightP);
+    	leftMotorFront.set(leftSpeed);
+    	leftMotorBack.set(leftSpeed);
+    	rightMotorFront.set(-1 * rightSpeed);
+    	rightMotorBack.set(-1 * rightSpeed);
     	
     	
     }
@@ -146,7 +167,12 @@ public class DriveBase {
 		if(!initialized){
 			init();
 		}
-		setRaw(leftSpeed, rightSpeed);
+		setRaw(leftSpeed * teleopPLeft, rightSpeed * teleopPRight);
+		
+		Robot.waitMillis(10);
+		teleopPLeft = leftSpeed / (leftEncoder.getRate() / MAX_SPEED);
+		teleopPRight = rightSpeed / (rightEncoder.getRate() / MAX_SPEED);
+		
 	}
 	
 	private static void accelerate(boolean forward){
