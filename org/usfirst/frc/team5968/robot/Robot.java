@@ -58,6 +58,7 @@ public class Robot extends RobotBase {
     			}
     			teleopPeriodic();
     		}
+    		periodic();
     		m_ds.waitForData(); 
     	}
     }
@@ -65,11 +66,10 @@ public class Robot extends RobotBase {
     private CameraVision cv = new CameraVision();
     
     private void robotInit(){
-    	UsbCamera.init();
+    	//UsbCamera.init();
     	DriveBase.init();
     	DashboardConnection.init();
-    	UsbCamera.init();
-    	cv.init();
+    	//cv.init();
     }
     
     private enum AutoState {
@@ -81,26 +81,23 @@ public class Robot extends RobotBase {
     private AutoState autoState = AutoState.TURNING;
     
     private void autoInit(){
+    	DashboardConnection.startTimer();
     }
     
     private void autoPeriodic(){
-    	DashboardConnection.updateCameraView();
-    	DashboardConnection.updateDashboardValues();
     	
-    	if(autoState == AutoState.DRIVING && DriveBase.driveDistance(13*12)){
-    		autoState = AutoState.IDLE;
-    	}
-    	else if(autoState == AutoState.TURNING && DriveBase.driveRotation(180)){
-    		autoState = AutoState.DRIVING;
-    	}
+    	
     }
     public void teleopInit(){
     }
     
     public void teleopPeriodic(){
+    	//cv.getTarget();
+    }
+    
+    public void periodic(){
     	DashboardConnection.updateCameraView();
     	DashboardConnection.updateDashboardValues();
-    	cv.getTarget();
     }
     
     public static void waitMillis(long millis){
@@ -108,4 +105,5 @@ public class Robot extends RobotBase {
     	
     	while(System.currentTimeMillis() - (millis + start) < 0){}
     }
+
 }

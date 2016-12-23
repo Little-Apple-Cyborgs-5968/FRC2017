@@ -12,11 +12,11 @@ public class UsbCamera {
 	
 	public static void init(){
 		//image can't be null when you pass it to NIVision.IMAQdxGrab()
-		image = NIVision.imaqCreateImage(NIVision.ImageType.IMAGE_RGB, 0);
+		/*image = NIVision.imaqCreateImage(NIVision.ImageType.IMAGE_RGB, 0);
 		session = NIVision.IMAQdxOpenCamera(PortMap.portOf(PortMap.roboRIO_USB.CAMERA), IMAQdxCameraControlMode.CameraControlModeController);
 		NIVision.IMAQdxConfigureGrab(session);
 		NIVision.IMAQdxStartAcquisition(session);
-		initialized = true;
+		initialized = true;*/
 	}
 	
 	public static Image getImage(){

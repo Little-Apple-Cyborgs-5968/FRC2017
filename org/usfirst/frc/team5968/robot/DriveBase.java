@@ -46,7 +46,6 @@ public class DriveBase {
     	if (Math.abs(navX.getYaw()) < TOLERANCE){
     		setRaw(initialSpeed, initialSpeed);
     	}
-		
     	else{
     		if (navX.getYaw() < TOLERANCE){
     			setRaw(initialSpeed + navX.getYaw() * autoP, initialSpeed);
