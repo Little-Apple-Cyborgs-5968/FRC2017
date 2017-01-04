@@ -1,7 +1,6 @@
 package org.usfirst.frc.team5968.robot;
 
 import com.ni.vision.NIVision.Image;
-
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;

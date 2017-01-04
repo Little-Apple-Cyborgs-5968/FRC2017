@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.SampleRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
 /**
  * Example of finding yellow totes based on color.
  * This example utilizes an image file, which you need to copy to the roboRIO
