@@ -68,7 +68,7 @@ public class Robot extends RobotBase {
     	//UsbCamera.init();
     	DriveBase.init();
     	DashboardConnection.init();
-    	AutoModes.addModes();
+    	DashboardConnection.addModes();
     	//cv.init();
     }
     

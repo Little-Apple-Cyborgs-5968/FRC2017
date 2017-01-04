@@ -22,6 +22,11 @@ public class DashboardConnection {
 		}
 	}
 	
+	public static void addModes() {
+		table = NetworkTable.getTable("/SmartDashboard/autonomous/options");
+		table.putString("Test 1", "Test 2");
+	}
+	
 	public static void startTimer(){
 		table.putBoolean("timeRunning", true);
 	}
