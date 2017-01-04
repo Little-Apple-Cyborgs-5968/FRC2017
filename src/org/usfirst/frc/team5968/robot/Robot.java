@@ -1,4 +1,3 @@
-
 package org.usfirst.frc.team5968.robot;
 
 import edu.wpi.first.wpilibj.RobotBase;
@@ -69,6 +68,7 @@ public class Robot extends RobotBase {
     	//UsbCamera.init();
     	DriveBase.init();
     	DashboardConnection.init();
+    	DashboardConnection.addModes();
     	//cv.init();
     }
     

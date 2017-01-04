@@ -1,7 +1,6 @@
 package org.usfirst.frc.team5968.robot;
 
 import com.kauailabs.navx.frc.AHRS;
-
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.SPI;
 

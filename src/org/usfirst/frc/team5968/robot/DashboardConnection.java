@@ -1,7 +1,6 @@
 package org.usfirst.frc.team5968.robot;
 
 import com.ni.vision.NIVision.Image;
-
 import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -15,12 +14,17 @@ public class DashboardConnection {
 	private static boolean initialized = false;
 	private static int x = 0;
 	private static NetworkTable table;
+	private static String[] autoModes = {"Dummy1", "Dummy2", "Dummy3"};
 	
 	public static void init(){
 		if(!initialized){
 			table = NetworkTable.getTable("SmartDashboard");
 			initialized = true;
 		}
+	}
+	
+	public static void addModes() {
+		table.putStringArray("options", autoModes);
 	}
 	
 	public static void startTimer(){
