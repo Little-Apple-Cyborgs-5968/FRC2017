@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="C:/Users/inspire314/wpilib/java/current/lib/NetworkTables.jar"/>
-	<classpathentry kind="lib" path="C:/Users/inspire314/wpilib/java/current/lib/NetworkTables-sources.jar"/>
-	<classpathentry kind="lib" path="C:/Users/inspire314/wpilib/java/current/lib/WPILib.jar"/>
-	<classpathentry kind="lib" path="C:/Users/inspire314/wpilib/java/current/lib/WPILib-sources.jar"/>
+	<classpathentry kind="var" path="wpilib" sourcepath="wpilib.sources"/>
+	<classpathentry kind="var" path="networktables" sourcepath="networktables.sources"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="lib" path="C:/Users/inspire314/navx-mxp/java/lib/navx_frc.jar"/>
 	<classpathentry kind="lib" path="C:/Users/inspire314/wpilib/tools/java-installer.jar"/>
 	<classpathentry kind="lib" path="C:/Users/inspire314/wpilib/tools/OutlineViewer.jar"/>
 	<classpathentry kind="lib" path="C:/Users/inspire314/wpilib/tools/RobotBuilder.jar"/>
 	<classpathentry kind="lib" path="C:/Users/inspire314/wpilib/tools/sfx.jar"/>
 	<classpathentry kind="lib" path="C:/Users/inspire314/wpilib/tools/SmartDashboard.jar"/>
-	<classpathentry kind="lib" path="C:/Users/inspire314/wpilib/tools/plugins/livewindowplugin.jar"/>
-	<classpathentry kind="lib" path="C:/Users/inspire314/navx-mxp/java/lib/navx_frc.jar"/>
+	<classpathentry kind="lib" path="C:/Users/inspire314/wpilib/java/current/lib/NetworkTables.jar"/>
+	<classpathentry kind="lib" path="C:/Users/inspire314/wpilib/java/current/lib/NetworkTables-sources.jar"/>
+	<classpathentry kind="lib" path="C:/Users/inspire314/wpilib/java/current/lib/WPILib.jar"/>
+	<classpathentry kind="lib" path="C:/Users/inspire314/wpilib/java/current/lib/WPILib-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
