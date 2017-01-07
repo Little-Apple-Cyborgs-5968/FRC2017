@@ -3,7 +3,7 @@ package org.usfirst.frc.team5968.robot;
 import org.usfirst.frc.team5968.robot.PortMap.CAN;
 import org.usfirst.frc.team5968.robot.PortMap.DIO;
 
-import edu.wpi.first.wpilibj.CANTalon;
+import com.ctre.CANTalon;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Timer;
 

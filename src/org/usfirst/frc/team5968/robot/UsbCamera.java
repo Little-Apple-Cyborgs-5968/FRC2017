@@ -1,29 +1,28 @@
 package org.usfirst.frc.team5968.robot;
 
-import com.ni.vision.NIVision;
-import com.ni.vision.NIVision.IMAQdxCameraControlMode;
-import com.ni.vision.NIVision.Image;
+import edu.wpi.cscore.CvSink;
+import edu.wpi.cscore.UsbCameraInfo;
+import org.opencv.core.Mat;
 
 public class UsbCamera {
 	
-	private static Image image;
-	private static int session;
-	private static boolean initialized = false;
+	/*
+	 * TODO: check if this stuff is actually right. From looking at the source code, I think it is,
+	 * but no guarantees. Especially make sure that it doesn't attempt to start a server.
+	 */
+	private static CvSink cv;
 	
 	public static void init(){
-		//image can't be null when you pass it to NIVision.IMAQdxGrab()
-		/*image = NIVision.imaqCreateImage(NIVision.ImageType.IMAGE_RGB, 0);
-		session = NIVision.IMAQdxOpenCamera(PortMap.portOf(PortMap.roboRIO_USB.CAMERA), IMAQdxCameraControlMode.CameraControlModeController);
-		NIVision.IMAQdxConfigureGrab(session);
-		NIVision.IMAQdxStartAcquisition(session);
-		initialized = true;*/
+		 UsbCameraInfo[] info = edu.wpi.cscore.UsbCamera.enumerateUsbCameras();
+		 if(info.length > 0){
+			 edu.wpi.cscore.UsbCamera camera = new edu.wpi.cscore.UsbCamera(info[0].name, info[0].dev);
+			 cv = new CvSink("opencv_" + info[0].name);
+		 }
 	}
 	
-	public static Image getImage(){
-		if(!initialized){
-			init();
-		}
-		NIVision.IMAQdxGrab(session, image, 1);
+	public static Mat getImage(){
+		Mat image = new Mat();
+		cv.grabFrame(image);
 		return image;
 	}
 }

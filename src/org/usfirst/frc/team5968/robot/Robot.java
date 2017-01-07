@@ -1,10 +1,6 @@
 package org.usfirst.frc.team5968.robot;
 
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary;
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tInstances;
-import edu.wpi.first.wpilibj.communication.FRCNetworkCommunicationsLibrary.tResourceType;
-import edu.wpi.first.wpilibj.communication.UsageReporting;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 
 /**
@@ -17,8 +13,6 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 public class Robot extends RobotBase {
 	
     public void startCompetition(){
-    	UsageReporting.report(tResourceType.kResourceType_Framework, tInstances.kFramework_Iterative);
-    	FRCNetworkCommunicationsLibrary.FRCNetworkCommunicationObserveUserProgramStarting();
     	LiveWindow.setEnabled(false);
     	robotInit();
     	
@@ -34,9 +28,7 @@ public class Robot extends RobotBase {
     		else if (isTest()) {
     			// call TestInit() if we are now just entering test mode from either
     			// a different mode or from power-on
-    		 
-    			FRCNetworkCommunicationsLibrary.FRCNetworkCommunicationObserveUserProgramTest();
-    		} 
+    		     		} 
     		else if (isAutonomous()) {
     			// call Autonomous_Init() if this is the first time
     			// we've entered autonomous_mode
@@ -46,10 +38,8 @@ public class Robot extends RobotBase {
     			}
     			
     			autoPeriodic();
-				FRCNetworkCommunicationsLibrary.FRCNetworkCommunicationObserveUserProgramAutonomous();
     		}
     		else {
-    			FRCNetworkCommunicationsLibrary.FRCNetworkCommunicationObserveUserProgramTeleop();
     			
     			if(!teleopInitialized){
     				teleopInit();
@@ -57,7 +47,7 @@ public class Robot extends RobotBase {
     			}
     			teleopPeriodic();
     		}
-    		periodic();
+    		robotPeriodic();
     		m_ds.waitForData(); 
     	}
     }
@@ -71,17 +61,8 @@ public class Robot extends RobotBase {
     	DashboardConnection.addModes();
     	//cv.init();
     }
-    
-    private enum AutoState {
-    	DRIVING,
-    	TURNING,
-    	IDLE;
-    }
-    
-    private AutoState autoState = AutoState.TURNING;
-    
+        
     private void autoInit(){
-    	DashboardConnection.startTimer();
     }
     
     private void autoPeriodic(){
@@ -95,8 +76,7 @@ public class Robot extends RobotBase {
     	//cv.getTarget();
     }
     
-    public void periodic(){
-    	DashboardConnection.updateCameraView();
+    public void robotPeriodic(){
     	DashboardConnection.updateDashboardValues();
     }
     
