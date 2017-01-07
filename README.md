@@ -1,2 +1,2 @@
 TODO List
-*Update firmware on Talons
+* Update firmware on Talons
