@@ -4,9 +4,9 @@ TODO List
 * Everyone install the CTRE Toolsuite
 
 Teleop
-*Drive base control **- Allen and Matt* *
+* Drive base control **- Allen and Matt**
   * PID Talon
-* Pneumatics** - Allen and Matt**
+* Pneumatics **- Allen and Matt**
 * Camera Streams **- Allen and Matt**
 * Climber **- Allen and Matt**
   * Stop Automatically
