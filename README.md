@@ -4,15 +4,15 @@ TODO List
 * Everyone install the [CTRE Toolsuite](http://www.ctr-electronics.com/hro.html#product_tabs_technical_resources)
 
 Teleop
-* Drive base control
+* Drive base control **- Allen and Matt**
     * PID Talon
-* Pneumatics
-* Camera Streams 
-* Climber
-    * Stop Automaticaly
-* LED Light strips
+* Pneumatics **- Allen and Matt**
+* Camera Streams  **- Allen and Matt**
+* Climber **- Allen and Matt**
+    * Stop Automatically
+* LED Light strips **- Bakthi**
     
-Auto
+Auto **-Eric and Nolan**
 * All possible combinations of
    * Crossing the line
    * Dumping balls into goal
@@ -20,8 +20,10 @@ Auto
    * Getting balls from hopper
 * Or do nothing
 * Path planner
+   * Determine position on field
+* Image Processing **- Nolan**
 
-Touch Screen
+Touch Screen **-Stephanie**
 * Check boxes for auto
 * Field layout
    * Boundary squares
