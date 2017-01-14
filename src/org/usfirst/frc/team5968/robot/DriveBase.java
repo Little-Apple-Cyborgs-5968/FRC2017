@@ -28,6 +28,8 @@ public class DriveBase {
 	
 	private static boolean initialized = false;
 	
+	private static final double MAX_SPEED_RPM = 1500;
+		
 	public enum Motor{
 		LEFT_FRONT,
 		LEFT_BACK,
@@ -39,6 +41,25 @@ public class DriveBase {
 		initialized = true;
 		leftEncoder.setDistancePerPulse(.042455); //this is in inches
 		rightEncoder.setDistancePerPulse(.042455); //this is in inches
+		leftMotorBack.changeControlMode(CANTalon.ControlMode.Follower);
+		rightMotorBack.changeComtrolMode(CANTalon.ControlMode.Follower);
+		leftMotorBack.set(PortMap.portOf(CAN.LEFT_MOTOR_FRONT));
+		rightMotorBack.set(PortMap.portof(CAN.RIGHT_MOTOR_FRONT));
+		leftMotorFront.setFeedbackDevice(FeedbackDevice.QuadEncoder);
+		leftMotorFront.changeMotorControl(TalonControlMode.Speed)
+		leftMotorFront.setProfile(0);
+		leftMotorFront.setF();
+		leftMotorFront.setP();
+		leftMotorFront.setI(0);
+		leftMotorFront.setD();
+		rightMotorFront.setFeedbackDevice(FeedbackDevice.QuadEncoder);
+		rightMotorFront.changeMotorControl(TalonControlMode.Speed)
+		rightMotorFront.setProfile(0);
+		rightMotorFront.setF();
+		rightMotorFront.setP();
+		rightMotorFront.setI(0);
+		rightMotorFront.setD();
+		
 	}
 	
     private static void driveStraight(double initialSpeed){
@@ -75,11 +96,7 @@ public class DriveBase {
     
     private static void setRaw(double leftSpeed, double rightSpeed){
     	leftMotorFront.set(leftSpeed);
-    	leftMotorBack.set(leftSpeed);
-    	rightMotorFront.set(-1 * rightSpeed);
-    	rightMotorBack.set(-1 * rightSpeed);
-    	
-    	
+    	rightMotorFront.set(-1 * rightSpeed);    	
     }
     
     private static void resetEncoders(){
@@ -163,15 +180,12 @@ public class DriveBase {
 	}
 	
 	public static void teleopDrive(double leftSpeed, double rightSpeed){
-		if(!initialized){
-			init();
-		}
-		setRaw(leftSpeed * teleopPLeft, rightSpeed * teleopPRight);
+	
+		double LEFT_TARGET_SPEED = HumanInterface.getLeftStick * MAX_SPEED_RPM;
+		double RIGHT_TARGET_SPEED = HumanInterface.getRightStick * MAX_SPEED_RPM;
 		
-		Robot.waitMillis(10);
-		teleopPLeft = leftSpeed / (leftEncoder.getRate() / MAX_SPEED);
-		teleopPRight = rightSpeed / (rightEncoder.getRate() / MAX_SPEED);
-		
+		leftMotorFront.set(LEFT_TARGET_SPEED);
+		rightMotorFront.set(RIGHT_TARGET_SPEED);
 	}
 	
 	private static void accelerate(boolean forward){
