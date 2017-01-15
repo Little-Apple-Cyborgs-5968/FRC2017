@@ -2,6 +2,8 @@ TODO List
 * Update firmware on Talons
 * ~~Check code for USB Cameras~~
 * Everyone install the [CTRE Toolsuite](http://www.ctr-electronics.com/hro.html#product_tabs_technical_resources)
+* Check axes on the navX
+* Calibrate compass sensor on navX
 
 Teleop
 * Drive base control **- Allen and Matt**
