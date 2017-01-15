@@ -28,7 +28,7 @@ public class Robot extends RobotBase {
     		else if (isTest()) {
     			// call TestInit() if we are now just entering test mode from either
     			// a different mode or from power-on
-    		     		} 
+    		} 
     		else if (isAutonomous()) {
     			// call Autonomous_Init() if this is the first time
     			// we've entered autonomous_mode
@@ -51,9 +51,7 @@ public class Robot extends RobotBase {
     		m_ds.waitForData(); 
     	}
     }
-    
-    private CameraVision cv = new CameraVision();
-    
+        
     private void robotInit(){
     	//UsbCamera.init();
     	DriveBase.init();

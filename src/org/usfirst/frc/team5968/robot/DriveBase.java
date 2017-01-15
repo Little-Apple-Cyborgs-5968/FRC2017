@@ -4,12 +4,14 @@ import org.usfirst.frc.team5968.robot.PortMap.CAN;
 import org.usfirst.frc.team5968.robot.PortMap.DIO;
 
 import com.ctre.CANTalon;
+import com.ctre.CANTalon.FeedbackDevice;
+import com.ctre.CANTalon.TalonControlMode;
+
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Timer;
 
 public class DriveBase {
 	
-	private static NavXMXP navX = new NavXMXP();
 	private static CANTalon leftMotorFront = new CANTalon(PortMap.portOf(CAN.LEFT_MOTOR_FRONT));
 	private static CANTalon leftMotorBack = new CANTalon(PortMap.portOf(CAN.LEFT_MOTOR_BACK));
 	private static CANTalon rightMotorFront = new CANTalon(PortMap.portOf(CAN.RIGHT_MOTOR_FRONT));
@@ -20,11 +22,8 @@ public class DriveBase {
 	
 	private static final double TOLERANCE = 0.5; //.5 degrees for angles, .5 inches for distance
 	private static final double autoP = -.23;
-	private static double teleopPLeft = 1;
-	private static double teleopPRight = 1;
 	private static final double DRIVE_SPEED = .3;
 	private static final double MOTOR_MAX_TEMP = 70;
-	private static final double MAX_SPEED = 36;
 	
 	private static boolean initialized = false;
 	
@@ -41,19 +40,22 @@ public class DriveBase {
 		initialized = true;
 		leftEncoder.setDistancePerPulse(.042455); //this is in inches
 		rightEncoder.setDistancePerPulse(.042455); //this is in inches
-		leftMotorBack.changeControlMode(CANTalon.ControlMode.Follower);
-		rightMotorBack.changeComtrolMode(CANTalon.ControlMode.Follower);
+		
+		leftMotorBack.changeControlMode(CANTalon.TalonControlMode.Follower);
+		rightMotorBack.changeControlMode(CANTalon.TalonControlMode.Follower);
 		leftMotorBack.set(PortMap.portOf(CAN.LEFT_MOTOR_FRONT));
-		rightMotorBack.set(PortMap.portof(CAN.RIGHT_MOTOR_FRONT));
+		rightMotorBack.set(PortMap.portOf(CAN.RIGHT_MOTOR_FRONT));
+		
 		leftMotorFront.setFeedbackDevice(FeedbackDevice.QuadEncoder);
-		leftMotorFront.changeMotorControl(TalonControlMode.Speed)
+		leftMotorFront.changeControlMode(TalonControlMode.Speed);
 		leftMotorFront.setProfile(0);
 		leftMotorFront.setF();
 		leftMotorFront.setP();
 		leftMotorFront.setI(0);
 		leftMotorFront.setD();
+		
 		rightMotorFront.setFeedbackDevice(FeedbackDevice.QuadEncoder);
-		rightMotorFront.changeMotorControl(TalonControlMode.Speed)
+		rightMotorFront.changeControlMode(TalonControlMode.Speed);
 		rightMotorFront.setProfile(0);
 		rightMotorFront.setF();
 		rightMotorFront.setP();
@@ -63,18 +65,18 @@ public class DriveBase {
 	}
 	
     private static void driveStraight(double initialSpeed){
-    	navX.resetYaw();
-    	if (Math.abs(navX.getYaw()) < TOLERANCE){
+    	NavXMXP.resetYaw();
+    	if (Math.abs(NavXMXP.getYaw()) < TOLERANCE){
     		setRaw(initialSpeed, initialSpeed);
     	}
     	else{
-    		if (navX.getYaw() < TOLERANCE){
-    			setRaw(initialSpeed + navX.getYaw() * autoP, initialSpeed);
-    			navX.resetYaw();
+    		if (NavXMXP.getYaw() < TOLERANCE){
+    			setRaw(initialSpeed + NavXMXP.getYaw() * autoP, initialSpeed);
+    			NavXMXP.resetYaw();
     		} 
-    		else if (navX.getYaw() > TOLERANCE){
-    			setRaw(initialSpeed, initialSpeed + navX.getYaw() * autoP);
-    			navX.resetYaw();
+    		else if (NavXMXP.getYaw() > TOLERANCE){
+    			setRaw(initialSpeed, initialSpeed + NavXMXP.getYaw() * autoP);
+    			NavXMXP.resetYaw();
     		}
     	}
     }
@@ -99,7 +101,7 @@ public class DriveBase {
     	rightMotorFront.set(-1 * rightSpeed);    	
     }
     
-    private static void resetEncoders(){
+    public static void resetEncoders(){
     	leftEncoder.reset();
     	rightEncoder.reset();
     }
@@ -116,6 +118,14 @@ public class DriveBase {
     	return rightEncoder.getRate(); //returns inches/second
     }
     
+	public static double getLeftDistance(){
+    	return leftEncoder.getDistance(); //returns inches
+    }
+    
+    public static double getRightDistance(){
+    	return rightEncoder.getDistance(); //returns inches
+    }
+	
     //The last time this method was called. It will reinitialize if the last call was more than
     //.5 seconds ago
     private static long driveLastCallMillis = System.currentTimeMillis();
@@ -159,16 +169,16 @@ public class DriveBase {
 		}
 		
 		if(System.currentTimeMillis() - rotateLastCallMillis >= 500){
-			navX.resetYaw();
+			NavXMXP.resetYaw();
 		}
 		
 		rotateLastCallMillis = System.currentTimeMillis();
 		
-    	if (Math.abs(navX.getYaw() - degrees) >= TOLERANCE) {
-    		if (navX.getYaw() > degrees) {
+    	if (Math.abs(NavXMXP.getYaw() - degrees) >= TOLERANCE) {
+    		if (NavXMXP.getYaw() > degrees) {
     			setRaw(-DRIVE_SPEED, DRIVE_SPEED);
     		} 
-    		else if (navX.getYaw() < degrees){
+    		else if (NavXMXP.getYaw() < degrees){
     			setRaw(DRIVE_SPEED, -DRIVE_SPEED);
     		}
     		return false;
@@ -181,8 +191,8 @@ public class DriveBase {
 	
 	public static void teleopDrive(double leftSpeed, double rightSpeed){
 	
-		double LEFT_TARGET_SPEED = HumanInterface.getLeftStick * MAX_SPEED_RPM;
-		double RIGHT_TARGET_SPEED = HumanInterface.getRightStick * MAX_SPEED_RPM;
+		double LEFT_TARGET_SPEED = HumanInterface.getLeftStick() * MAX_SPEED_RPM;
+		double RIGHT_TARGET_SPEED = HumanInterface.getRightStick() * MAX_SPEED_RPM;
 		
 		leftMotorFront.set(LEFT_TARGET_SPEED);
 		rightMotorFront.set(RIGHT_TARGET_SPEED);
