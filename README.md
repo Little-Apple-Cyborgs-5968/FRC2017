@@ -9,7 +9,7 @@ Teleop
 * Drive base control **- Allen and Matt**
     * PID Talon
 * Pneumatics **- Allen and Matt**
-* Camera Streams  **- Allen and Matt**
+* ~~Camera Streams  **- Allen and Matt**~~
 * Climber **- Allen and Matt**
     * Stop Automatically
 * LED Light strips **- Bakthi**
