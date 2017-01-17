@@ -75,7 +75,30 @@ public class NavXMXP {
 		return navX.getDisplacementY();
 	}
 	
+	/*
+	 * Resets the displacement measured by the accelerometer
+	 */
 	public static void resetAccelerometer(){
 		navX.resetDisplacement();
+	}
+	
+	/*
+	 * Converts a -180 to 180 degree angle to a 0 to 2 pi radian scale
+	 */
+	public static double convertAngleToRadians(double angle){
+		if(angle >= 0 && angle <= Math.PI / 2){
+			angle = Math.PI / 2 - angle;
+		}
+		else if(angle > Math.PI / 2){
+			angle = Math.PI + angle;
+		}
+		else if(angle >= -1 * Math.PI / 2 && angle < 0){
+			angle = Math.PI / 2 - angle; // angle is negative
+		}
+		else{ //if angle > -180
+			angle = Math.PI + (-1 * angle - Math.PI / 2);
+		}
+		
+		return angle;
 	}
 }

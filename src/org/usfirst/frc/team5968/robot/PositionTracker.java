@@ -24,18 +24,13 @@ public class PositionTracker {
 		y = yInitial;
 	}
 	
-	public static double getCurrentX(){
+	public static Point getCurrentPoint(){
 		updateCoordinates();
-		return x;
-	}
-	
-	public double getCurrentY(){
-		updateCoordinates();
-		return y;
+		return new Point(x, y);
 	}
 	
 	
-	private static void updateCoordinates(){
+	public static void updateCoordinates(){
 		double xDisplacementFromAccel = NavXMXP.getDisplacementX() * 39.3701; //convert meters to inches
 		double yDisplacementFromAccel = NavXMXP.getDisplacementY() * 39.3701; //convert meters to inches
 		double leftEncoderDistance = DriveBase.getLeftDistance(); //inches
@@ -64,18 +59,8 @@ public class PositionTracker {
 				double leftRadius;
 				
 				//convert angle to 0 to 2 pi radians
-				if(angle >= 0 && angle <= Math.PI / 2){
-					angle = Math.PI / 2 - angle;
-				}
-				else if(angle > Math.PI / 2){
-					angle = Math.PI + angle;
-				}
-				else if(angle >= -1 * Math.PI / 2 && angle < 0){
-					angle = Math.PI / 2 - angle; // angle is negative
-				}
-				else{ //if angle > -180
-					angle = Math.PI + (-1 * angle - Math.PI / 2);
-				}
+				angle = NavXMXP.convertAngleToRadians(angle);
+				
 				//the angle to the center of the circle
 				double theta;
 				double previousTheta;

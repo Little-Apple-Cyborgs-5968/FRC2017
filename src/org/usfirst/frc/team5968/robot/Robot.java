@@ -53,14 +53,15 @@ public class Robot extends RobotBase {
     }
         
     private void robotInit(){
-    	//UsbCamera.init();
     	DriveBase.init();
     	DashboardConnection.init();
     	DashboardConnection.addModes();
-    	//cv.init();
+    	//TODO: Fill in (0,0) with actual values
+    	PositionTracker.init(0, 0); 
     }
         
     private void autoInit(){
+    	
     }
     
     private void autoPeriodic(){
@@ -68,14 +69,22 @@ public class Robot extends RobotBase {
     	
     }
     public void teleopInit(){
+    	
     }
     
     public void teleopPeriodic(){
-    	//cv.getTarget();
+    	if(DashboardConnection.getDestinationPoint().getX() != -1 && 
+    			DashboardConnection.getDestinationPoint().getY() != -1){
+    		
+    	}
+    	else{
+    		DriveBase.teleopDrive(HumanInterface.getLeftStick(), HumanInterface.getRightStick());
+    	}
     }
     
     public void robotPeriodic(){
     	DashboardConnection.updateDashboardValues();
+    	PositionTracker.updateCoordinates();
     }
     
     public static void waitMillis(long millis){

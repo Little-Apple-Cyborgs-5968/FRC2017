@@ -212,4 +212,90 @@ public class DriveBase {
 			Timer.delay(.05);
 		}
 	}
+	
+	public static void driveToPoint(Point p){
+		double currentX = PositionTracker.getCurrentPoint().getX();
+		double currentY = PositionTracker.getCurrentPoint().getY();
+		double targetX = p.getX();
+		double targetY = p.getY();
+		
+		final double PROPORTION = .2;
+		final double MAX_SPEED = .6;
+		
+		double leftSpeed = leftMotorFront.getSpeed();
+		double rightSpeed = rightMotorFront.getSpeed();
+		
+		if(leftMotorFront.getSpeed() >= TOLERANCE){
+			double slope = Math.tan(NavXMXP.convertAngleToRadians(NavXMXP.getYaw()) - Math.PI / 2);
+			Point currentPoint = PositionTracker.getCurrentPoint();
+			
+			if(targetY < slope * (targetX - currentX) + currentY){
+				leftSpeed *= -1;
+				rightSpeed *= -1;
+				
+				double robotPathSlope = Math.tan(NavXMXP.convertAngleToRadians(NavXMXP.getYaw()));
+				
+				if(targetY > robotPathSlope * (targetX - currentX) + currentY){
+					if(rightSpeed < MAX_SPEED){
+						rightSpeed -= PROPORTION * targetY - (robotPathSlope * (targetX - currentX) + currentY);
+					}
+					else{
+						leftSpeed += PROPORTION * targetY - (robotPathSlope * (targetX - currentX) + currentY);
+					}
+				}
+				else if(targetY == robotPathSlope * (targetX - currentX) + currentY){
+					if(leftSpeed > rightSpeed){
+						rightSpeed = leftSpeed;
+					}
+					else{
+						leftSpeed = rightSpeed;
+					}
+				}
+				else{
+					if(leftSpeed < MAX_SPEED){
+						leftSpeed -= PROPORTION * targetY - (robotPathSlope * (targetX - currentX) + currentY);
+					}
+					else{
+						rightSpeed += PROPORTION * targetY - (robotPathSlope * (targetX - currentX) + currentY);
+					}
+				}
+			}
+			else{
+				double robotPathSlope = Math.tan(NavXMXP.convertAngleToRadians(NavXMXP.getYaw()));
+				
+				if(targetY > robotPathSlope * (targetX - currentX) + currentY){
+					if(rightSpeed < MAX_SPEED){
+						rightSpeed += PROPORTION * targetY - (robotPathSlope * (targetX - currentX) + currentY);
+					}
+					else{
+						leftSpeed -= PROPORTION * targetY - (robotPathSlope * (targetX - currentX) + currentY);
+					}
+				}
+				else if(targetY == robotPathSlope * (targetX - currentX) + currentY){
+					if(leftSpeed > rightSpeed){
+						rightSpeed = leftSpeed;
+					}
+					else{
+						leftSpeed = rightSpeed;
+					}
+				}
+				else{
+					if(leftSpeed < MAX_SPEED){
+						leftSpeed += PROPORTION * targetY - (robotPathSlope * (targetX - currentX) + currentY);
+					}
+					else{
+						rightSpeed -= PROPORTION * targetY - (robotPathSlope * (targetX - currentX) + currentY);
+					}
+				}			}
+			
+			setRaw(leftSpeed, rightSpeed);
+		}
+		else{
+			double turnAngle = Math.atan((targetX - currentX) / (targetY - currentY)) * 180 / Math.PI - NavXMXP.getYaw();
+			double distance = Math.sqrt(Math.pow(targetX - currentX, 2) + Math.pow(targetY - currentY, 2));
+		
+			driveRotation(turnAngle);
+			driveDistance(distance);
+		}
+	}
 }
