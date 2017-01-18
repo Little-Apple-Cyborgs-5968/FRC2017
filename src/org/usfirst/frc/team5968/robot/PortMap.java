@@ -15,10 +15,7 @@ public class PortMap {
 	}
 	
 	public enum DIO {
-		LEFT_ENCODER1,
-		LEFT_ENCODER2,
-		RIGHT_ENCODER1,
-		RIGHT_ENCODER2;
+		
 	}
 	
 	public static int portOf(USB u){
@@ -50,17 +47,6 @@ public class PortMap {
 	}
 	
 	public static int portOf(DIO d){
-		switch(d){
-			case LEFT_ENCODER1:
-				return 0;
-			case LEFT_ENCODER2:
-				return 1;
-			case RIGHT_ENCODER1:
-				return 2;
-			case RIGHT_ENCODER2:
-				return 3;
-			default:
-				return -1;
-		}
+		return -1;
 	}
 }

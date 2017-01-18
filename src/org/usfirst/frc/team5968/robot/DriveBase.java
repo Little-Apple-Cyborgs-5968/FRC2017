@@ -17,13 +17,12 @@ public class DriveBase {
 	private static CANTalon rightMotorFront = new CANTalon(PortMap.portOf(CAN.RIGHT_MOTOR_FRONT));
 	private static CANTalon rightMotorBack = new CANTalon(PortMap.portOf(CAN.RIGHT_MOTOR_BACK));
 	
-	private static Encoder leftEncoder = new Encoder(PortMap.portOf(DIO.LEFT_ENCODER1), PortMap.portOf(DIO.LEFT_ENCODER2));
-	private static Encoder rightEncoder = new Encoder(PortMap.portOf(DIO.RIGHT_ENCODER1), PortMap.portOf(DIO.RIGHT_ENCODER2));
-	
 	private static final double TOLERANCE = 0.5; //.5 degrees for angles, .5 inches for distance
 	private static final double autoP = -.23;
 	private static final double DRIVE_SPEED = .3;
 	private static final double MOTOR_MAX_TEMP = 70;
+	private static final int ENCODER_RESOLUTION = 512; //TODO: check this //counts/revolution
+	private static final double WHEEL_DIAMETER = 6; //TODO: check this //inches
 	
 	private static boolean initialized = false;
 	
@@ -38,8 +37,6 @@ public class DriveBase {
 	
 	public static void init(){
 		initialized = true;
-		leftEncoder.setDistancePerPulse(.042455); //this is in inches
-		rightEncoder.setDistancePerPulse(.042455); //this is in inches
 		
 		leftMotorBack.changeControlMode(CANTalon.TalonControlMode.Follower);
 		rightMotorBack.changeControlMode(CANTalon.TalonControlMode.Follower);
@@ -48,6 +45,10 @@ public class DriveBase {
 		
 		leftMotorFront.setFeedbackDevice(FeedbackDevice.QuadEncoder);
 		leftMotorFront.changeControlMode(TalonControlMode.Speed);
+		
+		leftMotorFront.configEncoderCodesPerRev(ENCODER_RESOLUTION);
+		rightMotorFront.configEncoderCodesPerRev(ENCODER_RESOLUTION);
+		
 		leftMotorFront.setProfile(0);
 		leftMotorFront.setF();
 		leftMotorFront.setP();
@@ -67,15 +68,15 @@ public class DriveBase {
     private static void driveStraight(double initialSpeed){
     	NavXMXP.resetYaw();
     	if (Math.abs(NavXMXP.getYaw()) < TOLERANCE){
-    		setRaw(initialSpeed, initialSpeed);
+    		setRawProportion(initialSpeed, initialSpeed);
     	}
     	else{
     		if (NavXMXP.getYaw() < TOLERANCE){
-    			setRaw(initialSpeed + NavXMXP.getYaw() * autoP, initialSpeed);
+    			setRawProportion(initialSpeed + NavXMXP.getYaw() * autoP, initialSpeed);
     			NavXMXP.resetYaw();
     		} 
     		else if (NavXMXP.getYaw() > TOLERANCE){
-    			setRaw(initialSpeed, initialSpeed + NavXMXP.getYaw() * autoP);
+    			setRawProportion(initialSpeed, initialSpeed + NavXMXP.getYaw() * autoP);
     			NavXMXP.resetYaw();
     		}
     	}
@@ -96,34 +97,46 @@ public class DriveBase {
     	}
     }
     
-    private static void setRaw(double leftSpeed, double rightSpeed){
+    private static void setRawProportion(double leftSpeed, double rightSpeed){
+    	leftMotorFront.set(leftSpeed * MAX_SPEED_RPM);
+    	rightMotorFront.set(-1 * rightSpeed * MAX_SPEED_RPM);    	
+    }
+    
+    @SuppressWarnings("unused")
+	private static void setRawSpeed(double leftSpeed, double rightSpeed){
     	leftMotorFront.set(leftSpeed);
-    	rightMotorFront.set(-1 * rightSpeed);    	
+    	rightMotorFront.set(rightSpeed);
     }
     
     public static void resetEncoders(){
-    	leftEncoder.reset();
-    	rightEncoder.reset();
+    	leftMotorFront.setPosition(0);
+    	rightMotorFront.setPosition(0);
     }
     
     private static double getDistance(){
-    	return Math.abs((leftEncoder.getDistance() - rightEncoder.getDistance()) / 2.0);
+    	return Math.abs((leftMotorFront.getPosition() - rightMotorFront.getPosition()) / 2.0);
 	}
     
     public static double getLeftSpeed(){
-    	return leftEncoder.getRate(); //returns inches/second
+    	double rpm = leftMotorFront.getSpeed();
+    	double inchesPerSecond = rpm * 1 / 60 * Math.PI * WHEEL_DIAMETER;
+    	
+    	return inchesPerSecond; //returns inches/second
     }
     
     public static double getRightSpeed(){
-    	return rightEncoder.getRate(); //returns inches/second
+    	double rpm = rightMotorFront.getSpeed();
+    	double inchesPerSecond = rpm * 1 / 60 * Math.PI * WHEEL_DIAMETER;
+    	
+    	return inchesPerSecond; //returns inches/second
     }
     
 	public static double getLeftDistance(){
-    	return leftEncoder.getDistance(); //returns inches
+    	return leftMotorFront.getPosition() * Math.PI * WHEEL_DIAMETER; //returns inches
     }
     
     public static double getRightDistance(){
-    	return rightEncoder.getDistance(); //returns inches
+    	return rightMotorFront.getPosition() * Math.PI * WHEEL_DIAMETER; //returns inches
     }
 	
     //The last time this method was called. It will reinitialize if the last call was more than
@@ -152,7 +165,7 @@ public class DriveBase {
     		return false;
     	}
     	else {
-    		DriveBase.setRaw(0, 0);
+    		DriveBase.setRawProportion(0, 0);
     		return true;
     	}
 	}
@@ -176,26 +189,22 @@ public class DriveBase {
 		
     	if (Math.abs(NavXMXP.getYaw() - degrees) >= TOLERANCE) {
     		if (NavXMXP.getYaw() > degrees) {
-    			setRaw(-DRIVE_SPEED, DRIVE_SPEED);
+    			setRawProportion(-DRIVE_SPEED, DRIVE_SPEED);
     		} 
     		else if (NavXMXP.getYaw() < degrees){
-    			setRaw(DRIVE_SPEED, -DRIVE_SPEED);
+    			setRawProportion(DRIVE_SPEED, -DRIVE_SPEED);
     		}
     		return false;
     	}    
     	else {
-    		DriveBase.setRaw(0, 0);
+    		DriveBase.setRawProportion(0, 0);
     		return true;
     	}
 	}
 	
 	public static void teleopDrive(double leftSpeed, double rightSpeed){
 	
-		double LEFT_TARGET_SPEED = HumanInterface.getLeftStick() * MAX_SPEED_RPM;
-		double RIGHT_TARGET_SPEED = HumanInterface.getRightStick() * MAX_SPEED_RPM;
-		
-		leftMotorFront.set(LEFT_TARGET_SPEED);
-		rightMotorFront.set(RIGHT_TARGET_SPEED);
+		setRawProportion(leftSpeed, rightSpeed);
 	}
 	
 	private static void accelerate(boolean forward){
@@ -226,69 +235,37 @@ public class DriveBase {
 		double rightSpeed = rightMotorFront.getSpeed();
 		
 		if(leftMotorFront.getSpeed() >= TOLERANCE){
-			double slope = Math.tan(NavXMXP.convertAngleToRadians(NavXMXP.getYaw()) - Math.PI / 2);
-			Point currentPoint = PositionTracker.getCurrentPoint();
 			
-			if(targetY < slope * (targetX - currentX) + currentY){
-				leftSpeed *= -1;
-				rightSpeed *= -1;
-				
-				double robotPathSlope = Math.tan(NavXMXP.convertAngleToRadians(NavXMXP.getYaw()));
-				
-				if(targetY > robotPathSlope * (targetX - currentX) + currentY){
-					if(rightSpeed < MAX_SPEED){
-						rightSpeed -= PROPORTION * targetY - (robotPathSlope * (targetX - currentX) + currentY);
-					}
-					else{
-						leftSpeed += PROPORTION * targetY - (robotPathSlope * (targetX - currentX) + currentY);
-					}
-				}
-				else if(targetY == robotPathSlope * (targetX - currentX) + currentY){
-					if(leftSpeed > rightSpeed){
-						rightSpeed = leftSpeed;
-					}
-					else{
-						leftSpeed = rightSpeed;
-					}
+			double robotPathSlope;
+			if(NavXMXP.getYaw() == 0 || NavXMXP.getYaw() == 180 || NavXMXP.getYaw() == -180){
+				robotPathSlope = 0.0001;
+			}
+			else{
+				robotPathSlope = Math.tan(NavXMXP.convertAngleToRadians(NavXMXP.getYaw()));
+			}
+			
+			//This assumes the robot is traveling in a straight line, which may be somewhat inaccurate.
+			//I'm hoping the refresh rate is high enough that it won't matter, but we'll have to see.
+			double projectedY = robotPathSlope * (targetX - currentX) + currentY;
+			
+			if((NavXMXP.getYaw() < 0 && targetY > projectedY) || (NavXMXP.getYaw() >= 0 && targetY < projectedY)){
+				if(leftSpeed < MAX_SPEED){
+					leftSpeed += PROPORTION * (targetY - projectedY);
 				}
 				else{
-					if(leftSpeed < MAX_SPEED){
-						leftSpeed -= PROPORTION * targetY - (robotPathSlope * (targetX - currentX) + currentY);
-					}
-					else{
-						rightSpeed += PROPORTION * targetY - (robotPathSlope * (targetX - currentX) + currentY);
-					}
+					rightSpeed -= PROPORTION * (targetY - projectedY);
 				}
 			}
 			else{
-				double robotPathSlope = Math.tan(NavXMXP.convertAngleToRadians(NavXMXP.getYaw()));
-				
-				if(targetY > robotPathSlope * (targetX - currentX) + currentY){
-					if(rightSpeed < MAX_SPEED){
-						rightSpeed += PROPORTION * targetY - (robotPathSlope * (targetX - currentX) + currentY);
-					}
-					else{
-						leftSpeed -= PROPORTION * targetY - (robotPathSlope * (targetX - currentX) + currentY);
-					}
-				}
-				else if(targetY == robotPathSlope * (targetX - currentX) + currentY){
-					if(leftSpeed > rightSpeed){
-						rightSpeed = leftSpeed;
-					}
-					else{
-						leftSpeed = rightSpeed;
-					}
+				if(rightSpeed < MAX_SPEED){
+					rightSpeed += PROPORTION * (targetY - projectedY);
 				}
 				else{
-					if(leftSpeed < MAX_SPEED){
-						leftSpeed += PROPORTION * targetY - (robotPathSlope * (targetX - currentX) + currentY);
-					}
-					else{
-						rightSpeed -= PROPORTION * targetY - (robotPathSlope * (targetX - currentX) + currentY);
-					}
-				}			}
+					leftSpeed -= PROPORTION * (targetY - projectedY);
+				}
+			}
 			
-			setRaw(leftSpeed, rightSpeed);
+			setRawProportion(leftSpeed, rightSpeed);
 		}
 		else{
 			double turnAngle = Math.atan((targetX - currentX) / (targetY - currentY)) * 180 / Math.PI - NavXMXP.getYaw();
