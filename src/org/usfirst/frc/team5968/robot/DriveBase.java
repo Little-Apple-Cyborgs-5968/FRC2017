@@ -1,5 +1,7 @@
 package org.usfirst.frc.team5968.robot;
 
+import java.util.concurrent.LinkedBlockingQueue;
+
 import org.usfirst.frc.team5968.robot.PortMap.CAN;
 import org.usfirst.frc.team5968.robot.PortMap.DIO;
 
@@ -69,7 +71,7 @@ public class DriveBase {
 	/**
 	 * The resolution of the encoder readings in counts/revolution
 	 */
-	private static final int ENCODER_RESOLUTION = 512; //TODO: check this
+	private static final int ENCODER_RESOLUTION = 2048;
 	
 	/**
 	 * Wheel diameter in inches
@@ -85,6 +87,12 @@ public class DriveBase {
 	 * The maximum speed the robot can drive. Used to scale the joystick inputs to an absolute speed.
 	 */
 	private static final double MAX_SPEED_RPM = 1500;
+	
+	/**
+     * The robot will keep trying to reach the target until it is this far away
+     * from the target point (in inches).
+     */
+    private static final double DISTANCE_THRESHOLD = 2;
 	
 	/**
 	 * All the motors we have in the drive train.
@@ -371,7 +379,7 @@ public class DriveBase {
 	 * 
 	 * @param p The point to drive to
 	 */
-	public static void driveToPoint(Point p){
+	private static void driveToPoint(Point p){
 		double currentX = PositionTracker.getCurrentPoint().getX();
 		double currentY = PositionTracker.getCurrentPoint().getY();
 		double targetX = p.getX();
@@ -422,6 +430,25 @@ public class DriveBase {
 		
 			driveRotation(turnAngle);
 			driveDistance(distance);
+		}
+	}
+	
+	/**
+	 * Drive along a path. It's nonblocking, so call it from the main control loop
+	 * 
+	 * @param points The list of points defining the path to drive.
+	 */
+	public static void drivePath(LinkedBlockingQueue<Point> points){
+		if(points.isEmpty()){
+			throw new IllegalArgumentException("Points queue was empty");
+		}
+		
+		driveToPoint(points.peek());
+		
+		Point current = PositionTracker.getCurrentPoint();
+		Point target = points.peek();
+		if(Math.sqrt(Math.pow(current.getX() - target.getX(), 2) + Math.pow(current.getY() - target.getY(), 2)) <= DISTANCE_THRESHOLD){
+			points.poll();
 		}
 	}
 }

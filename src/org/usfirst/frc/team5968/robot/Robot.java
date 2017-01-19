@@ -1,5 +1,7 @@
 package org.usfirst.frc.team5968.robot;
 
+import java.util.concurrent.LinkedBlockingQueue;
+
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 
@@ -62,6 +64,12 @@ public class Robot extends RobotBase {
     }
     
     /**
+     * Stores the points to drive to in first-in-first-out order. Stores nothing if the user
+     * is using the joysticks
+     */
+    private LinkedBlockingQueue<Point> drivePoints = new LinkedBlockingQueue<Point>();
+    
+    /**
      * Called when the robot turns on
      */
     private void robotInit(){
@@ -98,9 +106,8 @@ public class Robot extends RobotBase {
      * Called periodically during teleop
      */
     public void teleopPeriodic(){
-    	if(DashboardConnection.getDestinationPoint().getX() != -1 && 
-    			DashboardConnection.getDestinationPoint().getY() != -1){
-    		
+    	if(!drivePoints.isEmpty() && HumanInterface.getLeftStick() != 0 && HumanInterface.getRightStick() != 0){
+    		DriveBase.drivePath(drivePoints);
     	}
     	else{
     		DriveBase.teleopDrive(HumanInterface.getLeftStick(), HumanInterface.getRightStick());
@@ -114,6 +121,7 @@ public class Robot extends RobotBase {
     public void robotPeriodic(){
     	DashboardConnection.updateDashboardValues();
     	PositionTracker.updateCoordinates();
+    	DashboardConnection.updateDrivePoints(drivePoints);
     }
     
     /**

@@ -18,19 +18,25 @@ public class Point {
 	private double y;
 	
 	/**
-	 * Whether this point is a hopper
+	 * The hoppers. The robot will first drive to a point 30 inches in front of the hopper,
+	 * turn toward the hopper, and drive straight into it.
 	 */
-	private boolean isHopper;
+	public static final Point[] hoppers = {
+		new Point(30, 202),
+		new Point(30, 450),
+		new Point(294, 115),
+		new Point(294, 537),
+		new Point(294, 326)
+	};
 	
 	/**
-	 * Whether this point is a boiler
+	 * The boilers. The robot will drive to the edge of the key, realign with the camera, then
+	 * drive up to the low goal.
 	 */
-	private boolean isBoiler;
-	
-	/**
-	 * Whether this point is a retrieval or overflow chute
-	 */
-	private boolean isChute;
+	public static final Point[] boilers = { //these assume the boilers are at a 45 degree angle - check the CAD model
+		new Point(272.4, 51.6), //red boiler
+		new Point(272.4, 600.4) //blue boiler
+	};
 	
 	/**
 	 * Intialize the point

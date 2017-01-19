@@ -11,9 +11,26 @@ import edu.wpi.first.wpilibj.Joystick;
  * @author BeijingStrongbow
  */
 public class HumanInterface {
+	
+	/**
+	 * Joystick controlling the left side of the robot
+	 */
 	private static Joystick leftStick = new Joystick(PortMap.portOf(USB.LEFT_JOYSTICK));
+	
+	/**
+	 * Joystick controlling the right side of the robot
+	 */
 	private static Joystick rightStick = new Joystick(PortMap.portOf(USB.RIGHT_JOYSTICK));
+	
+	/**
+	 * Operator's xbox controller
+	 */
 	private static Joystick xbox = new Joystick(PortMap.portOf(USB.XBOX));
+	
+	/**
+	 * If the joystick inputs are less than this amount, they will be set to 0.
+	 */
+	private static final double DEADZONE = .02;
 	
 	/**
 	 * Gets the value from the Y axis of the left stick, since that's
@@ -22,7 +39,11 @@ public class HumanInterface {
 	 * @return The Y value read by the left joystick
 	 */
 	public static double getLeftStick(){
-		return leftStick.getY(); 
+		double y = leftStick.getY();
+		if(Math.abs(y) <= DEADZONE){
+			y = 0;
+		}
+		return y; 
 	}
 	
 	/**
@@ -32,6 +53,10 @@ public class HumanInterface {
 	 * @return The Y value read by the right joystick
 	 */
 	public static double getRightStick(){
-		return rightStick.getY();
+		double y = rightStick.getY();
+		if(Math.abs(y) <= DEADZONE){
+			y = 0;
+		}
+		return y;
 	}
 }

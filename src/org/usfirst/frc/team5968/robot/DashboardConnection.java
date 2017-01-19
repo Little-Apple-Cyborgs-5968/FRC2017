@@ -1,5 +1,8 @@
 package org.usfirst.frc.team5968.robot;
 
+import java.util.concurrent.LinkedBlockingQueue;
+
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 
@@ -58,19 +61,6 @@ public class DashboardConnection {
 	}
 	
 	/**
-	 * Get the current destination point from the dashboard, if the user
-	 * is using the touchscreen control.
-	 * 
-	 * @return The current point on the field selected by the user
-	 */
-	public static Point getDestinationPoint(){
-		if(!initialized){
-			init();
-		}
-		return new Point(table.getNumber("targetX", PositionTracker.getCurrentPoint().getX()), table.getNumber("targetY", PositionTracker.getCurrentPoint().getY()));
-	}
-	
-	/**
 	 * Send the robot's current location to the dashboard, so it can be drawn in on the
 	 * field diagram.
 	 * 
@@ -85,5 +75,21 @@ public class DashboardConnection {
 		table.putNumber("currentX", loc.getX());
 		table.putNumber("currentY", loc.getY());
 		table.putNumber("currentAngle", angle);
+	}
+	
+	/**
+	 * Updates the list of points along the drive path
+	 * 
+	 * @param q The current list of drive paths to add the point to
+	 */
+	public static void updateDrivePoints(LinkedBlockingQueue<Point> q){
+		if(table.getNumber("targetX", -1) != -1 && table.getNumber("targetY", -1) != -1){
+			try{
+				q.put(new Point(table.getNumber("targetX", -1), table.getNumber("targetY", -1)));
+			}
+			catch(InterruptedException ex){
+				DriverStation.reportError("Uhh... that wasn't supposed to happen", true);
+			}
+		}
 	}
 }
