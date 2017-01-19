@@ -1,35 +1,69 @@
 package org.usfirst.frc.team5968.robot;
 
-/*
+/**
  * Keeps track of the current position of the robot.
+ * 
+ * @author BejingStrongbow
  */
 public class PositionTracker {
 	
-	//(0,0) is the lower-left corner from the red-alliance point of view
-	//(i.e. blue alliance retrieval bins)
+	/*
+	 * The robot's current X coordinate. (0,0) is the lower-left corner from the red-alliance point of view
+	 * (i.e. blue alliance retrieval bins)
+	 */
 	private static double x;
 	
+	/**
+	 * The robot's current Y coordinate. //(0,0) is the lower-left corner from the red-alliance point of view
+	 * (i.e. blue alliance retrieval bins)
+	 */
 	private static double y;
 	
-	private static double previousAngle; //radians
+	/**
+	 * The robot's angle at the last iteration, measured from 0 to 2 pi radians.
+	 */
+	private static double previousAngle;
 	
+	/**
+	 * The threshold for considering an accelerometer or encoder reading as movement.
+	 */
 	private static final double MOVEMENT_THRESHOLD = .05;
 	
+	/**
+	 * The threshold for considering a driving path as a straight line. Otherwise, it's
+	 * considered a curve.
+	 */
 	private static final double STRAIGHT_LINE_THRESHOLD = .5;
 	
-	private static final double ROBOT_WIDTH = 14.031; //inches
+	/**
+	 * The width of the robot, measured from the centers of the wheels. Measured in inches.
+	 */
+	private static final double ROBOT_WIDTH = 14.031;
 	
+	/**
+	 * Initializes the position tracker
+	 * 
+	 * @param xInitial The initial X coordinate
+	 * @param yInitial The initial Y coordinate
+	 */
 	public static void init(double xInitial, double yInitial){
 		x = xInitial;
 		y = yInitial;
 	}
 	
+	/**
+	 * Updates the robot's current position based on the most recent accelerometer and encoder readings
+	 * 
+	 * @return The robot's current position
+	 */
 	public static Point getCurrentPoint(){
 		updateCoordinates();
 		return new Point(x, y);
 	}
 	
-	
+	/**
+	 * Update the robot's current position based on the most recent accelerometer and encoder readings
+	 */
 	public static void updateCoordinates(){
 		double xDisplacementFromAccel = NavXMXP.getDisplacementX() * 39.3701; //convert meters to inches
 		double yDisplacementFromAccel = NavXMXP.getDisplacementY() * 39.3701; //convert meters to inches

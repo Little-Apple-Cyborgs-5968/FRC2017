@@ -16,7 +16,12 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.*;
 import org.opencv.objdetect.*;
 
-public class imageProcessing {
+/**
+ * Handles image processing. This will probably end up being run on the driver station laptop.
+ * 
+ * @author Elden123
+ */
+public class ImageProcessing {
 	//Outputs
 		private Mat hslThresholdOutput = new Mat();
 		private ArrayList<MatOfPoint> findContoursOutput = new ArrayList<MatOfPoint>();
