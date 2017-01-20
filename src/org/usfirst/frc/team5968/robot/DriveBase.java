@@ -2,6 +2,7 @@ package org.usfirst.frc.team5968.robot;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.usfirst.frc.team5968.robot.Point.Setpoint;
 import org.usfirst.frc.team5968.robot.PortMap.CAN;
 import org.usfirst.frc.team5968.robot.PortMap.DIO;
 
@@ -440,7 +441,11 @@ public class DriveBase {
 	 */
 	public static void drivePath(LinkedBlockingQueue<Point> points){
 		if(points.isEmpty()){
-			throw new IllegalArgumentException("Points queue was empty");
+			Setpoint destination = PositionTracker.findNearestSetpoint(PositionTracker.getCurrentPoint());
+			driveToPoint(Point.getCoordinates(destination));
+			
+			driveRotation(NavXMXP.getYaw() - Point.getCorrectAngle(destination));
+			driveStraight(30);
 		}
 		
 		driveToPoint(points.peek());

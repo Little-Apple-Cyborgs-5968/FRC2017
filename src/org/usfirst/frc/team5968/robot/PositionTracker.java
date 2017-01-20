@@ -1,5 +1,7 @@
 package org.usfirst.frc.team5968.robot;
 
+import org.usfirst.frc.team5968.robot.Point.Setpoint;
+
 /**
  * Keeps track of the current position of the robot.
  * 
@@ -138,5 +140,29 @@ public class PositionTracker {
 		System.out.println("x: " + x + " y: " + y);
 		DriveBase.resetEncoders();
 		NavXMXP.resetAccelerometer();
+	}
+	
+	/**
+	 * Find the closest hopper/chute/boiler to a point on the field
+	 * 
+	 * @param current The current point. Likely the end of the user's path selection
+	 * on the touchscreen, and not the current position of the robot.
+	 */
+	public static Setpoint findNearestSetpoint(Point current){
+		Setpoint closestPoint = Setpoint.BLUE_BOILER; //just a placeholder value
+		double closestDistance = 0;
+		
+		double distance;
+		for(Setpoint s : Setpoint.values()){
+			Point setpoint = Point.getCoordinates(s);
+			
+			distance = Math.sqrt(Math.pow(current.getX() - setpoint.getX(), 2) + (Math.pow(current.getY() - setpoint.getY(), 2)));
+			if(distance < closestDistance){
+				closestPoint = s;
+				closestDistance = distance;
+			}
+		}
+		
+		return closestPoint;
 	}
 }
