@@ -4,6 +4,8 @@ import org.usfirst.frc.team5968.robot.PortMap.USB;
 
 import edu.wpi.first.wpilibj.Joystick;
 
+import edu.wpi.first.wpilibf.XboxController;
+
 /**
  * Appropriately, this class handles interfacing with the drivers. It only does the joysticks and Xbox controller
  * though - the dashboard interface is separate.
@@ -59,4 +61,26 @@ public class HumanInterface {
 		}
 		return y;
 	}
+	
+	public static void liftControl(){
+		
+		XboxController controller = new XboxController();
+		boolean isUp = true;
+		Pneumatics lifter = new Pneumatics();
+		
+		if(counter.getAButton() && isUp) {
+			
+			lifter.DoubleSolenoidUP();
+			isUp = false;
+			
+		}	
+		if(counter.getAButton() && !isUp){
+			
+			lifter.DoubleSolenoidDOWN();
+			isUp = true;
+		
+		}
+		
+		
+	}	
 }
