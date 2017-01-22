@@ -187,7 +187,7 @@ public class DriveBase {
      * @param leftSpeed The fraction of full speed the left motors should be set to.
      * @param rightSpeed The fraction of full speed the right motors should be set to.
      */
-    private static void setRawFraction(double leftSpeed, double rightSpeed){
+    public static void setRawFraction(double leftSpeed, double rightSpeed){
     	leftMotorFront.set(leftSpeed * MAX_SPEED_RPM);
     	rightMotorFront.set(-1 * rightSpeed * MAX_SPEED_RPM);    	
     }

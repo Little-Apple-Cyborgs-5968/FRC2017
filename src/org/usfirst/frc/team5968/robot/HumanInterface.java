@@ -62,12 +62,23 @@ public class HumanInterface {
 		return y;
 	}
 	
+	//TODO: @allen458 fix a few bugs
+	
 	public static void liftControl(){
-		
+		//there's already an instance you can use up there^^ It's called xbox. It's an instance of Joystick,
+		//which is a bit confusing, but it's the right thing.
 		XboxController controller = new XboxController();
 		boolean isUp = true;
 		Pneumatics lifter = new Pneumatics();
 		
+		//I believe this should be controller instead of counter
+		
+		//The method for getting a button is actually Joystick.getRawButton(int number). I don't know for sure what number A
+		//is, but we can check.
+		
+		//The better code design here would be to have the pneumatics class worry about whether it should be going up or down.
+		//The idea is a given class should only have access to what it needs to "know about," and there's no reason the human
+		//interface should have to worry about what position the pistons are in.
 		if(counter.getAButton() && isUp) {
 			
 			lifter.DoubleSolenoidUP();

@@ -1,32 +1,41 @@
+package org.usfirst.frc.team5968.robot;
+
+import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.Compressor;
+
+//TODO: @allen458 fix some stuff and document the code. See the other classes for examples on documentation.
 
 public class Pneumatics{
   
-  DoubleSolenoid piston = new DoubleSolenoid(1, 2);    //Eric maybe put this in PortMap?
+	//there are 2 pistons. They should be controlled together, though.
+	private static DoubleSolenoid piston = new DoubleSolenoid(PortMap.portOf(PortMap.PCM.FRONT_PISTON_1), PortMap.portOf(PortMap.PCM.FRONT_PISTON_2));    //Eric maybe put this in PortMap?
     
-  public static void Compressor(){
+	public static void init(){
 
-    Compressor compressor = new Compressor(0);   //Same with this?
-    compressor.setClosedLoopControl(true);
+		Compressor compressor = new Compressor(PortMap.portOf(PortMap.CAN.PCM));   //Same with this?
+		compressor.setClosedLoopControl(true);
     
-  }
+	}
   
-  public static void DoubleSolenoidOFF(){
+	//I'm not really sure what a solenoid being "off" is. I don't think we need this method.
+	public static void DoubleSolenoidOFF(){
     
-    piston.set(DoubleSolenoid.Value.kOff);
+		piston.set(DoubleSolenoid.Value.kOff);
     
-  }
+	}
   
-  public static void DoubleSolenoidUP(){
+	//It would be better code design to have just one method that toggles the solenoid. See the note in HumanInterface
+	public static void DoubleSolenoidUP(){
     
-    piston.set(DoubleSolenoid.Value.kForward);
+		piston.set(DoubleSolenoid.Value.kForward);
     
-  }
+	}
   
-  public static void DoubleSolenoidDOWN(){
+	public static void DoubleSolenoidDOWN(){
     
-    pistion.set(DoubleSolenoid.Value.kReverse);
+		piston.set(DoubleSolenoid.Value.kReverse);
     
-  }  
-    
+	}  
+}  
     
  

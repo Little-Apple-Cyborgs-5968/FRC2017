@@ -26,14 +26,34 @@ public class PortMap {
 		LEFT_MOTOR_FRONT,
 		LEFT_MOTOR_BACK,
 		RIGHT_MOTOR_FRONT,
-		RIGHT_MOTOR_BACK;
+		RIGHT_MOTOR_BACK,
+		PCM;
 	}
 	
 	/**
-	 * Devices plugged into the digital IO on the roboRIO. Doesn't include anything right now.
+	 * Devices plugged into the digital IO on the roboRIO. 
 	 */
 	public enum DIO {
-		
+		CLIMBER_ENCODER_A,
+		CLIMBER_ENCODER_B,
+	}
+	
+	/**
+	 * PWM outputs on the roboRIO.
+	 */
+	public enum PWM {
+		CLIMBER_MOTOR_LEFT,
+		CLIMBER_MOTOR_RIGHT;
+	}
+	
+	/**
+	 * Pneumatic devices plugged into the PCM
+	 */
+	public enum PCM {
+		FRONT_PISTON_1,
+		FRONT_PISTON_2,
+		BACK_PISTON_1,
+		BACK_PISTON_2;
 	}
 	
 	/**
@@ -71,6 +91,8 @@ public class PortMap {
 				return 5;
 			case RIGHT_MOTOR_BACK:
 				return 6;
+			case PCM:
+				return 0;
 			default:
 				return -1;
 		}
@@ -83,6 +105,51 @@ public class PortMap {
 	 * @return The port the device is plugged into
 	 */
 	public static int portOf(DIO d){
-		return -1;
+		switch(d){
+			case CLIMBER_ENCODER_A:
+				return 0;
+			case CLIMBER_ENCODER_B:
+				return 1;
+			default:
+				return -1;
+		}
+	}
+	
+	/**
+	 * Get the port a specific PWM device is plugged into on the roboRIO
+	 * 
+	 * @param p The device to get the port for
+	 * @return The port the device is plugged into
+	 */
+	public static int portOf(PWM p){
+		switch(p){
+		 	case CLIMBER_MOTOR_LEFT:
+		 		return 0;
+			case CLIMBER_MOTOR_RIGHT:
+				return 1;
+			default:
+				return -1;
+		}
+	}
+	
+	/**
+	 * Get the port a specific pneumatic cylinder is plugged into on the PCM
+	 * 
+	 * @param p The cylinder to get the port for
+	 * @return The port the cylinder is plugged into
+	 */
+	public static int portOf(PCM p){
+		switch(p){
+			case FRONT_PISTON_1:
+				return 0;
+			case FRONT_PISTON_2:
+				return 1;
+			case BACK_PISTON_1:
+				return 2;
+			case BACK_PISTON_2:
+				return 3;
+			default:
+				return -1;
+		}
 	}
 }
