@@ -26,18 +26,18 @@ Auto **-Eric and Nolan**
 * Image Processing **- Nolan**
 
 Touch Screen **-Stephanie**
-* Check boxes for auto
-* Field layout
-   * Boundary squares
-   * Updated robot position on field
-* Pass data with network tables
-* Updated outline of robot
-* Tell drivers if/when
-   * Pressure of pneumatics is too low
+* ~~Check boxes for auto~~
+* ~~Field layout~~
+   * ~~Boundary squares~~
+   * ~~Updated robot position on field~~
+* Pass data with network tables - almost done
+* ~~Updated outline of robot~~
+* ~~Tell drivers if/when~~
+   * ~~Pressure of pneumatics is too low~~
    * Done with driving a path or if balls have been dumped
-   * Time gets to different points (30, 15, 10, 5 sec left)
-   * Motor controllers get too hot
+   * ~~Time gets to different points (30, 15, 10, 5 sec left)~~
+   * ~~Motor controllers get too hot~~
    * There is a collision
-* Display cameras
-   * Button to switch between them (or change automatically)
+* ~~Display cameras~~
+   * ~~Button to switch between them (or change automatically)~~
 * LED Light strip or border to communicate things
