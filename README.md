@@ -34,10 +34,13 @@ Touch Screen **-Stephanie**
 * ~~Updated outline of robot~~
 * ~~Tell drivers if/when~~
    * ~~Pressure of pneumatics is too low~~
-   * Done with driving a path or if balls have been dumped
+   * ~~Done with driving a path or if balls have been dumped~~
    * ~~Time gets to different points (30, 15, 10, 5 sec left)~~
    * ~~Motor controllers get too hot~~
-   * There is a collision
+   * ~~There is a collision~~
 * ~~Display cameras~~
    * ~~Button to switch between them (or change automatically)~~
 * LED Light strip or border to communicate things
+* Sliders, lights, etc
+   * Pressure values
+   * Current climb height
