@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
  * @author Elden123
  */
 public class Robot extends RobotBase {
+	Lights lights = new Lights();
 	
 	/**
 	 * Method called automatically by the VM when a round starts. We decided to implement this directly from RobotBase
@@ -78,13 +79,14 @@ public class Robot extends RobotBase {
     	DashboardConnection.addModes();
     	//TODO: Fill in (0,0) with actual values
     	PositionTracker.init(0, 0); 
+    	lights.upBrighness();
     }
     
     /**
      * Called at the beginning of autonomous.
      */
     private void autoInit(){
-    	
+    	lights.off();
     }
     
     /**
@@ -92,6 +94,7 @@ public class Robot extends RobotBase {
      */
     private void autoPeriodic(){
     	
+    	lights.green();
     	
     }
     
@@ -112,6 +115,9 @@ public class Robot extends RobotBase {
     	else{
     		DriveBase.teleopDrive(HumanInterface.getLeftStick(), HumanInterface.getRightStick());
     	}
+    	lights.pneumatics();
+    	lights.climbing();
+    	
     }
     
     /**

@@ -36,6 +36,10 @@ public class Pneumatics{
 		piston.set(DoubleSolenoid.Value.kReverse);
     
 	}  
-}  
+	public static boolean isUp() {
+		
+		return false;
+} 
+}
     
  
