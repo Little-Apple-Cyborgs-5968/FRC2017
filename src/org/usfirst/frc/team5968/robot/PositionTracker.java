@@ -36,11 +36,7 @@ public class PositionTracker {
 	 * considered a curve.
 	 */
 	private static final double STRAIGHT_LINE_THRESHOLD = .5;
-	
-	/**
-	 * The width of the robot, measured from the centers of the wheels. Measured in inches.
-	 */
-	private static final double ROBOT_WIDTH = 14.031;
+
 	
 	/**
 	 * Initializes the position tracker
@@ -91,7 +87,7 @@ public class PositionTracker {
 				if(leftEncoderDistance == -1 * rightEncoderDistance){
 					return;
 				}
-				double rightRadius = (rightEncoderDistance * ROBOT_WIDTH) / (leftEncoderDistance - rightEncoderDistance);
+				double rightRadius = (rightEncoderDistance * Robot.getRobotWidth()) / (leftEncoderDistance - rightEncoderDistance);
 				double leftRadius;
 				
 				//convert angle to 0 to 2 pi radians
@@ -103,13 +99,13 @@ public class PositionTracker {
 				
 				if(rightEncoderDistance > leftEncoderDistance){
 					rightRadius *= -1;
-					leftRadius = rightRadius - ROBOT_WIDTH;
+					leftRadius = rightRadius - Robot.getRobotWidth();
 					avgDistance = (leftEncoderDistance + rightEncoderDistance) / 2;
 					theta = angle - Math.PI / 2;
 					previousTheta = previousAngle - Math.PI / 2;
 				}
 				else{
-					leftRadius = rightRadius + ROBOT_WIDTH;
+					leftRadius = rightRadius + Robot.getRobotWidth();
 					avgDistance = (leftEncoderDistance + rightEncoderDistance) / 2 * -1;
 					theta = angle + Math.PI / 2;
 					previousTheta = previousAngle + Math.PI / 2;

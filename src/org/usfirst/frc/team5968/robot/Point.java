@@ -179,4 +179,8 @@ public class Point {
 				return -1;
 		}
 	}
+	
+	public static double getStopDistance(){
+		return STOP_DISTANCE;
+	}
 }

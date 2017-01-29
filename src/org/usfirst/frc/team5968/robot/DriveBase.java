@@ -2,15 +2,15 @@ package org.usfirst.frc.team5968.robot;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.swing.text.Position;
+
 import org.usfirst.frc.team5968.robot.Point.Setpoint;
 import org.usfirst.frc.team5968.robot.PortMap.CAN;
-import org.usfirst.frc.team5968.robot.PortMap.DIO;
 
 import com.ctre.CANTalon;
 import com.ctre.CANTalon.FeedbackDevice;
 import com.ctre.CANTalon.TalonControlMode;
 
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Timer;
 
 /**
@@ -22,24 +22,24 @@ import edu.wpi.first.wpilibj.Timer;
 public class DriveBase {
 	
 	/**
-	 * The front left motor
+	 * The Lead left motor
 	 */
-	private static CANTalon leftMotorFront = new CANTalon(PortMap.portOf(CAN.LEFT_MOTOR_FRONT));
+	private static CANTalon leftMotorLead = new CANTalon(PortMap.portOf(CAN.LEFT_MOTOR_LEAD));
 	
 	/**
-	 * The back left motor
+	 * The Follow left motor
 	 */
-	private static CANTalon leftMotorBack = new CANTalon(PortMap.portOf(CAN.LEFT_MOTOR_BACK));
+	private static CANTalon leftMotorFollow = new CANTalon(PortMap.portOf(CAN.LEFT_MOTOR_FOLLOW));
 	
 	/**
-	 * The front right motor
+	 * The Lead right motor
 	 */
-	private static CANTalon rightMotorFront = new CANTalon(PortMap.portOf(CAN.RIGHT_MOTOR_FRONT));
+	private static CANTalon rightMotorLead = new CANTalon(PortMap.portOf(CAN.RIGHT_MOTOR_LEAD));
 	
 	/**
-	 * The back right motor
+	 * The Follow right motor
 	 */
-	private static CANTalon rightMotorBack = new CANTalon(PortMap.portOf(CAN.RIGHT_MOTOR_BACK));
+	private static CANTalon rightMotorFollow = new CANTalon(PortMap.portOf(CAN.RIGHT_MOTOR_FOLLOW));
 	
 	/**
 	 * Used in 4 cases. Could be multiple constants, but having a ton of constants looks kind of bad. 
@@ -87,7 +87,7 @@ public class DriveBase {
 	/**
 	 * The maximum speed the robot can drive. Used to scale the joystick inputs to an absolute speed.
 	 */
-	private static final double MAX_SPEED_RPM = 1500;
+	private static final double MAX_SPEED_RPM = 425;
 	
 	/**
      * The robot will keep trying to reach the target until it is this far away
@@ -99,10 +99,10 @@ public class DriveBase {
 	 * All the motors we have in the drive train.
 	 */
 	public enum Motor{
-		LEFT_FRONT,
-		LEFT_BACK,
-		RIGHT_FRONT,
-		RIGHT_BACK;
+		LEFT_Lead,
+		LEFT_Follow,
+		RIGHT_Lead,
+		RIGHT_Follow;
 	}
 	
 	/**
@@ -111,30 +111,38 @@ public class DriveBase {
 	public static void init(){
 		initialized = true;
 		
-		leftMotorBack.changeControlMode(CANTalon.TalonControlMode.Follower);
-		rightMotorBack.changeControlMode(CANTalon.TalonControlMode.Follower);
-		leftMotorBack.set(PortMap.portOf(CAN.LEFT_MOTOR_FRONT));
-		rightMotorBack.set(PortMap.portOf(CAN.RIGHT_MOTOR_FRONT));
+		leftMotorFollow.changeControlMode(CANTalon.TalonControlMode.Follower);
+		rightMotorFollow.changeControlMode(CANTalon.TalonControlMode.Follower);
+		leftMotorFollow.set(PortMap.portOf(CAN.LEFT_MOTOR_LEAD));
+		rightMotorFollow.set(PortMap.portOf(CAN.RIGHT_MOTOR_LEAD));
 		
-		leftMotorFront.setFeedbackDevice(FeedbackDevice.QuadEncoder);
-		leftMotorFront.changeControlMode(TalonControlMode.Speed);
+		leftMotorLead.setFeedbackDevice(FeedbackDevice.QuadEncoder);
+		leftMotorLead.changeControlMode(TalonControlMode.Speed);
 		
-		leftMotorFront.configEncoderCodesPerRev(ENCODER_RESOLUTION);
-		rightMotorFront.configEncoderCodesPerRev(ENCODER_RESOLUTION);
+		leftMotorLead.configEncoderCodesPerRev(ENCODER_RESOLUTION);
 		
-		leftMotorFront.setProfile(0);
-		leftMotorFront.setF();
-		leftMotorFront.setP();
-		leftMotorFront.setI(0);
-		leftMotorFront.setD();
+		leftMotorLead.configNominalOutputVoltage(0.0f, -0.0f);
+		leftMotorFollow.configNominalOutputVoltage(0.0f, -0.0f);
 		
-		rightMotorFront.setFeedbackDevice(FeedbackDevice.QuadEncoder);
-		rightMotorFront.changeControlMode(TalonControlMode.Speed);
-		rightMotorFront.setProfile(0);
-		rightMotorFront.setF();
-		rightMotorFront.setP();
-		rightMotorFront.setI(0);
-		rightMotorFront.setD();
+		leftMotorLead.setProfile(0);
+		leftMotorLead.setF(.19);
+		leftMotorLead.setP(.09);
+		leftMotorLead.setI(0);
+		leftMotorLead.setD(0);
+		
+		rightMotorLead.setFeedbackDevice(FeedbackDevice.QuadEncoder);
+		rightMotorLead.changeControlMode(TalonControlMode.Speed);
+		
+		rightMotorLead.configEncoderCodesPerRev(ENCODER_RESOLUTION);
+		
+		rightMotorLead.configPeakOutputVoltage(12.0f, -12.0f);
+		rightMotorFollow.configPeakOutputVoltage(12.0f, -12.0f);
+				
+		rightMotorLead.setProfile(0);
+		rightMotorLead.setF(.19);
+		rightMotorLead.setP(.09);
+		rightMotorLead.setI(0);
+		rightMotorLead.setD(0);
 		
 	}
 	
@@ -168,14 +176,14 @@ public class DriveBase {
      */
     public static boolean isMotorTooHot(Motor m){
     	switch(m){
-    		case LEFT_FRONT:
-    			return leftMotorFront.getTemperature() > MOTOR_MAX_TEMP;
-    		case LEFT_BACK:
-    			return leftMotorBack.getTemperature() > MOTOR_MAX_TEMP;
-    		case RIGHT_FRONT:
-    			return rightMotorFront.getTemperature() > MOTOR_MAX_TEMP;
-    		case RIGHT_BACK:
-    			return rightMotorBack.getTemperature() > MOTOR_MAX_TEMP;
+    		case LEFT_Lead:
+    			return leftMotorLead.getTemperature() > MOTOR_MAX_TEMP;
+    		case LEFT_Follow:
+    			return leftMotorFollow.getTemperature() > MOTOR_MAX_TEMP;
+    		case RIGHT_Lead:
+    			return rightMotorLead.getTemperature() > MOTOR_MAX_TEMP;
+    		case RIGHT_Follow:
+    			return rightMotorFollow.getTemperature() > MOTOR_MAX_TEMP;
     		default:
     			return true;
     	}
@@ -188,8 +196,8 @@ public class DriveBase {
      * @param rightSpeed The fraction of full speed the right motors should be set to.
      */
     public static void setRawFraction(double leftSpeed, double rightSpeed){
-    	leftMotorFront.set(leftSpeed * MAX_SPEED_RPM);
-    	rightMotorFront.set(-1 * rightSpeed * MAX_SPEED_RPM);    	
+    	leftMotorLead.set(leftSpeed * MAX_SPEED_RPM);
+    	rightMotorLead.set(-1 * rightSpeed * MAX_SPEED_RPM);    	
     }
     
     /**
@@ -200,16 +208,16 @@ public class DriveBase {
      */
     @SuppressWarnings("unused")
 	private static void setRawSpeed(double leftSpeed, double rightSpeed){
-    	leftMotorFront.set(leftSpeed);
-    	rightMotorFront.set(rightSpeed);
+    	leftMotorLead.set(leftSpeed);
+    	rightMotorLead.set(-rightSpeed);
     }
     
     /*
      * Reset the encoders to 0 displacement
      */
     public static void resetEncoders(){
-    	leftMotorFront.setPosition(0);
-    	rightMotorFront.setPosition(0);
+    	leftMotorLead.setPosition(0);
+    	rightMotorLead.setPosition(0);
     }
     
     /**
@@ -218,7 +226,7 @@ public class DriveBase {
      * @return The average distance measured by the encoders. NOTE: this won't mean anything if the robot has turned.
      */
     private static double getDistance(){
-    	return Math.abs((leftMotorFront.getPosition() - rightMotorFront.getPosition()) / 2.0);
+    	return Math.abs((leftMotorLead.getPosition() - rightMotorLead.getPosition()) / 2.0);
 	}
     
     /**
@@ -227,7 +235,7 @@ public class DriveBase {
      * @return The speed currently measured by the left encoder
      */
     public static double getLeftSpeed(){
-    	double rpm = leftMotorFront.getSpeed();
+    	double rpm = leftMotorLead.getSpeed();
     	double inchesPerSecond = rpm * 1 / 60 * Math.PI * WHEEL_DIAMETER;
     	
     	return inchesPerSecond; //returns inches/second
@@ -239,7 +247,7 @@ public class DriveBase {
      * @return The speed currently measured by the right encoder
      */
     public static double getRightSpeed(){
-    	double rpm = rightMotorFront.getSpeed();
+    	double rpm = rightMotorLead.getSpeed();
     	double inchesPerSecond = rpm * 1 / 60 * Math.PI * WHEEL_DIAMETER;
     	
     	return inchesPerSecond; //returns inches/second
@@ -251,7 +259,7 @@ public class DriveBase {
      * @return The distance traveled by the left side of the robot
      */
 	public static double getLeftDistance(){
-    	return leftMotorFront.getPosition() * Math.PI * WHEEL_DIAMETER; //returns inches
+    	return leftMotorLead.getPosition() * Math.PI * WHEEL_DIAMETER; //returns inches
     }
     
 	/**
@@ -260,7 +268,7 @@ public class DriveBase {
      * @return The distance traveled by the right side of the robot
      */
     public static double getRightDistance(){
-    	return rightMotorFront.getPosition() * Math.PI * WHEEL_DIAMETER; //returns inches
+    	return rightMotorLead.getPosition() * Math.PI * WHEEL_DIAMETER; //returns inches
     }
 	
     /**
@@ -379,8 +387,9 @@ public class DriveBase {
 	 * and uses what might be called P control.
 	 * 
 	 * @param p The point to drive to
+	 * @param stop Whether top stop before driving to the point
 	 */
-	private static void driveToPoint(Point p){
+	public static void driveToPoint(Point p, boolean stop){
 		double currentX = PositionTracker.getCurrentPoint().getX();
 		double currentY = PositionTracker.getCurrentPoint().getY();
 		double targetX = p.getX();
@@ -389,10 +398,14 @@ public class DriveBase {
 		final double PROPORTION = .2;
 		final double MAX_SPEED = .6;
 		
-		double leftSpeed = leftMotorFront.getSpeed();
-		double rightSpeed = rightMotorFront.getSpeed();
+		double leftSpeed = leftMotorLead.getSpeed();
+		double rightSpeed = rightMotorLead.getSpeed();
 		
-		if(leftMotorFront.getSpeed() >= TOLERANCE){
+		if(stop){
+			setRawSpeed(0, 0);
+		}
+		
+		if(leftMotorLead.getSpeed() >= TOLERANCE && !stop){
 			
 			double robotPathSlope;
 			if(NavXMXP.getYaw() == 0 || NavXMXP.getYaw() == 180 || NavXMXP.getYaw() == -180){
@@ -438,22 +451,32 @@ public class DriveBase {
 	 * Drive along a path. It's nonblocking, so call it from the main control loop
 	 * 
 	 * @param points The list of points defining the path to drive.
+	 * @param stopBetweenPoints Whether to stop between driving to each point
 	 */
-	public static void drivePath(LinkedBlockingQueue<Point> points){
+	public static void drivePath(LinkedBlockingQueue<Point> points, boolean stopBetweenPoints){
 		if(points.isEmpty()){
 			Setpoint destination = PositionTracker.findNearestSetpoint(PositionTracker.getCurrentPoint());
-			driveToPoint(Point.getCoordinates(destination));
+			driveToPoint(Point.getCoordinates(destination), stopBetweenPoints);
 			
-			driveRotation(NavXMXP.getYaw() - Point.getCorrectAngle(destination));
-			driveStraight(30);
+			if(destination == Setpoint.RED_BOILER || destination == Setpoint.BLUE_BOILER){
+				driveRotation(NavXMXP.getYaw() - Point.getCorrectAngle(destination));
+				//correct for error with vision processing
+				driveStraight(52 - .5 * Robot.getRobotLength());
+			}
+			else{
+				driveRotation(NavXMXP.getYaw() - Point.getCorrectAngle(destination));
+				driveStraight(Point.getStopDistance() - .5 * Robot.getRobotLength());
+			}
 		}
-		
-		driveToPoint(points.peek());
-		
-		Point current = PositionTracker.getCurrentPoint();
-		Point target = points.peek();
-		if(Math.sqrt(Math.pow(current.getX() - target.getX(), 2) + Math.pow(current.getY() - target.getY(), 2)) <= DISTANCE_THRESHOLD){
-			points.poll();
+		else{			
+			Point current = PositionTracker.getCurrentPoint();
+			Point target = points.peek();
+			
+			driveToPoint(target, stopBetweenPoints);
+			
+			if(Math.sqrt(Math.pow(current.getX() - target.getX(), 2) + Math.pow(current.getY() - target.getY(), 2)) <= DISTANCE_THRESHOLD){
+				points.poll();
+			}
 		}
 	}
 }

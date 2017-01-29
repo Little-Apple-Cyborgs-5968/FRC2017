@@ -23,10 +23,10 @@ public class PortMap {
 	 * is added.
 	 */
 	public enum CAN {
-		LEFT_MOTOR_FRONT,
-		LEFT_MOTOR_BACK,
-		RIGHT_MOTOR_FRONT,
-		RIGHT_MOTOR_BACK,
+		LEFT_MOTOR_LEAD,
+		LEFT_MOTOR_FOLLOW,
+		RIGHT_MOTOR_LEAD,
+		RIGHT_MOTOR_FOLLOW,
 		PCM;
 	}
 	
@@ -83,13 +83,13 @@ public class PortMap {
 	 */
 	public static int portOf(CAN c){
 		switch(c){
-			case LEFT_MOTOR_FRONT:
-				return 0;
-			case LEFT_MOTOR_BACK:
+			case LEFT_MOTOR_LEAD:
+				return 5;
+			case LEFT_MOTOR_FOLLOW:
 				return 6;
-			case RIGHT_MOTOR_FRONT:
+			case RIGHT_MOTOR_LEAD:
 				return 3;
-			case RIGHT_MOTOR_BACK:
+			case RIGHT_MOTOR_FOLLOW:
 				return 4;
 			case PCM:
 				return 0;

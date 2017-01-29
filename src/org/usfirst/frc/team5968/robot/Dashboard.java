@@ -2,6 +2,9 @@ package org.usfirst.frc.team5968.robot;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.usfirst.frc.team5968.robot.Robot.AutoMode;
+import org.usfirst.frc.team5968.robot.Robot.StartPoint;
+
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
@@ -12,7 +15,7 @@ import edu.wpi.first.wpilibj.networktables.NetworkTable;
  * 
  * @author BeijingStrongbow
  */
-public class DashboardConnection {
+public class Dashboard {
 	
 	/**
 	 * Whether the connection has been initialized
@@ -91,5 +94,62 @@ public class DashboardConnection {
 				DriverStation.reportError("Uhh... that wasn't supposed to happen", true);
 			}
 		}
+	}
+	
+	/**
+	 * Gets the starting point for auto
+	 * 
+	 * @return The starting point on the field
+	 */
+	public static StartPoint getStartingPoint(){
+		String point = table.getString("startPoint", "");
+		
+		switch(point){
+			case "KEY":
+				return StartPoint.KEY;
+			case "MIDLINE":
+				return StartPoint.MIDLINE;
+			case "RETRIEVAL":
+				return StartPoint.RETRIEVAL_ZONE;
+			default:
+				return null;
+		}
+	}
+	
+	/**
+	 * Get the auto option chosen by the drivers
+	 * 
+	 * @return The auto option chosen by the drivers
+	 */
+	public static AutoMode getAutoMode(){
+		String routine = table.getString("autonomous", "");
+		
+		switch(routine){
+			case "HOPPER_BOILER":
+				return AutoMode.HOPPER_BOILER;
+			case "HOPPER":
+				return AutoMode.HOPPER;
+			case "GEAR":
+				return AutoMode.GEAR;
+			case "GEAR_HOPPER":
+				return AutoMode.GEAR_HOPPER;
+			case "BOILER":
+				return AutoMode.BOILER;
+			case "BOILER_CROSS":
+				return AutoMode.BOILER_CROSS;
+			case "CROSS":
+				return AutoMode.CROSS;
+			default:
+				return AutoMode.BE_USELESS;
+		}
+	}
+	
+	/**
+	 * The hopper to empty, if it's part of the selected auto routine
+	 * 
+	 * @return The hopper number. Starts from the blue alliance retrieval chute at 1 and goes counter clockwise
+	 */
+	public static int getHopper(){
+		return (int) table.getNumber("hopper", 0);
 	}
 }

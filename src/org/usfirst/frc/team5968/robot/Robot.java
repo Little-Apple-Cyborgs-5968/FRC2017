@@ -2,6 +2,12 @@ package org.usfirst.frc.team5968.robot;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.swing.text.Position;
+
+import org.usfirst.frc.team5968.robot.Point.Setpoint;
+
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 
@@ -71,29 +77,118 @@ public class Robot extends RobotBase {
     private LinkedBlockingQueue<Point> drivePoints = new LinkedBlockingQueue<Point>();
     
     /**
+     * Where the robot started
+     */
+    private StartPoint startPointName;
+    
+    /**
+     * The length of the robot in inches
+     */
+    private static final double ROBOT_LENGTH = 38;
+    
+    /**
+     * The width of the robot in inches, measured between the centers of the wheels
+     */
+    private static final double ROBOT_WIDTH = 25.1875;
+    
+    /**
+     * The alliance we're on
+     */
+    private static Alliance alliance;
+    
+    /**
+     * All the autonomous options
+     */
+    public enum AutoMode {
+    	HOPPER_BOILER,
+    	HOPPER,
+    	GEAR,
+    	GEAR_HOPPER,
+    	BOILER,
+    	BOILER_CROSS,
+    	CROSS,
+    	BE_USELESS; //<- do nothing, if you didn't understand
+    }
+    
+    /**
+     * The starting positions
+     *
+     */
+    public enum StartPoint {
+    	MIDLINE,
+    	KEY,
+    	RETRIEVAL_ZONE;
+    }
+    
+    /**
      * Called when the robot turns on
      */
     private void robotInit(){
     	DriveBase.init();
-    	DashboardConnection.init();
-    	DashboardConnection.addModes();
-    	//TODO: Fill in (0,0) with actual values
-    	PositionTracker.init(0, 0); 
-    	lights.upBrighness();
+    	Dashboard.init();
+    	Dashboard.addModes();
+		lights.upBrightness();
+    	alliance = DriverStation.getInstance().getAlliance();
+    	
+    	startPointName = Dashboard.getStartingPoint();
+    	if(startPointName == StartPoint.KEY){
+    		if(alliance == Alliance.Red){
+    			PositionTracker.init(295 + .5 * ROBOT_WIDTH, .5 * ROBOT_LENGTH);
+    		}
+    		else if(alliance == Alliance.Blue){
+    			PositionTracker.init(295 + .5 * ROBOT_WIDTH, 652 - .5 * ROBOT_LENGTH);
+    		}
+    	}
+    	else if(startPointName == StartPoint.MIDLINE){
+    		if(alliance == Alliance.Red){
+    			PositionTracker.init(162, .5 * ROBOT_LENGTH);
+    		}
+    		else if(alliance == Alliance.Blue){
+    			PositionTracker.init(162, 652 - .5 * ROBOT_LENGTH);
+    		}
+    	}
+    	else if(startPointName == StartPoint.RETRIEVAL_ZONE){
+    		if(alliance == Alliance.Red){
+    			PositionTracker.init(33.9 + .5 * ROBOT_WIDTH, .5 * ROBOT_LENGTH);
+    		}
+    		else if(alliance == Alliance.Blue){
+    			PositionTracker.init(33.9 + .5 * ROBOT_WIDTH, 652 - .5 * ROBOT_LENGTH);
+    		}
+    	}
+    	else{
+    		DriverStation.reportError("I don't know where I am!! Position Tracking won't work!!", false);
+    	}
+    	
     }
     
     /**
      * Called at the beginning of autonomous.
      */
     private void autoInit(){
-    	lights.off();
+		lights.off();
+    	if(alliance != Alliance.Red && alliance != Alliance.Blue){
+    		DriverStation.reportError("I don't know what alliance I'm on!", false);
+    		return;
+    	}
+    	
+    	AutoMode mode = Dashboard.getAutoMode();
+    	
+    	int hopper = Dashboard.getHopper();
+    	
+    	try{
+    		drivePoints = processAutoPath(mode, hopper);
+    	}
+    	catch(InterruptedException ex){
+    		DriverStation.reportError("Chances are I have no idea why this happened", false);
+    	}
+    	
+    	DriveBase.drivePath(drivePoints, true);
     }
     
     /**
      * Called periodically during autonomous
      */
     private void autoPeriodic(){
-    	
     	lights.green();
     	
     }
@@ -110,14 +205,13 @@ public class Robot extends RobotBase {
      */
     public void teleopPeriodic(){
     	if(!drivePoints.isEmpty() && HumanInterface.getLeftStick() != 0 && HumanInterface.getRightStick() != 0){
-    		DriveBase.drivePath(drivePoints);
+    		DriveBase.drivePath(drivePoints, false);
     	}
     	else{
     		DriveBase.teleopDrive(HumanInterface.getLeftStick(), HumanInterface.getRightStick());
     	}
-    	lights.pneumatics();
-    	lights.climbing();
-    	
+		lights.pneumatics();
+		lights.climbing();
     }
     
     /**
@@ -125,9 +219,95 @@ public class Robot extends RobotBase {
      * at all times, to avoid pasting it twice.
      */
     public void robotPeriodic(){
-    	DashboardConnection.updateDashboardValues();
+    	Dashboard.updateDashboardValues();
     	PositionTracker.updateCoordinates();
-    	DashboardConnection.updateDrivePoints(drivePoints);
+    	Dashboard.updateDrivePoints(drivePoints);
+    }
+    
+    private LinkedBlockingQueue<Point> processAutoPath(AutoMode mode, int hopper) throws InterruptedException{
+    	LinkedBlockingQueue<Point> path = new LinkedBlockingQueue<Point>();
+    	
+    	if(alliance == Alliance.Red && hopper == 3){
+    		DriverStation.reportError("We aren't allowed to go to that hopper", false);
+    		hopper = -1;
+    	}
+    	else if(alliance == Alliance.Blue && hopper == 5){
+    		DriverStation.reportError("We aren't allowed to go to that hopper", false);
+    		hopper = -1;
+    	}
+    	
+    	if(mode == AutoMode.GEAR || mode == AutoMode.GEAR_HOPPER){
+    		if(startPointName == StartPoint.KEY){
+    			if(alliance == Alliance.Red){
+    				path.put(Point.getCoordinates(Setpoint.RED_GEAR3));
+    			}
+    			else if(alliance == Alliance.Blue){
+    				path.put(Point.getCoordinates(Setpoint.BLUE_GEAR3));
+    			}
+    		}
+    		else if(startPointName == StartPoint.MIDLINE){
+    			if(alliance == Alliance.Red){
+    				path.put(Point.getCoordinates(Setpoint.RED_GEAR2));
+    			}
+    			else if(alliance == Alliance.Blue){
+    				path.put(Point.getCoordinates(Setpoint.BLUE_GEAR2));
+    			}
+    		}
+    		else if(startPointName == StartPoint.RETRIEVAL_ZONE){
+    			if(alliance == Alliance.Red){
+    				path.put(Point.getCoordinates(Setpoint.RED_GEAR1));
+    			}
+    			else if(alliance == Alliance.Blue){
+    				path.put(Point.getCoordinates(Setpoint.BLUE_GEAR1));
+    			}
+    		}
+    	}
+    	
+    	if(mode == AutoMode.HOPPER_BOILER || mode == AutoMode.HOPPER || mode == AutoMode.GEAR_HOPPER){
+    		if(startPointName == StartPoint.KEY && (hopper == 3 || hopper == 4 || hopper == 5)){
+    			switch(hopper){
+    				case 3:
+    					path.put(Point.getCoordinates(Setpoint.HOPPER3));
+    					break;
+    				case 4:
+    					path.put(Point.getCoordinates(Setpoint.HOPPER4));
+    					break;
+    				case 5:
+    					path.put(Point.getCoordinates(Setpoint.HOPPER5));
+    					break;
+    			}
+    		}
+    		else if(startPointName == StartPoint.RETRIEVAL_ZONE && (hopper == 1 || hopper == 2)){
+    			switch(hopper){
+    				case 1:
+    					path.put(Point.getCoordinates(Setpoint.HOPPER1));
+    					break;
+    				case 2:
+    					path.put(Point.getCoordinates(Setpoint.HOPPER2));
+    					break;
+    			}
+    		}
+    	}
+    	
+    	if(mode == AutoMode.BOILER_CROSS || mode == AutoMode.HOPPER_BOILER){
+    		if(alliance == Alliance.Red){
+    			path.put(Point.getCoordinates(Setpoint.RED_BOILER));
+    		}
+    		else if(alliance == Alliance.Blue){
+    			path.put(Point.getCoordinates(Setpoint.BLUE_BOILER));
+    		}
+    	}
+    	
+    	if(mode == AutoMode.CROSS || mode == AutoMode.BOILER_CROSS){
+    		if(alliance == Alliance.Red){
+    			path.put(new Point(PositionTracker.getCurrentPoint().getX(), 93.25));
+    		}
+    		else if(alliance == Alliance.Blue){
+    			path.put(new Point(PositionTracker.getCurrentPoint().getX(), 558.75));
+    		}
+    	}
+    	
+    	return path;
     }
     
     /**
@@ -141,5 +321,22 @@ public class Robot extends RobotBase {
     	
     	while(System.currentTimeMillis() - (millis + start) < 0){}
     }
-
+    
+    /**
+     * The width of the robot between the centers of the wheels, in inches
+     * 
+     * @return The width of the robot in inches
+     */
+    public static double getRobotWidth(){
+    	return ROBOT_WIDTH;
+    }
+    
+    /**
+     * The length of the robot in inches
+     * 
+     * @return The length of the robot
+     */
+    public static double getRobotLength(){
+    	return ROBOT_LENGTH;
+    }
 }
