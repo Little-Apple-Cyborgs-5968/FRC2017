@@ -31,8 +31,7 @@ public class NavXMXP {
 	/**
 	 * positive means rotated clockwise.
 	 * 
-	 * @return The current yaw (rotation in z-axis) value in degrees (-180 to
-	 *         180).
+	 * @return The current yaw (rotation in z-axis) value in degrees (0 to 360). Clockwise is positive.
 	 */
 	public static double getYaw() {
 		return navX.getFusedHeading();

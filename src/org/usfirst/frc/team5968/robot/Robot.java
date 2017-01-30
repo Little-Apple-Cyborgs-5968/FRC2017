@@ -9,6 +9,9 @@ import org.usfirst.frc.team5968.robot.Point.Setpoint;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tInstances;
+import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
+import edu.wpi.first.wpilibj.hal.HAL;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 
 /**
@@ -31,6 +34,9 @@ public class Robot extends RobotBase {
 	 * method runs considerably faster than FIRST's default.
 	 */
     public void startCompetition(){
+    	HAL.report(tResourceType.kResourceType_Framework, tInstances.kFramework_Iterative);
+    	
+    	HAL.observeUserProgramStarting();
     	LiveWindow.setEnabled(false);
     	robotInit();
     	
@@ -42,10 +48,12 @@ public class Robot extends RobotBase {
     		if (isDisabled()) {
     			// call DisabledInit() if we are now just entering disabled mode from
     			// either a different mode or from power-on
+    			HAL.observeUserProgramDisabled();
     		}
     		else if (isTest()) {
     			// call TestInit() if we are now just entering test mode from either
     			// a different mode or from power-on
+    			HAL.observeUserProgramTest();
     		} 
     		else if (isAutonomous()) {
     			// call Autonomous_Init() if this is the first time
@@ -54,7 +62,7 @@ public class Robot extends RobotBase {
     				autoInit();
     				autoInitialized = true;
     			}
-    			
+    			HAL.observeUserProgramAutonomous();
     			autoPeriodic();
     		}
     		else {
@@ -63,6 +71,7 @@ public class Robot extends RobotBase {
     				teleopInit();
     				teleopInitialized = true;
     			}
+    			HAL.observeUserProgramTeleop();
     			teleopPeriodic();
     		}
     		robotPeriodic();
@@ -127,7 +136,8 @@ public class Robot extends RobotBase {
     	DriveBase.init();
     	Dashboard.init();
     	Dashboard.addModes();
-		lights.upBrightness();
+    	NavXMXP.init();
+		/*lights.upBrightness();
     	alliance = DriverStation.getInstance().getAlliance();
     	
     	startPointName = Dashboard.getStartingPoint();
@@ -157,7 +167,7 @@ public class Robot extends RobotBase {
     	}
     	else{
     		DriverStation.reportError("I don't know where I am!! Position Tracking won't work!!", false);
-    	}
+    	}*/
     	
     }
     
@@ -165,6 +175,7 @@ public class Robot extends RobotBase {
      * Called at the beginning of autonomous.
      */
     private void autoInit(){
+    	NavXMXP.resetYaw();
 		lights.off();
     	if(alliance != Alliance.Red && alliance != Alliance.Blue){
     		DriverStation.reportError("I don't know what alliance I'm on!", false);
@@ -182,7 +193,6 @@ public class Robot extends RobotBase {
     		DriverStation.reportError("Chances are I have no idea why this happened", false);
     	}
     	
-    	DriveBase.drivePath(drivePoints, true);
     }
     
     /**
@@ -197,21 +207,25 @@ public class Robot extends RobotBase {
      * Called at the beginning of teleop
      */
     public void teleopInit(){
-    	
+    	NavXMXP.resetYaw();
     }
-    
+    boolean driven = false;
     /**
      * Called periodically during teleop
      */
     public void teleopPeriodic(){
-    	if(!drivePoints.isEmpty() && HumanInterface.getLeftStick() != 0 && HumanInterface.getRightStick() != 0){
+    	/*if(!drivePoints.isEmpty() && HumanInterface.getLeftStick() != 0 && HumanInterface.getRightStick() != 0){
     		DriveBase.drivePath(drivePoints, false);
     	}
     	else{
     		DriveBase.teleopDrive(HumanInterface.getLeftStick(), HumanInterface.getRightStick());
     	}
 		lights.pneumatics();
-		lights.climbing();
+		lights.climbing();*/
+    	if(DriveBase.driveDistance(48) && !driven){
+    		driven = true;
+    	}
+    	System.out.println(PositionTracker.getCurrentPoint().getX() + " " + PositionTracker.getCurrentPoint().getY());
     }
     
     /**

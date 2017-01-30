@@ -4,8 +4,6 @@ import org.usfirst.frc.team5968.robot.PortMap.USB;
 
 import edu.wpi.first.wpilibj.Joystick;
 
-import edu.wpi.first.wpilibf.XboxController;
-
 /**
  * Appropriately, this class handles interfacing with the drivers. It only does the joysticks and Xbox controller
  * though - the dashboard interface is separate.
@@ -64,7 +62,7 @@ public class HumanInterface {
 	
 	//TODO: @allen458 fix a few bugs
 	
-	public static void liftControl(){
+	/*public static void liftControl(){
 		//there's already an instance you can use up there^^ It's called xbox. It's an instance of Joystick,
 		//which is a bit confusing, but it's the right thing.
 		XboxController controller = new XboxController();
@@ -93,5 +91,5 @@ public class HumanInterface {
 		}
 		
 		
-	}	
+	}	*/
 }

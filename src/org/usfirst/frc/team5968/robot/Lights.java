@@ -24,7 +24,7 @@ public class Lights extends IterativeRobot {
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
-    public void upBrighness() {
+    public void upBrightness() {
 	    for(int x =0; x<=255; x++){
 	    	r.setRaw(x);
 	    	g.setRaw(x);

@@ -29,13 +29,13 @@ public class PositionTracker {
 	/**
 	 * The threshold for considering an accelerometer or encoder reading as movement.
 	 */
-	private static final double MOVEMENT_THRESHOLD = .05;
+	private static final double MOVEMENT_THRESHOLD = .004;
 	
 	/**
 	 * The threshold for considering a driving path as a straight line. Otherwise, it's
 	 * considered a curve.
 	 */
-	private static final double STRAIGHT_LINE_THRESHOLD = .5;
+	private static final double STRAIGHT_LINE_THRESHOLD = 100;
 
 	
 	/**
@@ -67,7 +67,7 @@ public class PositionTracker {
 		double yDisplacementFromAccel = NavXMXP.getDisplacementY() * 39.3701; //convert meters to inches
 		double leftEncoderDistance = DriveBase.getLeftDistance(); //inches
 		double rightEncoderDistance = DriveBase.getRightDistance(); //inches
-		double angle = NavXMXP.getYaw() * Math.PI / 180; //angle from -pi / 2 to pi / 2
+		double angle = NavXMXP.getYaw() * Math.PI / 180; //angle from 0 to 2 pi
 		double avgDistance;
 		
 		//if both the accelerometer and encoders registered movement
@@ -133,7 +133,7 @@ public class PositionTracker {
 		//do nothing if the encoders read movement but the accelerometer didn't
 		
 		previousAngle = angle;
-		System.out.println("x: " + x + " y: " + y);
+		//System.out.println("x: " + x + " y: " + y);
 		DriveBase.resetEncoders();
 		NavXMXP.resetAccelerometer();
 	}
