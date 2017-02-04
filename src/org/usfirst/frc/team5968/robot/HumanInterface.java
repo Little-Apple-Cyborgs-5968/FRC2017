@@ -32,7 +32,7 @@ public class HumanInterface {
 	 */
 	private static final double DEADZONE = .02;
 	
-	private static boolean isPRESSED = false	
+	private static boolean isPRESSED = false;
 	/**
 	 * Gets the value from the Y axis of the left stick, since that's
 	 * the only value we use
@@ -67,7 +67,7 @@ public class HumanInterface {
 		
 		if(xbox.getRawButton(1) && !isPRESSED){
 			
-			Pnuematics.DoubleSolenoidTOGGLE();
+			Pneumatics.DoubleSolenoidTOGGLE();
 			isPRESSED = true;
 		}
 		if(!xbox.getRawButton(1)){

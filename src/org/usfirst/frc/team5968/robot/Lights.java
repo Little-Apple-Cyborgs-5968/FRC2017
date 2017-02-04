@@ -65,13 +65,13 @@ public class Lights {
      */
     public void pneumatics() {
        
-    	if(p.isUp()) {
+    	if(p.getIsUP()) {
     		r.setRaw(146);
     		g.setRaw(14);
     		b.setRaw(14);
     		w.setRaw(0);
     	}
-    	if(!p.isUp())  {
+    	if(!p.getIsUP())  {
     		b.setRaw(87);
     		r.setRaw(0);
     		g.setRaw(0);
