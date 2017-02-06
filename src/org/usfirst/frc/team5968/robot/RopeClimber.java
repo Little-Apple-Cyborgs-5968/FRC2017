@@ -21,7 +21,7 @@ public class RopeClimber{
 		climberEncoder.setDistancePerPulse(8/2048);		//Inches
 	}
 	
-	public static void setSpeed(motorSpeed){
+	public static void setSpeed(double motorSpeed){
 		
 		rightMotor.set(motorSpeed);
 		leftMotor.set(-motorSpeed);
@@ -43,12 +43,12 @@ public class RopeClimber{
     
   		if(verticalAngle > startAngle){
   			
-			Distance = climberEncoder.getDistance() + ((Math.sin(startAngle * (Math.PI / 180))) * robotLength);
-  			if(Distance < 48){
+			distance = climberEncoder.getDistance() + ((Math.sin(startAngle * (Math.PI / 180))) * robotLength);
+  			if(distance < 48){
   				
   				reachedDestination = false;
         		}
-  			if(Distance >= 48){
+  			if(distance >= 48){
       
   				setSpeed(.8);
 				reachedDestination = false;
