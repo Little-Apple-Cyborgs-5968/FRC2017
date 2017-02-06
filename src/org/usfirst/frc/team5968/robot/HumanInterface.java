@@ -65,16 +65,20 @@ public class HumanInterface {
 	
 	public static void liftControl(){
 		
-		if(xbox.getRawButton(1) && !isPRESSED){
+		if(leftStick.getRawButton(2) && !isPRESSED){
 			
 			Pneumatics.DoubleSolenoidTOGGLE();
 			isPRESSED = true;
 		}
-		if(!xbox.getRawButton(1)){
+		if(!leftStick.getRawButton(2)){
 			
 			isPRESSED = false;
 			
 		}
 		
 	}	
+	
+	public static boolean getButton(){
+		return leftStick.getTrigger() || rightStick.getTrigger();
+	}
 }

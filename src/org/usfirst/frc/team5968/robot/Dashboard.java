@@ -88,7 +88,7 @@ public class Dashboard {
 	public static void updateDrivePoints(LinkedBlockingQueue<Point> q){
 		if(table.getNumber("targetX", -1) != -1 && table.getNumber("targetY", -1) != -1){
 			try{
-				q.put(new Point(table.getNumber("targetX", -1), table.getNumber("targetY", -1)));
+				q.put(new Point(table.getNumber("fieldX", -1), table.getNumber("fieldY", -1)));
 			}
 			catch(InterruptedException ex){
 				DriverStation.reportError("Uhh... that wasn't supposed to happen", true);

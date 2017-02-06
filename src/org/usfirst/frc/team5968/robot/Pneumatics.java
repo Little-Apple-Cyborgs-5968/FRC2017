@@ -7,10 +7,9 @@ import edu.wpi.first.wpilibj.Compressor;
 
 public class Pneumatics{
   
-	//there are 2 pistons. They should be controlled together, though.
 	private static DoubleSolenoid piston1 = new DoubleSolenoid(PortMap.portOf(PortMap.PCM.BACK_PISTON_1), PortMap.portOf(PortMap.PCM.FRONT_PISTON_2));    //Eric maybe put this in PortMap?
-    	private static DoubleSolenoid piston2 = new DoubleSolenoid(PortMap.portOf(PortMap.PCM.FRONT_PISTON_1), PortMap.portOf(PortMap.PCM.BACK_PISTON_2));
-	private static boolean IsUP = false;
+    private static DoubleSolenoid piston2 = new DoubleSolenoid(PortMap.portOf(PortMap.PCM.FRONT_PISTON_1), PortMap.portOf(PortMap.PCM.BACK_PISTON_2));
+	private static boolean isUp = false;
 	
 	public static void init(){
 
@@ -19,24 +18,24 @@ public class Pneumatics{
     
 	}
   
-	public boolean getIsUP() {
-		return IsUP;
+	public static boolean getIsUp() {
+		return isUp;
 	}
 	//It would be better code design to have just one method that toggles the solenoid. See the note in HumanInterface
 	public static void DoubleSolenoidTOGGLE(){
     		
-		if(IsUP){
+		if(isUp){
 			
 			piston1.set(DoubleSolenoid.Value.kForward);
 			piston2.set(DoubleSolenoid.Value.kForward);
-			IsUP = false;
+			isUp = false;
 			
 		}
-		if(!IsUP){
+		if(!isUp){
 			
 			piston1.set(DoubleSolenoid.Value.kReverse);
 			piston2.set(DoubleSolenoid.Value.kReverse);
-			IsUP = true;
+			isUp = true;
 			
 		}
     

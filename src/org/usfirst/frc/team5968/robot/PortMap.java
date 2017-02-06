@@ -84,13 +84,13 @@ public class PortMap {
 	public static int portOf(CAN c){
 		switch(c){
 			case LEFT_MOTOR_LEAD:
-				return 5;
-			case LEFT_MOTOR_FOLLOW:
-				return 6;
-			case RIGHT_MOTOR_LEAD:
 				return 3;
-			case RIGHT_MOTOR_FOLLOW:
+			case LEFT_MOTOR_FOLLOW:
 				return 4;
+			case RIGHT_MOTOR_LEAD:
+				return 5;
+			case RIGHT_MOTOR_FOLLOW:
+				return 6;
 			case PCM:
 				return 0;
 			default:

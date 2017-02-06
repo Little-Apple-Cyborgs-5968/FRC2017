@@ -26,6 +26,7 @@ public class NavXMXP {
 		} catch (RuntimeException ex) {
 			DriverStation.reportError("Error instantiating navX MXP:  " + ex.getMessage(), true);
 		}
+		resetYaw();
 	}
 
 	/**
@@ -63,6 +64,7 @@ public class NavXMXP {
 	 */
 	public static void resetYaw() {
 		navX.zeroYaw();
+		navX.zeroYaw();
 	}
 	
 	/**
@@ -95,24 +97,15 @@ public class NavXMXP {
 	}
 	
 	/**
-	 * Converts a -180 to 180 degree angle to a 0 to 2 pi radian scale
+	 * Converts a 0 to 360 (clockwise positive) degree angle to a 0 to 2 pi radian scale (counter clockwise positive)
 	 * 
-	 * @param The angle from -180 to 180 degrees to convert to radians
+	 * @param The angle from 0 to 360 degrees to convert to radians
 	 * @return The angle from 0 to 2 pi radians
 	 */
 	public static double convertAngleToRadians(double angle){
-		if(angle >= 0 && angle <= Math.PI / 2){
-			angle = Math.PI / 2 - angle;
-		}
-		else if(angle > Math.PI / 2){
-			angle = Math.PI + angle;
-		}
-		else if(angle >= -1 * Math.PI / 2 && angle < 0){
-			angle = Math.PI / 2 - angle; // angle is negative
-		}
-		else{ //if angle > -180
-			angle = Math.PI + (-1 * angle - Math.PI / 2);
-		}
+		angle = angle * Math.PI / 180;
+		
+		angle = 360 - angle;
 		
 		return angle;
 	}

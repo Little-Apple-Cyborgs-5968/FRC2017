@@ -35,9 +35,17 @@ public class PositionTracker {
 	 * The threshold for considering a driving path as a straight line. Otherwise, it's
 	 * considered a curve.
 	 */
-	private static final double STRAIGHT_LINE_THRESHOLD = 100;
+	private static final double STRAIGHT_LINE_THRESHOLD = 1000000;
 
+	/**
+	 * The position of the left encoder on the last iteration
+	 */
+	private static double leftEncoderPrev = 0;
 	
+	/**
+	 * The position of the right encoder on the last iteration
+	 */
+	private static double rightEncoderPrev = 0;
 	/**
 	 * Initializes the position tracker
 	 * 
@@ -47,6 +55,13 @@ public class PositionTracker {
 	public static void init(double xInitial, double yInitial){
 		x = xInitial;
 		y = yInitial;
+		leftEncoderPrev = DriveBase.getLeftDistance();
+		rightEncoderPrev = DriveBase.getRightDistance();
+	}
+	
+	public static void resetCoordinates(){
+		x = 0;
+		y = 0;
 	}
 	
 	/**
@@ -65,29 +80,29 @@ public class PositionTracker {
 	public static void updateCoordinates(){
 		double xDisplacementFromAccel = NavXMXP.getDisplacementX() * 39.3701; //convert meters to inches
 		double yDisplacementFromAccel = NavXMXP.getDisplacementY() * 39.3701; //convert meters to inches
-		double leftEncoderDistance = DriveBase.getLeftDistance(); //inches
-		double rightEncoderDistance = DriveBase.getRightDistance(); //inches
+		double leftEncoderDistance = DriveBase.getLeftDistance() - leftEncoderPrev; //inches
+		double rightEncoderDistance = DriveBase.getRightDistance() - rightEncoderPrev; //inches
 		double angle = NavXMXP.getYaw() * Math.PI / 180; //angle from 0 to 2 pi
-		double avgDistance;
-		
+				
 		//if both the accelerometer and encoders registered movement
 		if((Math.abs(leftEncoderDistance) >= MOVEMENT_THRESHOLD || Math.abs(rightEncoderDistance) >= MOVEMENT_THRESHOLD) && 
-				(Math.abs(xDisplacementFromAccel) >= MOVEMENT_THRESHOLD || Math.abs(yDisplacementFromAccel) >= MOVEMENT_THRESHOLD) &&
-				((leftEncoderDistance >= 0 && rightEncoderDistance >= 0) ||
-				(leftEncoderDistance <= 0 && rightEncoderDistance <= 0))){
+				/*(Math.abs(xDisplacementFromAccel) >= MOVEMENT_THRESHOLD || Math.abs(yDisplacementFromAccel) >= MOVEMENT_THRESHOLD) &&*/
+				((leftEncoderDistance <= 0 && rightEncoderDistance >= 0) ||
+				(leftEncoderDistance >= 0 && rightEncoderDistance <= 0))){
 			//approximate path as a straight line
-			if(Math.abs(leftEncoderDistance - rightEncoderDistance) < STRAIGHT_LINE_THRESHOLD){
-				avgDistance = (leftEncoderDistance + rightEncoderDistance) / 2;
+			if(Math.abs(leftEncoderDistance - rightEncoderDistance) <= STRAIGHT_LINE_THRESHOLD){
+				System.out.println("yoyo line");
+				double avgDistance = (rightEncoderDistance - leftEncoderDistance) / 2;
 				x += avgDistance * Math.sin(angle);
 				y += avgDistance * Math.cos(angle);
 			}
 			
 			//approximate path as a circular arc
 			else{
-				if(leftEncoderDistance == -1 * rightEncoderDistance){
+				if(leftEncoderDistance == rightEncoderDistance){
 					return;
 				}
-				double rightRadius = (rightEncoderDistance * Robot.getRobotWidth()) / (leftEncoderDistance - rightEncoderDistance);
+				double rightRadius = (rightEncoderDistance * Robot.getRobotWidth()) / (-leftEncoderDistance - rightEncoderDistance);
 				double leftRadius;
 				
 				//convert angle to 0 to 2 pi radians
@@ -96,26 +111,40 @@ public class PositionTracker {
 				//the angle to the center of the circle
 				double theta;
 				double previousTheta;
+				double initialX;
+				double initialY;
+				double x;
+				double y;
 				
 				if(rightEncoderDistance > leftEncoderDistance){
-					rightRadius *= -1;
+					rightRadius *= -1; //not sure what this is
 					leftRadius = rightRadius - Robot.getRobotWidth();
-					avgDistance = (leftEncoderDistance + rightEncoderDistance) / 2;
-					theta = angle - Math.PI / 2;
-					previousTheta = previousAngle - Math.PI / 2;
+					
+					theta = angle + Math.PI / 2;
+					previousTheta = previousAngle + Math.PI / 2;
+					
+					//the radius of the robot's turning path
+					double radius = (leftRadius + rightRadius) / 2;
+					initialX = radius * Math.sin(previousTheta);
+					initialY = -1 * radius * Math.cos(previousTheta);
+					x = radius * Math.sin(theta);
+					y = -1 * radius * Math.cos(theta);
 				}
 				else{
 					leftRadius = rightRadius + Robot.getRobotWidth();
-					avgDistance = (leftEncoderDistance + rightEncoderDistance) / 2 * -1;
+
 					theta = angle + Math.PI / 2;
 					previousTheta = previousAngle + Math.PI / 2;
+					
+					//the radius of the robot's turning path
+					double radius = (leftRadius + rightRadius) / 2;
+					initialX = -1 * radius * Math.sin(previousTheta);
+					initialY = radius * Math.cos(previousTheta);
+					x = -1 * radius * Math.sin(theta);
+					y = radius * Math.cos(theta);
+					
 				}
-				//the radius of the robot's turning path
-				double radius = (leftRadius + rightRadius) / 2;
-				double initialX = radius * Math.cos(previousTheta);
-				double initialY = radius * Math.sin(previousTheta);
-				double x = radius * Math.cos(theta);
-				double y = radius * Math.sin(theta);
+				
 				double dX = x - initialX;
 				double dY = y - initialY;
 				
@@ -132,9 +161,10 @@ public class PositionTracker {
 		
 		//do nothing if the encoders read movement but the accelerometer didn't
 		
+		System.out.println("x: " + x + " y: " + y);
 		previousAngle = angle;
-		//System.out.println("x: " + x + " y: " + y);
-		DriveBase.resetEncoders();
+		leftEncoderPrev += leftEncoderDistance;
+		rightEncoderPrev += rightEncoderDistance;
 		NavXMXP.resetAccelerometer();
 	}
 	
@@ -150,7 +180,7 @@ public class PositionTracker {
 		
 		double distance;
 		for(Setpoint s : Setpoint.values()){
-			Point setpoint = Point.getCoordinates(s);
+			Point setpoint = Point.getCoordinates(s); //knock knock? who's there? *Silence*
 			
 			distance = Math.sqrt(Math.pow(current.getX() - setpoint.getX(), 2) + (Math.pow(current.getY() - setpoint.getY(), 2)));
 			if(distance < closestDistance){

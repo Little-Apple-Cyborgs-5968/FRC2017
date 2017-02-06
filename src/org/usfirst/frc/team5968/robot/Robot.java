@@ -26,7 +26,6 @@ import edu.wpi.first.wpilibj.livewindow.LiveWindow;
  * @author Elden123
  */
 public class Robot extends RobotBase {
-	Lights lights = new Lights();
 	
 	/**
 	 * Method called automatically by the VM when a round starts. We decided to implement this directly from RobotBase
@@ -106,6 +105,11 @@ public class Robot extends RobotBase {
     private static Alliance alliance;
     
     /**
+     * The swag (LED strip lights)
+     */
+	private Lights lights = new Lights();
+    
+    /**
      * All the autonomous options
      */
     public enum AutoMode {
@@ -132,13 +136,15 @@ public class Robot extends RobotBase {
     /**
      * Called when the robot turns on
      */
-    private void robotInit(){
-    	DriveBase.init();
-    	Dashboard.init();
-    	Dashboard.addModes();
+    public void robotInit(){
+    	//Dashboard.init();
     	NavXMXP.init();
-		/*lights.upBrightness();
-    	alliance = DriverStation.getInstance().getAlliance();
+    	DriveBase.init();
+    	DriveBase.resetEncoders();
+    	PositionTracker.init(0, 0);
+    	Pneumatics.init();
+    	System.out.println(PositionTracker.getCurrentPoint().getX() + " " + PositionTracker.getCurrentPoint().getY());
+		/*alliance = DriverStation.getInstance().getAlliance();
     	
     	startPointName = Dashboard.getStartingPoint();
     	if(startPointName == StartPoint.KEY){
@@ -174,10 +180,10 @@ public class Robot extends RobotBase {
     /**
      * Called at the beginning of autonomous.
      */
-    private void autoInit(){
+    public void autoInit(){
     	NavXMXP.resetYaw();
-		lights.off();
-    	if(alliance != Alliance.Red && alliance != Alliance.Blue){
+    	System.out.println("INITIAL: " + PositionTracker.getCurrentPoint().getX() + " " + PositionTracker.getCurrentPoint().getY());
+    	/*if(alliance != Alliance.Red && alliance != Alliance.Blue){
     		DriverStation.reportError("I don't know what alliance I'm on!", false);
     		return;
     	}
@@ -191,16 +197,27 @@ public class Robot extends RobotBase {
     	}
     	catch(InterruptedException ex){
     		DriverStation.reportError("Chances are I have no idea why this happened", false);
-    	}
+    	}*/
     	
     }
+    
+    private boolean driven = false;
     
     /**
      * Called periodically during autonomous
      */
-    private void autoPeriodic(){
-    	lights.green();
-    	
+    public void autoPeriodic(){
+    	/*if(!driven){
+    		if(DriveBase.driveToPoint(new Point(-48, 48), true)){
+    			System.out.println("done");
+    			driven = true;
+    		}
+    	}*/
+    	if(!driven){
+    		if(DriveBase.driveToPoint(new Point(-48, 48), true)){
+    			driven = true;
+    		}
+    	}
     }
     
     /**
@@ -208,24 +225,30 @@ public class Robot extends RobotBase {
      */
     public void teleopInit(){
     	NavXMXP.resetYaw();
+    	DriveBase.resetTargetAngle();
     }
-    boolean driven = false;
+    boolean forward = false;
     /**
      * Called periodically during teleop
      */
     public void teleopPeriodic(){
-    	/*if(!drivePoints.isEmpty() && HumanInterface.getLeftStick() != 0 && HumanInterface.getRightStick() != 0){
+    	if(!drivePoints.isEmpty() && HumanInterface.getLeftStick() != 0 && HumanInterface.getRightStick() != 0){
     		DriveBase.drivePath(drivePoints, false);
     	}
     	else{
     		DriveBase.teleopDrive(HumanInterface.getLeftStick(), HumanInterface.getRightStick());
     	}
-		lights.pneumatics();
-		lights.climbing();*/
-    	if(DriveBase.driveDistance(48) && !driven){
-    		driven = true;
+    	
+    	HumanInterface.liftControl();
+    	
+    	if(HumanInterface.getButton()){
+    		DriveBase.resetEncoders();
+    		NavXMXP.resetYaw();
+    		PositionTracker.resetCoordinates();
     	}
-    	System.out.println(PositionTracker.getCurrentPoint().getX() + " " + PositionTracker.getCurrentPoint().getY());
+		/*lights.pneumatics();
+		lights.climbing();*/
+    	
     }
     
     /**
@@ -234,8 +257,11 @@ public class Robot extends RobotBase {
      */
     public void robotPeriodic(){
     	Dashboard.updateDashboardValues();
-    	PositionTracker.updateCoordinates();
-    	Dashboard.updateDrivePoints(drivePoints);
+    	
+    	if(!isDisabled()){
+        	PositionTracker.updateCoordinates();
+    		Dashboard.updateDrivePoints(drivePoints);
+    	}
     }
     
     private LinkedBlockingQueue<Point> processAutoPath(AutoMode mode, int hopper) throws InterruptedException{
