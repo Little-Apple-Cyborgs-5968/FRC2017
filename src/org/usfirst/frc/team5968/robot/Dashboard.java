@@ -122,22 +122,16 @@ public class Dashboard {
 	 * @return The auto option chosen by the drivers
 	 */
 	public static AutoMode getAutoMode(){
-		String routine = table.getString("autonomous", "");
+		int routine = (int) table.getNumber("autoMode", -1);
 		
 		switch(routine){
-			case "HOPPER_BOILER":
+			case 1:
 				return AutoMode.HOPPER_BOILER;
-			case "HOPPER":
+			case 2:
 				return AutoMode.HOPPER;
-			case "GEAR":
+			case 6:
 				return AutoMode.GEAR;
-			case "GEAR_HOPPER":
-				return AutoMode.GEAR_HOPPER;
-			case "BOILER":
-				return AutoMode.BOILER;
-			case "BOILER_CROSS":
-				return AutoMode.BOILER_CROSS;
-			case "CROSS":
+			case 7:
 				return AutoMode.CROSS;
 			default:
 				return AutoMode.BE_USELESS;

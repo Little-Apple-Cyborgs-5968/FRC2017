@@ -81,15 +81,4 @@ public class HumanInterface {
 	public static boolean getButton(){
 		return leftStick.getTrigger() || rightStick.getTrigger();
 	}
-	
-	boolean climbed = false;
-	public static void climbing(){
-		
-		if(!climbed){
-			if(RopeClimber.motorClimb()){
-				
-				climbed = true;
-			}
-		}
-	}
 }

@@ -9,6 +9,7 @@ import org.usfirst.frc.team5968.robot.Point.Setpoint;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.hal.FRCNetComm.tInstances;
 import edu.wpi.first.wpilibj.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.wpilibj.hal.HAL;
@@ -116,9 +117,6 @@ public class Robot extends RobotBase {
     	HOPPER_BOILER,
     	HOPPER,
     	GEAR,
-    	GEAR_HOPPER,
-    	BOILER,
-    	BOILER_CROSS,
     	CROSS,
     	BE_USELESS; //<- do nothing, if you didn't understand
     }
@@ -137,14 +135,12 @@ public class Robot extends RobotBase {
      * Called when the robot turns on
      */
     public void robotInit(){
-    	//Dashboard.init();
+    	Dashboard.init();
     	NavXMXP.init();
     	DriveBase.init();
     	DriveBase.resetEncoders();
-    	PositionTracker.init(0, 0);
     	Pneumatics.init();
-    	System.out.println(PositionTracker.getCurrentPoint().getX() + " " + PositionTracker.getCurrentPoint().getY());
-		/*alliance = DriverStation.getInstance().getAlliance();
+		alliance = DriverStation.getInstance().getAlliance();
     	
     	startPointName = Dashboard.getStartingPoint();
     	if(startPointName == StartPoint.KEY){
@@ -173,7 +169,7 @@ public class Robot extends RobotBase {
     	}
     	else{
     		DriverStation.reportError("I don't know where I am!! Position Tracking won't work!!", false);
-    	}*/
+    	}
     	
     }
     
@@ -182,8 +178,7 @@ public class Robot extends RobotBase {
      */
     public void autoInit(){
     	NavXMXP.resetYaw();
-    	System.out.println("INITIAL: " + PositionTracker.getCurrentPoint().getX() + " " + PositionTracker.getCurrentPoint().getY());
-    	/*if(alliance != Alliance.Red && alliance != Alliance.Blue){
+    	if(alliance != Alliance.Red && alliance != Alliance.Blue){
     		DriverStation.reportError("I don't know what alliance I'm on!", false);
     		return;
     	}
@@ -197,7 +192,7 @@ public class Robot extends RobotBase {
     	}
     	catch(InterruptedException ex){
     		DriverStation.reportError("Chances are I have no idea why this happened", false);
-    	}*/
+    	}
     	
     }
     
@@ -270,13 +265,15 @@ public class Robot extends RobotBase {
     	if(alliance == Alliance.Red && hopper == 3){
     		DriverStation.reportError("We aren't allowed to go to that hopper", false);
     		hopper = -1;
+    		return path;
     	}
     	else if(alliance == Alliance.Blue && hopper == 5){
     		DriverStation.reportError("We aren't allowed to go to that hopper", false);
     		hopper = -1;
+    		return path;
     	}
     	
-    	if(mode == AutoMode.GEAR || mode == AutoMode.GEAR_HOPPER){
+    	if(mode == AutoMode.GEAR){
     		if(startPointName == StartPoint.KEY){
     			if(alliance == Alliance.Red){
     				path.put(Point.getCoordinates(Setpoint.RED_GEAR3));
@@ -303,47 +300,42 @@ public class Robot extends RobotBase {
     		}
     	}
     	
-    	if(mode == AutoMode.HOPPER_BOILER || mode == AutoMode.HOPPER || mode == AutoMode.GEAR_HOPPER){
+    	if(mode == AutoMode.HOPPER_BOILER){
+    		if(alliance == Alliance.Red){
+    			path.put(new Point(295 + .5 * ROBOT_WIDTH, 115));
+    			path.put(new Point(324 - .5 * ROBOT_WIDTH, 115));
+    			path.put(new Point(29, 28.9));
+    		}
+    		else if(alliance == Alliance.Blue){
+    			path.put(new Point(295 + .5 * ROBOT_WIDTH, 537));
+    			path.put(new Point(324 - .5 * ROBOT_WIDTH, 537));
+    			path.put(new Point(29, 622.2));
+    		}
+    	}
+    	
+    	if(mode == AutoMode.HOPPER){
     		if(startPointName == StartPoint.KEY && (hopper == 3 || hopper == 4 || hopper == 5)){
     			switch(hopper){
     				case 3:
-    					path.put(Point.getCoordinates(Setpoint.HOPPER3));
+    					path.put(new Point(295 + .5 * ROBOT_WIDTH, 537));
     					break;
     				case 4:
-    					path.put(Point.getCoordinates(Setpoint.HOPPER4));
+    					path.put(new Point(295 + .5 * ROBOT_WIDTH, 326));
     					break;
     				case 5:
-    					path.put(Point.getCoordinates(Setpoint.HOPPER5));
+    					path.put(new Point(295 + .5 * ROBOT_WIDTH, 115));
     					break;
     			}
     		}
     		else if(startPointName == StartPoint.RETRIEVAL_ZONE && (hopper == 1 || hopper == 2)){
     			switch(hopper){
     				case 1:
-    					path.put(Point.getCoordinates(Setpoint.HOPPER1));
+    					path.put(new Point(33.9 + .5 * ROBOT_WIDTH, 202));
     					break;
     				case 2:
-    					path.put(Point.getCoordinates(Setpoint.HOPPER2));
+    					path.put(new Point(33.9 + .5 * ROBOT_WIDTH, 450));
     					break;
     			}
-    		}
-    	}
-    	
-    	if(mode == AutoMode.BOILER_CROSS || mode == AutoMode.HOPPER_BOILER){
-    		if(alliance == Alliance.Red){
-    			path.put(Point.getCoordinates(Setpoint.RED_BOILER));
-    		}
-    		else if(alliance == Alliance.Blue){
-    			path.put(Point.getCoordinates(Setpoint.BLUE_BOILER));
-    		}
-    	}
-    	
-    	if(mode == AutoMode.CROSS || mode == AutoMode.BOILER_CROSS){
-    		if(alliance == Alliance.Red){
-    			path.put(new Point(PositionTracker.getCurrentPoint().getX(), 93.25));
-    		}
-    		else if(alliance == Alliance.Blue){
-    			path.put(new Point(PositionTracker.getCurrentPoint().getX(), 558.75));
     		}
     	}
     	
