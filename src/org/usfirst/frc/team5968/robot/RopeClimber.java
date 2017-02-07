@@ -50,7 +50,12 @@ public class RopeClimber{
 	}	
 	
  	public static boolean motorClimb(){	//Prepares to climb
-  		
+		
+		if(Timer.getMatchTime() < 120){
+			
+			return false;
+		}
+		
 		boolean reachedDestination = false;
   		
 		if(!isSetToPoint4){
@@ -82,7 +87,8 @@ public class RopeClimber{
   				
         		} 
 			if(getCurrent() >= maxCurrent){
-				
+					
+					setSpeed(0);
 					reachedDestination = true;	//Create if statement for boolean when calling method
 			}
   		}
