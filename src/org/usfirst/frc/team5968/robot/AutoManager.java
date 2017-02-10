@@ -355,14 +355,15 @@ public class AutoManager {
 				distanceToGoal = 0; //TODO: camera targeting
 				angleToGoal = 0; //TODO: camera targeting
 				
-				angleToTurn = Math.atan((distanceToGoal * Math.cos(angleToGoal * Math.PI / 180) - SAFE_TURN_DISTANCE) / (distanceToGoal * Math.sin(angleToGoal * Math.PI / 180))); //make sure angleToGoal is in degrees
-				angleToTurn = 90 - 2 * angleToGoal - Math.abs(angleToTurn); //angle to turn THROUGH
+				angleToTurn = 180 / Math.PI * Math.atan((distanceToGoal * Math.cos(angleToGoal * Math.PI / 180) - SAFE_TURN_DISTANCE) / (distanceToGoal * Math.sin(angleToGoal * Math.PI / 180))); //make sure angleToGoal is in degrees
 				
-				if(alliance == Alliance.Red){
-					angleToTurn = NavXMXP.getYaw() + angleToTurn; //angle to turn TO
+				if(angleToTurn > 0){
+					angleToTurn = 90 - angleToGoal - angleToTurn; //angle to turn THROUGH
+					angleToTurn += NavXMXP.getYaw(); //angle to turn TO
 				}
 				else{
-					angleToTurn = NavXMXP.getYaw() - angleToTurn; //since the angle will be negative if we're on blue
+					angleToTurn = 90 + angleToGoal + angleToTurn; //angle to turn THROUGH
+					angleToTurn -= NavXMXP.getYaw(); //since the angle will be negative if we're on blue
 				}
 				
 				distanceToDrive = Math.sqrt(Math.pow(distanceToGoal * Math.cos(angleToGoal * Math.PI / 180) - SAFE_TURN_DISTANCE, 2) + Math.pow(distanceToGoal * Math.sin(angleToGoal * Math.PI / 180), 2));
