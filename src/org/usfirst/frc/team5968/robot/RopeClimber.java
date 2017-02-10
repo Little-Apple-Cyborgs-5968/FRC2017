@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj.VictorSP;
 
 import com.ctre.CANTalon;
 
-public class RopeClimber{
+public class RopeClimber implements Runnable {
 	
 	private static VictorSP rightMotor = new VictorSP(PortMap.portOf(PortMap.PWM.CLIMBER_MOTOR_RIGHT));
 	private static VictorSP leftMotor = new VictorSP(PortMap.portOf(PortMap.PWM.CLIMBER_MOTOR_LEFT));
@@ -25,6 +25,10 @@ public class RopeClimber{
 	
 	private static boolean isSetToPoint4 = false;
 	private static boolean isAccelerated = false;
+	
+	public void run() {
+		motorClimb();
+	}
   
 	public static void init(){
   

@@ -147,7 +147,11 @@ public class Robot extends RobotBase {
     	DriveBase.resetEncoders();
     	Pneumatics.init();
     	Pneumatics.setSolenoidDown();
-  
+    	
+    	RopeClimber climb = new RopeClimber();
+    	Thread t = new Thread(climb);
+    	t.start();
+    	
 		alliance = DriverStation.getInstance().getAlliance();
     	
     	startPoint = Dashboard.getStartingPoint();
