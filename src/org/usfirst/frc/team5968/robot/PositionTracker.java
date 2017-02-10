@@ -161,7 +161,7 @@ public class PositionTracker {
 		
 		//do nothing if the encoders read movement but the accelerometer didn't
 		
-		System.out.println("x: " + x + " y: " + y);
+		//System.out.println("x: " + x + " y: " + y);
 		previousAngle = angle;
 		leftEncoderPrev += leftEncoderDistance;
 		rightEncoderPrev += rightEncoderDistance;

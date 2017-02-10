@@ -27,7 +27,8 @@ public class PortMap {
 		LEFT_MOTOR_FOLLOW,
 		RIGHT_MOTOR_LEAD,
 		RIGHT_MOTOR_FOLLOW,
-		PCM;
+		PCM,
+		PDP;
 	}
 	
 	/**
@@ -50,10 +51,8 @@ public class PortMap {
 	 * Pneumatic devices plugged into the PCM
 	 */
 	public enum PCM {
-		FRONT_PISTON_1,
-		FRONT_PISTON_2,
-		BACK_PISTON_1,
-		BACK_PISTON_2;
+		PISTON_1,
+		PISTON_2,
 	}
 	
 	/**
@@ -84,15 +83,17 @@ public class PortMap {
 	public static int portOf(CAN c){
 		switch(c){
 			case LEFT_MOTOR_LEAD:
-				return 3;
-			case LEFT_MOTOR_FOLLOW:
-				return 4;
-			case RIGHT_MOTOR_LEAD:
 				return 5;
-			case RIGHT_MOTOR_FOLLOW:
+			case LEFT_MOTOR_FOLLOW:
 				return 6;
+			case RIGHT_MOTOR_LEAD:
+				return 3;
+			case RIGHT_MOTOR_FOLLOW:
+				return 4;
 			case PCM:
 				return 0;
+			case PDP:
+				return 1;
 			default:
 				return -1;
 		}
@@ -140,14 +141,10 @@ public class PortMap {
 	 */
 	public static int portOf(PCM p){
 		switch(p){
-			case FRONT_PISTON_1:
-				return 0;
-			case FRONT_PISTON_2:
-				return 1;
-			case BACK_PISTON_1:
-				return 2;
-			case BACK_PISTON_2:
-				return 3;
+			case PISTON_1:
+				return 4;
+			case PISTON_2:
+				return 7;
 			default:
 				return -1;
 		}

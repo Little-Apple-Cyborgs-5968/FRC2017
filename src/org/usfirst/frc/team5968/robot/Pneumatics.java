@@ -7,8 +7,7 @@ import edu.wpi.first.wpilibj.Compressor;
 
 public class Pneumatics{
   
-	private static DoubleSolenoid piston1 = new DoubleSolenoid(PortMap.portOf(PortMap.PCM.BACK_PISTON_1), PortMap.portOf(PortMap.PCM.FRONT_PISTON_2));    //Eric maybe put this in PortMap?
-    private static DoubleSolenoid piston2 = new DoubleSolenoid(PortMap.portOf(PortMap.PCM.FRONT_PISTON_1), PortMap.portOf(PortMap.PCM.BACK_PISTON_2));
+	private static DoubleSolenoid piston1 = new DoubleSolenoid(PortMap.portOf(PortMap.PCM.PISTON_1), PortMap.portOf(PortMap.PCM.PISTON_2));    //Eric maybe put this in PortMap?
 	private static boolean isUp = false;
 	
 	public static void init(){
@@ -21,26 +20,26 @@ public class Pneumatics{
 	public static boolean getIsUp() {
 		return isUp;
 	}
-	//It would be better code design to have just one method that toggles the solenoid. See the note in HumanInterface
+	
 	public static void DoubleSolenoidTOGGLE(){
-    		
-		if(isUp){
-			
-			piston1.set(DoubleSolenoid.Value.kForward);
-			piston2.set(DoubleSolenoid.Value.kForward);
-			isUp = false;
-			
-		}
-		if(!isUp){
-			
-			piston1.set(DoubleSolenoid.Value.kReverse);
-			piston2.set(DoubleSolenoid.Value.kReverse);
-			isUp = true;
-			
-		}
+    	if(piston1.get() == DoubleSolenoid.Value.kForward){
+    		piston1.set(DoubleSolenoid.Value.kReverse);
+    	}
+    	else{
+    		piston1.set(DoubleSolenoid.Value.kForward);
+    	}
     
 	}
   
+	public static void setSolenoidDown(){
+		piston1.set(DoubleSolenoid.Value.kForward);
+		if(piston1.get() == DoubleSolenoid.Value.kForward){
+			System.out.println("lskdj");
+		}
+		else{
+			System.out.println("slkdslkd");
+		}
+	}
 	
 }
     

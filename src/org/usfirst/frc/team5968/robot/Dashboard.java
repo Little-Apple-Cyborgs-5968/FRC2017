@@ -2,7 +2,7 @@ package org.usfirst.frc.team5968.robot;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.usfirst.frc.team5968.robot.Robot.AutoMode;
+import org.usfirst.frc.team5968.robot.AutoManager.AutoMode;
 import org.usfirst.frc.team5968.robot.Robot.StartPoint;
 
 import edu.wpi.first.wpilibj.DriverStation;

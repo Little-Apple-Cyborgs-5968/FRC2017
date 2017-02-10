@@ -1,10 +1,12 @@
 package org.usfirst.frc.team5968.robot;
 
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.DoubleAccumulator;
 
 import javax.swing.text.Position;
 
 import org.usfirst.frc.team5968.robot.Point.Setpoint;
+import org.usfirst.frc.team5968.robot.AutoManager.AutoMode;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -88,7 +90,7 @@ public class Robot extends RobotBase {
     /**
      * Where the robot started
      */
-    private StartPoint startPointName;
+    private StartPoint startPoint;
     
     /**
      * The length of the robot in inches
@@ -108,18 +110,22 @@ public class Robot extends RobotBase {
     /**
      * The swag (LED strip lights)
      */
-	private Lights lights = new Lights();
-    
-    /**
-     * All the autonomous options
-     */
-    public enum AutoMode {
-    	HOPPER_BOILER,
-    	HOPPER,
-    	GEAR,
-    	CROSS,
-    	BE_USELESS; //<- do nothing, if you didn't understand
-    }
+	private static Lights lights = new Lights();
+	
+	/**
+	 * The automode selected on the driver station
+	 */
+	private static AutoMode auto;
+	
+	/**
+	 * The hopper to drive to if it's needed for the selected automode
+	 */
+	private static int hopper;
+	
+	/**
+	 * Whether the selected autonomous routine is finished.
+	 */
+	private static boolean autoFinished = false;
     
     /**
      * The starting positions
@@ -140,15 +146,17 @@ public class Robot extends RobotBase {
     	DriveBase.init();
     	DriveBase.resetEncoders();
     	Pneumatics.init();
+    	Pneumatics.setSolenoidDown();
+  
 		alliance = DriverStation.getInstance().getAlliance();
     	
-    	startPointName = Dashboard.getStartingPoint();
-    	if(startPointName == StartPoint.KEY){
+    	startPoint = Dashboard.getStartingPoint();
+    	/*if(startPointName == StartPoint.KEY){
     		if(alliance == Alliance.Red){
-    			PositionTracker.init(295 + .5 * ROBOT_WIDTH, .5 * ROBOT_LENGTH);
+    			PositionTracker.init(223.1 + .5 * ROBOT_WIDTH, .5 * ROBOT_LENGTH);
     		}
     		else if(alliance == Alliance.Blue){
-    			PositionTracker.init(295 + .5 * ROBOT_WIDTH, 652 - .5 * ROBOT_LENGTH);
+    			PositionTracker.init(223.1 + .5 * ROBOT_WIDTH, 652 - .5 * ROBOT_LENGTH);
     		}
     	}
     	else if(startPointName == StartPoint.MIDLINE){
@@ -161,14 +169,14 @@ public class Robot extends RobotBase {
     	}
     	else if(startPointName == StartPoint.RETRIEVAL_ZONE){
     		if(alliance == Alliance.Red){
-    			PositionTracker.init(33.9 + .5 * ROBOT_WIDTH, .5 * ROBOT_LENGTH);
+    			PositionTracker.init(80.9 + .5 * ROBOT_WIDTH, .5 * ROBOT_LENGTH);
     		}
     		else if(alliance == Alliance.Blue){
-    			PositionTracker.init(33.9 + .5 * ROBOT_WIDTH, 652 - .5 * ROBOT_LENGTH);
+    			PositionTracker.init(80.9 + .5 * ROBOT_WIDTH, 652 - .5 * ROBOT_LENGTH);
     		}
-    	}
-    	else{
-    		DriverStation.reportError("I don't know where I am!! Position Tracking won't work!!", false);
+    	}*/
+    	if(startPoint != StartPoint.KEY && startPoint != StartPoint.MIDLINE && startPoint != StartPoint.RETRIEVAL_ZONE){
+    		DriverStation.reportError("I don't know where I am!!! D: D:", false);
     	}
     	
     }
@@ -180,37 +188,42 @@ public class Robot extends RobotBase {
     	NavXMXP.resetYaw();
     	if(alliance != Alliance.Red && alliance != Alliance.Blue){
     		DriverStation.reportError("I don't know what alliance I'm on!", false);
+    		autoFinished = true;
     		return;
     	}
     	
-    	AutoMode mode = Dashboard.getAutoMode();
+    	auto = Dashboard.getAutoMode();
     	
-    	int hopper = Dashboard.getHopper();
+    	hopper = Dashboard.getHopper();
     	
-    	try{
-    		drivePoints = processAutoPath(mode, hopper);
+    	if(auto == AutoMode.HOPPER_BOILER){
+    		DriverStation.reportWarning("Selected auto is hopper and boiler", false);
     	}
-    	catch(InterruptedException ex){
-    		DriverStation.reportError("Chances are I have no idea why this happened", false);
+    	else if(auto == AutoMode.HOPPER){
+    		DriverStation.reportWarning("Selected auto is hopper on hopper number " + hopper, false);
     	}
-    	
+    	else if(auto == AutoMode.GEAR){
+    		DriverStation.reportWarning("Selected auto is gear", false);
+    	}
+    	else if(auto == AutoMode.CROSS){
+    		DriverStation.reportWarning("Selected auto is cross", false);
+    	}
+    	else{
+    		System.out.println("Derp. Tell that to Rishi and he'll say it's \"cringy\"");
+    	}
     }
     
-    private boolean driven = false;
     
     /**
      * Called periodically during autonomous
      */
-    public void autoPeriodic(){
-    	/*if(!driven){
-    		if(DriveBase.driveToPoint(new Point(-48, 48), true)){
-    			System.out.println("done");
-    			driven = true;
+	public void autoPeriodic(){
+    	if(!autoFinished){
+    		try{
+    			AutoManager.doAuto(startPoint, auto, alliance, hopper);
     		}
-    	}*/
-    	if(!driven){
-    		if(DriveBase.driveToPoint(new Point(-48, 48), true)){
-    			driven = true;
+    		catch(UnsupportedOperationException ex){
+    			AutoManager.doAuto(startPoint, AutoMode.CROSS, alliance, hopper);
     		}
     	}
     }
@@ -222,25 +235,18 @@ public class Robot extends RobotBase {
     	NavXMXP.resetYaw();
     	DriveBase.resetTargetAngle();
     }
-    boolean forward = false;
     /**
      * Called periodically during teleop
      */
     public void teleopPeriodic(){
-    	if(!drivePoints.isEmpty() && HumanInterface.getLeftStick() != 0 && HumanInterface.getRightStick() != 0){
-    		DriveBase.drivePath(drivePoints, false);
-    	}
-    	else{
-    		DriveBase.teleopDrive(HumanInterface.getLeftStick(), HumanInterface.getRightStick());
-    	}
+    	//if(!drivePoints.isEmpty() && HumanInterface.getLeftStick() != 0 && HumanInterface.getRightStick() != 0){
+    		//DriveBase.drivePath(drivePoints, false);
+    	//}
+    	//else{
+    	DriveBase.teleopDrive(HumanInterface.getLeftStick(), HumanInterface.getRightStick());
+    	//}
     	
     	HumanInterface.liftControl();
-    	
-    	if(HumanInterface.getButton()){
-    		DriveBase.resetEncoders();
-    		NavXMXP.resetYaw();
-    		PositionTracker.resetCoordinates();
-    	}
 		/*lights.pneumatics();
 		lights.climbing();*/
     	
@@ -253,10 +259,10 @@ public class Robot extends RobotBase {
     public void robotPeriodic(){
     	Dashboard.updateDashboardValues();
     	
-    	if(!isDisabled()){
+    	/*if(!isDisabled()){
         	PositionTracker.updateCoordinates();
     		Dashboard.updateDrivePoints(drivePoints);
-    	}
+    	}*/
     }
     
     private LinkedBlockingQueue<Point> processAutoPath(AutoMode mode, int hopper) throws InterruptedException{
@@ -274,7 +280,7 @@ public class Robot extends RobotBase {
     	}
     	
     	if(mode == AutoMode.GEAR){
-    		if(startPointName == StartPoint.KEY){
+    		if(startPoint == StartPoint.KEY){
     			if(alliance == Alliance.Red){
     				path.put(Point.getCoordinates(Setpoint.RED_GEAR3));
     			}
@@ -282,7 +288,7 @@ public class Robot extends RobotBase {
     				path.put(Point.getCoordinates(Setpoint.BLUE_GEAR3));
     			}
     		}
-    		else if(startPointName == StartPoint.MIDLINE){
+    		else if(startPoint == StartPoint.MIDLINE){
     			if(alliance == Alliance.Red){
     				path.put(Point.getCoordinates(Setpoint.RED_GEAR2));
     			}
@@ -290,7 +296,7 @@ public class Robot extends RobotBase {
     				path.put(Point.getCoordinates(Setpoint.BLUE_GEAR2));
     			}
     		}
-    		else if(startPointName == StartPoint.RETRIEVAL_ZONE){
+    		else if(startPoint == StartPoint.RETRIEVAL_ZONE){
     			if(alliance == Alliance.Red){
     				path.put(Point.getCoordinates(Setpoint.RED_GEAR1));
     			}
@@ -314,7 +320,7 @@ public class Robot extends RobotBase {
     	}
     	
     	if(mode == AutoMode.HOPPER){
-    		if(startPointName == StartPoint.KEY && (hopper == 3 || hopper == 4 || hopper == 5)){
+    		if(startPoint == StartPoint.KEY && (hopper == 3 || hopper == 4 || hopper == 5)){
     			switch(hopper){
     				case 3:
     					path.put(new Point(295 + .5 * ROBOT_WIDTH, 537));
@@ -327,7 +333,7 @@ public class Robot extends RobotBase {
     					break;
     			}
     		}
-    		else if(startPointName == StartPoint.RETRIEVAL_ZONE && (hopper == 1 || hopper == 2)){
+    		else if(startPoint == StartPoint.RETRIEVAL_ZONE && (hopper == 1 || hopper == 2)){
     			switch(hopper){
     				case 1:
     					path.put(new Point(33.9 + .5 * ROBOT_WIDTH, 202));

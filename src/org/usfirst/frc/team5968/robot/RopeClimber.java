@@ -3,14 +3,20 @@ package org.usfirst.frc.team5968.robot;
 import org.usfirst.frc.team5968.robot.PortMap.DIO;
 
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.PowerDistributionPanel;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.VictorSP;
+
 import com.ctre.CANTalon;
 
 public class RopeClimber{
 	
-	private static VictorSP rightMotor = new VictorSP(PortMap.PWM.CLIMBER_MOTOR_RIGHT);
-	private static VictorSP leftMotor = new VictorSP(PortMap.PWM.CLIMBER_MOTOR_LEFT);
+	private static VictorSP rightMotor = new VictorSP(PortMap.portOf(PortMap.PWM.CLIMBER_MOTOR_RIGHT));
+	private static VictorSP leftMotor = new VictorSP(PortMap.portOf(PortMap.PWM.CLIMBER_MOTOR_LEFT));
 	private static Encoder climberEncoder = new Encoder(PortMap.portOf(DIO.CLIMBER_ENCODER_A), PortMap.portOf(DIO.CLIMBER_ENCODER_B));  
   
+	private static PowerDistributionPanel pdp = new PowerDistributionPanel(PortMap.portOf(PortMap.CAN.PDP));
+	
 	private static final double startAngle = 5;	//Inches
 	private static final double robotLength = 33;	//Inches  
 	private static final double maxCurrent = 40;    //Tune
@@ -38,7 +44,7 @@ public class RopeClimber{
 			motorSpeed = motorSpeed + .1;
 			isAccelerated = false;
 		}
-		if motorSpeed >= .9){
+		if(motorSpeed >= .9){
 			
 			isAccelerated = true;
 		}
@@ -46,7 +52,7 @@ public class RopeClimber{
 		
 	public static double getCurrent(){
 		
-		return Math.abs(rightMotor.getOutputCurrent);
+		return Math.abs(pdp.getCurrent(14)); //right motor
 	}	
 	
  	public static boolean motorClimb(){	//Prepares to climb
@@ -72,7 +78,7 @@ public class RopeClimber{
 			
 			if(!isAccelerated){
 				
-				climberAcceleration();
+				climbingAcceleration();
 			}
 			
 			distance = climberEncoder.getDistance() + ((Math.sin(startAngle * (Math.PI / 180))) * robotLength);
