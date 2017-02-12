@@ -142,7 +142,12 @@ public class Robot extends RobotBase {
      * because it won't have to wait for updates from the Driver Station, and we should get better
      * precision.
      */
-    private Thread autoThread;
+    private static Thread autoThread;
+    
+    /**
+     * The climber will run in this thread to allow it to stop within 5 ms of hitting the target, instead of 20 ms.
+     */
+    private static Thread climberThread;
     
     /**
      * Called when the robot turns on
@@ -156,8 +161,8 @@ public class Robot extends RobotBase {
     	Pneumatics.setSolenoidDown();
     	
     	RopeClimber climb = new RopeClimber();
-    	Thread t = new Thread(climb);
-    	t.start();
+    	Thread climberThread = new Thread(climb);
+    	climberThread.start();
     	
 		alliance = DriverStation.getInstance().getAlliance();
     	
@@ -260,6 +265,7 @@ public class Robot extends RobotBase {
     	//}
     	
     	HumanInterface.liftControl();
+    	HumanInterface.emergencyStopClimberControl();
 		/*lights.pneumatics();
 		lights.climbing();*/
     	
@@ -410,5 +416,14 @@ public class Robot extends RobotBase {
      */
     public static double getRobotLength(){
     	return ROBOT_LENGTH;
+    }
+    
+    /**
+     * Get the climber thread
+     * 
+     * @return The thread the climber code is running in.
+     */
+    public static Thread getClimberThread(){
+    	return climberThread;
     }
 }

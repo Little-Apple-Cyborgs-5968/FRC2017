@@ -6,7 +6,7 @@ import org.usfirst.frc.team5968.robot.Robot.StartPoint;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
-public class AutoManager implements Runnable{
+public class AutoManager{
 
     /**
      * Represents the current place in autonomous. Not all are used on all modes.

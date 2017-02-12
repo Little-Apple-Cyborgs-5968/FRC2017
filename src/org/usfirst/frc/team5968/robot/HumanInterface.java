@@ -67,4 +67,13 @@ public class HumanInterface {
 		}
 		isPRESSED = xbox.getRawButton(5) || xbox.getRawButton(6);
 	}
+	
+	/**
+	 * Stop the climber if it isn't stopping, the robot is falling apart, the field is exploding, etc.
+	 */
+	public static void emergencyStopClimberControl(){
+		if(xbox.getRawButton(1)){
+			Robot.getClimberThread().interrupt();
+		}
+	}
 }

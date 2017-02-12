@@ -16,6 +16,11 @@ public class NavXMXP {
 	 * The navX
 	 */
 	private static AHRS navX;
+	
+	/**
+	 * What acceleration is considered a collision. 
+	 */
+	private static final double COLLISION_THRESHOLD = 10; //TODO: test this
 
 	/**
 	 * Initializes the connection with the navX
@@ -108,5 +113,15 @@ public class NavXMXP {
 		angle = 360 - angle;
 		
 		return angle;
+	}
+	
+	/**
+	 * Get whether a collision occurred 
+	 * 
+	 * @return Whether a collision occurred 
+	 */
+	public static boolean getCollisionHappened(){
+		return navX.getWorldLinearAccelX() > COLLISION_THRESHOLD ||
+				navX.getWorldLinearAccelY() > COLLISION_THRESHOLD;
 	}
 }

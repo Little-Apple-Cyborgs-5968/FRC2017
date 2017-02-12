@@ -250,19 +250,11 @@ public class DriveBase {
      * @param m The motor whose temperature should be checked
      * @return Whether the specified motor is too hot.
      */
-    public static boolean isMotorTooHot(Motor m){
-    	switch(m){
-    		case LEFT_Lead:
-    			return leftMotorLead.getTemperature() > MOTOR_MAX_TEMP;
-    		case LEFT_Follow:
-    			return leftMotorFollow.getTemperature() > MOTOR_MAX_TEMP;
-    		case RIGHT_Lead:
-    			return rightMotorLead.getTemperature() > MOTOR_MAX_TEMP;
-    		case RIGHT_Follow:
-    			return rightMotorFollow.getTemperature() > MOTOR_MAX_TEMP;
-    		default:
-    			return true;
-    	}
+    public static boolean isAMotorTooHot(){
+    	return (leftMotorLead.getTemperature() > MOTOR_MAX_TEMP) ||
+    			(rightMotorLead.getTemperature() > MOTOR_MAX_TEMP) ||
+    			(leftMotorFollow.getTemperature() > MOTOR_MAX_TEMP) ||
+    			(rightMotorFollow.getTemperature() > MOTOR_MAX_TEMP);
     }
     
     /**

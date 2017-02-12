@@ -28,6 +28,11 @@ public class Dashboard {
 	private static NetworkTable table;
 	
 	/**
+	 * Table for storing warnings
+	 */
+	private static NetworkTable warnings;
+	
+	/**
 	 * Valid automodes for the user to select. Obviously it's still WIP
 	 */
 	private static String[] autoModes = {"Dummy1", "Dummy2", "Dummy3"};
@@ -38,6 +43,7 @@ public class Dashboard {
 	public static void init(){
 		if(!initialized){
 			table = NetworkTable.getTable("SmartDashboard");
+			warnings = (NetworkTable) table.getSubTable("warnings");
 			initialized = true;
 		}
 	}
@@ -61,6 +67,9 @@ public class Dashboard {
 			init();
 		}
 		table.putNumber("timeRemaining", Timer.getMatchTime());
+		putWarnings();
+		putRopeClimbData();
+		putPneumaticsUpOrDown();
 	}
 	
 	/**
@@ -131,7 +140,7 @@ public class Dashboard {
 				return AutoMode.HOPPER;
 			case 6:
 				return AutoMode.GEAR;
-			case 7:
+			case 5:
 				return AutoMode.CROSS;
 			default:
 				return AutoMode.BE_USELESS;
@@ -144,6 +153,35 @@ public class Dashboard {
 	 * @return The hopper number. Starts from the blue alliance retrieval chute at 1 and goes counter clockwise
 	 */
 	public static int getHopper(){
-		return (int) table.getNumber("hopper", 0);
+		return (int) table.getNumber("hopperChoice", 0);
+	}
+	
+	/**
+	 * Send warnings to the dashboard
+	 */
+	private static void putWarnings(){
+		warnings.putBoolean("collision", NavXMXP.getCollisionHappened());
+		warnings.putBoolean("pneumatics", Pneumatics.isPressureLow());
+		warnings.putBoolean("temperature", DriveBase.isAMotorTooHot());
+	}
+	
+	/**
+	 * Put the direction the rope climber is spinning
+	 */
+	public static void putRopeClimbData(){
+		table.putNumber("climbingRope", RopeClimber.getDirection());
+		table.putNumber("climbHeight", RopeClimber.getClimbHeight());
+	}
+	
+	/**
+	 * Put whether the pneumatics are up or down (the color that should show on the dashboard).
+	 */
+	public static void putPneumaticsUpOrDown(){
+		if(Pneumatics.getIsUp()){
+			table.putString("pneumatics", "green");
+		}
+		else{
+			table.putString("pneumatics", "red");
+		}
 	}
 }

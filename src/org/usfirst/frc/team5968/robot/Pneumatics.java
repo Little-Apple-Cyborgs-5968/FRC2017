@@ -9,40 +9,49 @@ import edu.wpi.first.wpilibj.Compressor;
 public class Pneumatics{
   
 	private static DoubleSolenoid piston1 = new DoubleSolenoid(PortMap.portOf(PortMap.PCM.BACK_PISTON_1), PortMap.portOf(PortMap.PCM.BACK_PISTON_2));    //Eric maybe put this in PortMap?
-    private static DoubleSolenoid piston2 = new DoubleSolenoid(PortMap.portOf(PortMap.PCM.FRONT_PISTON_1), PortMap.portOf(PortMap.PCM.FRONT_PISTON_2));
-	private static boolean isUp = false;
+	private static DoubleSolenoid piston2 = new DoubleSolenoid(PortMap.portOf(PortMap.PCM.FRONT_PISTON_1), PortMap.portOf(PortMap.PCM.FRONT_PISTON_2));    //Eric maybe put this in PortMap?
+	
+	private static Compressor compressor;
 	
 	public static void init(){
 
-		Compressor compressor = new Compressor(PortMap.portOf(PortMap.CAN.PCM));   //Same with this?
+		compressor = new Compressor(PortMap.portOf(PortMap.CAN.PCM));   //Same with this?
 		compressor.setClosedLoopControl(true);
-    
 	}
   
 	public static boolean getIsUp() {
-		return isUp;
+		return piston1.get() == DoubleSolenoid.Value.kReverse;
 	}
-	//It would be better code design to have just one method that toggles the solenoid. See the note in HumanInterface
+	
 	public static void DoubleSolenoidTOGGLE(){
-    		
-		if(isUp){
-			
-			piston2.set(DoubleSolenoid.Value.kForward);
-			Timer.delay(.35);
-			piston1.set(DoubleSolenoid.Value.kForward);
-			isUp = false;
-			
-		}
-		else{
-			
-			piston1.set(DoubleSolenoid.Value.kReverse);
+    	if(piston1.get() == DoubleSolenoid.Value.kForward){
+    		piston1.set(DoubleSolenoid.Value.kReverse);
 			Timer.delay(.425);
-			piston2.set(DoubleSolenoid.Value.kReverse);
-			isUp = true;
-			
-		}
+    		piston2.set(DoubleSolenoid.Value.kReverse);
+    	}
+    	else{
+    		piston2.set(DoubleSolenoid.Value.kForward);
+			Timer.delay(.35);
+    		piston1.set(DoubleSolenoid.Value.kForward);
+    	}
     
 	}
   
+	public static void setSolenoidDown(){
+		piston1.set(DoubleSolenoid.Value.kForward);
+		piston2.set(DoubleSolenoid.Value.kForward);
+	}
+	public static void stopCompressor(){
+		compressor.stop();
+	}
 	
+	/*
+	 * Get whether the pressure is too low to use the pneumatics. We need the sensor before
+	 * we actually do this.
+	 */
+	public static boolean isPressureLow(){
+		return false;
+	}
 }
+    
+ 

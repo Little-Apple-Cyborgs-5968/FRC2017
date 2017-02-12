@@ -26,8 +26,14 @@ public class RopeClimber implements Runnable {
 	private static boolean isSetToPoint4 = false;
 	private static boolean isAccelerated = false;
 	
+	private static int direction = 0;
+	
 	public void run() {
-		motorClimb();
+		while(!motorClimb()){
+			if(Thread.interrupted()){
+				return;
+			}
+		}
 	}
   
 	public static void init(){
@@ -65,7 +71,7 @@ public class RopeClimber implements Runnable {
 			
 			return false;
 		}
-		
+		direction = 1;
 		boolean reachedDestination = false;
   		
 		if(!isSetToPoint4){
@@ -89,13 +95,13 @@ public class RopeClimber implements Runnable {
   			if(distance < 48){
   				
   				reachedDestination = false;
-        		}
+        	}
   			if(distance >= 48){
       
   				setSpeed(.8);
 				reachedDestination = false;
   				
-        		} 
+        	} 
 			if(getCurrent() >= maxCurrent){
 					
 					setSpeed(0);
@@ -104,6 +110,24 @@ public class RopeClimber implements Runnable {
   		}
   		return reachedDestination;
   	}
+ 	
+ 	/**
+ 	 * Get the direction the climber is spinning. -1 = backwards,
+ 	 * 0 = not moving, 1 = forward
+ 	 * @return
+ 	 */
+ 	public static int getDirection(){
+ 		return direction;
+ 	}
+ 	
+ 	/**
+ 	 * Get the approximate height the robot is at while climbing
+ 	 * 
+ 	 * @return The height the climber is off the ground.
+ 	 */
+ 	public static double getClimbHeight(){
+ 		return distance;
+ 	}
 } 
     
     
