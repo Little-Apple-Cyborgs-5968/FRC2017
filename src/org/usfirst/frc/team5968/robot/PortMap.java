@@ -51,8 +51,10 @@ public class PortMap {
 	 * Pneumatic devices plugged into the PCM
 	 */
 	public enum PCM {
-		PISTON_1,
-		PISTON_2,
+		FRONT_PISTON_1,
+		FRONT_PISTON_2,
+		BACK_PISTON_1,
+		BACK_PISTON_2;
 	}
 	
 	/**
@@ -141,10 +143,14 @@ public class PortMap {
 	 */
 	public static int portOf(PCM p){
 		switch(p){
-			case PISTON_1:
-				return 4;
-			case PISTON_2:
-				return 7;
+		case FRONT_PISTON_1:
+			return 0;
+		case FRONT_PISTON_2:
+			return 1;
+		case BACK_PISTON_1:
+			return 2;
+		case BACK_PISTON_2:
+			return 3;
 			default:
 				return -1;
 		}

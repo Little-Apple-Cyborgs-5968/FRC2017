@@ -6,7 +6,7 @@ import org.usfirst.frc.team5968.robot.Robot.StartPoint;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
-public class AutoManager {
+public class AutoManager implements Runnable{
 
     /**
      * Represents the current place in autonomous. Not all are used on all modes.
@@ -83,8 +83,9 @@ public class AutoManager {
      * @return Whether autonomous is finished
      * @throws UnsupportedOperationException If you try to do something it doesn't know how to do, or that is illegal. It's recommended that you call again with AutoMode.CROSS.
      */
-    public static boolean doAuto(StartPoint startPoint, AutoMode mode, Alliance alliance, int hopper) throws UnsupportedOperationException{
-    	switch(mode){
+    public static void doAuto(StartPoint startPoint, AutoMode mode, Alliance alliance, int hopper) throws UnsupportedOperationException{
+    	while(autoProgress != AutoProgress.FINISHED){
+    		switch(mode){
     		case GEAR:
     			autoProgress = gearAuto(autoProgress, alliance, startPoint);
     			break;
@@ -114,9 +115,8 @@ public class AutoManager {
     				autoProgress = hopperBoilerAuto(autoProgress, alliance);
     			}
     			break;
+    		}
     	}
-    	
-    	return autoProgress == AutoProgress.FINISHED;
     }
     
     /**

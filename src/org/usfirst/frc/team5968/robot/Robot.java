@@ -215,6 +215,10 @@ public class Robot extends RobotBase {
     	else{
     		System.out.println("Derp. Tell that to Rishi and he'll say it's \"cringy\"");
     	}
+    	
+    	Runnable task = new AutoThread(startPoint, auto, alliance, hopper);
+    	Thread autoThread = new Thread(task);
+    	autoThread.start();
     }
     
     
@@ -222,14 +226,7 @@ public class Robot extends RobotBase {
      * Called periodically during autonomous
      */
 	public void autoPeriodic(){
-    	if(!autoFinished){
-    		try{
-    			AutoManager.doAuto(startPoint, auto, alliance, hopper);
-    		}
-    		catch(UnsupportedOperationException ex){
-    			AutoManager.doAuto(startPoint, AutoMode.CROSS, alliance, hopper);
-    		}
-    	}
+    	//hehe this is all in a separate thread. It won't have to wait for Driver Station updates!! :D
     }
     
     /**
@@ -267,6 +264,27 @@ public class Robot extends RobotBase {
         	PositionTracker.updateCoordinates();
     		Dashboard.updateDrivePoints(drivePoints);
     	}*/
+    }
+    
+    private class AutoThread implements Runnable{
+    	private StartPoint startPoint;
+    	
+    	private AutoMode mode;
+    	
+    	private Alliance alliance;
+    	
+    	private int hopper;
+    	
+    	public AutoThread(StartPoint startPoint, AutoMode mode, Alliance alliance, int hopper){
+    		this.startPoint = startPoint;
+    		this.mode = mode;
+    		this.alliance = alliance;
+    		this.hopper = hopper;
+    	}
+    	
+    	public void run(){
+    		AutoManager.doAuto(startPoint, mode, alliance, hopper);
+    	}
     }
     
     private LinkedBlockingQueue<Point> processAutoPath(AutoMode mode, int hopper) throws InterruptedException{

@@ -42,22 +42,24 @@ public class DriveBase {
 	private static CANTalon rightMotorFollow = new CANTalon(PortMap.portOf(CAN.RIGHT_MOTOR_FOLLOW));
 	
 	/**
-	 * Used in 4 cases. Could be multiple constants, but having a ton of constants looks kind of bad. 
+	 * Used in 2 cases. Could be multiple constants, but having a ton of constants looks kind of bad. 
 	 *  
-	 * 1) How close to 0 degrees is considered driving straight in driveStraight()
-	 * 2) How close to the target distance is considered at the target in driveDistance(double inches)
-	 * 3) How fast the encoders need to be moving to be considered moving in driveToPoint(Point p)
+	 * 1) How close to the target distance is considered at the target in driveDistance(double inches)
+	 * 2) How fast the encoders need to be moving to be considered moving in driveToPoint(Point p)
 	 * 
 	 * This is measured in inches
 	 */
-	private static final double DISTANCE_TOLERANCE = 3; //.5 inches
+	private static final double DISTANCE_TOLERANCE = .25; //inches
 	
+	/**
+	 * How close to the target angle the gyro needs to read to be considered driving straight
+	 */
 	private static final double STRAIGHT_LINE_TOLERANCE = .008;
 	
 	/**
 	 * How close the robot needs to be when turning to be considered at the target angle
 	 */
-	private static final double ANGLE_TOLERANCE = 1; //degrees
+	private static final double ANGLE_TOLERANCE = .5; //degrees
 	
 	/**
 	 * Proportion used to drive straight, using P (traditionally PID) control.
@@ -94,12 +96,11 @@ public class DriveBase {
 	 * The maximum speed the robot can drive. Used to scale the joystick inputs to an absolute speed.
 	 */
 	private static final double MAX_SPEED_RPM = 425;
-	
-	/**
-     * The robot will keep trying to reach the target until it is this far away
-     * from the target point (in inches).
+    
+    /**
+     * The distance to accelerate/decelerate over when driving a distance, in inches.
      */
-    private static final double DISTANCE_THRESHOLD = 2;
+    private static final double ACCELERATE_DISTANCE = 6;
 	
 	/**
 	 * All the motors we have in the drive train.
@@ -366,65 +367,67 @@ public class DriveBase {
     private static double rightEncoderInitial = 0;
     
     /**
-     * Whether to drive backwards
-     */
-    private static boolean backwards;
-    
-    /**
      * Drive straight for a certain number of inches
      * 
      * @param inches The number of inches to drive
      * @return whether the driving is complete
      */
 	public static boolean driveDistance(double inches) {
+		double distance = ((getLeftDistance() - leftEncoderInitial) + (getRightDistance() - rightEncoderInitial)) / 2;
+		double driveSpeed;
+		
+		if(inches < 12){
+			driveSpeed = .2;
+		}
+		else{
+			driveSpeed = DRIVE_SPEED;
+		}
+		
 		if(System.currentTimeMillis() - driveLastCallMillis >= 30){
 			leftEncoderInitial = getLeftDistance();
 			rightEncoderInitial = getRightDistance();
-			if(inches < 0){
-				accelerate(-DRIVE_SPEED, 0);
-			}
-			else{
-				accelerate(DRIVE_SPEED, 0);
-			}
 			
 			resetTargetAngle();
-			System.out.println("I reinitialized it");
 		}
 		
-		if((Math.abs(getLeftDistance() - leftEncoderInitial) + Math.abs(getRightDistance() - rightEncoderInitial)) / 2 < Math.abs(inches) - 3.75){
+		if(distance >= 0 && distance <= ACCELERATE_DISTANCE && inches >= ACCELERATE_DISTANCE * 2){
+			driveStraight(.1 + (driveSpeed - .1) / ACCELERATE_DISTANCE * distance, false);
+		}
+		
+		else if(distance <= 0 && distance >= -1 * ACCELERATE_DISTANCE && inches <= -1 * ACCELERATE_DISTANCE * 2){
+			driveStraight(-.1 + (driveSpeed - .1) / ACCELERATE_DISTANCE * distance, false);
+		}
+		
+		else if(Math.abs(distance) < Math.abs(inches) - ACCELERATE_DISTANCE){
 			if(inches < 0){
-				driveStraight(-DRIVE_SPEED, false);
+				driveStraight(-driveSpeed, false);
 			}
 			else{
-				driveStraight(DRIVE_SPEED, false);
+				driveStraight(driveSpeed, false);
 			}
-			System.out.println((Math.abs(getLeftDistance() + leftEncoderInitial) + Math.abs(getRightDistance() + rightEncoderInitial)));
-			driveLastCallMillis = System.currentTimeMillis();
-			return false;
 		}
+		
 		else{
-			if(inches > 0){
-				accelerate(0, DRIVE_SPEED);
+			if(Math.abs(distance) > Math.abs(inches) - DISTANCE_TOLERANCE){
+				setRawFraction(0, 0);
+				return true;
+			}
+			else if(inches > 0){
+				driveStraight((driveSpeed - 0) / ACCELERATE_DISTANCE * (inches - distance) + 0, false); //replace 0 with some other number if you want to finish at a different speed
 			}
 			else{
-				accelerate(0, -DRIVE_SPEED);
+				driveStraight((driveSpeed + 0) / ACCELERATE_DISTANCE * (inches - distance) - 0, false);
 			}
-			driveLastCallMillis = System.currentTimeMillis();
-			System.out.println("IIIIIIIIIIIIIIIII'''''''''''''MMMMMMMM DONE");
-			return true;
 		}
+		
+		driveLastCallMillis = System.currentTimeMillis();
+		return false;
 	}
-	
-
-    /**
-     * The last time this method was called. It will reinitialize if the last call was more than .5 seconds ago
-     */
-	private static long rotateLastCallMillis = System.currentTimeMillis();
 	
 	/**
 	 * The direction to turn. 0 = clockwise, 1 = counter clockwise
 	 */
-	private static int direction = -1;
+	private static int direction;
 	
 	/**
 	 * Drive to a certain angle (0 to 360 degrees)
@@ -433,13 +436,10 @@ public class DriveBase {
 	 * @return Whether the turning is finished
 	 */
 	public static boolean driveRotation(double degrees) {
-		if(System.currentTimeMillis() - rotateLastCallMillis >= 100){
-			if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE){
-				System.out.println("returned");
-				return true;
-			}
-			
+		if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE){
+			return true;
 		}
+		
 		if(degrees < 0){
 			degrees += 360;
 		}
@@ -460,30 +460,28 @@ public class DriveBase {
 			}
 		}
 		
-		rotateLastCallMillis = System.currentTimeMillis();
-    	if (Math.abs(NavXMXP.getYaw() - degrees) >= ANGLE_TOLERANCE) {
+    	if(Math.abs(NavXMXP.getYaw() - degrees) >= ANGLE_TOLERANCE){
     		if(direction == 1){
     			if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE * 10){ //yes, 10 is a very magic number
-    				setRawFraction(-1 * .3, .3);
+    				double speed = (DRIVE_SPEED * 2 - 0) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0; //replace speed with a different number if it's too low to reach the target
+    				setRawFraction(-1 * speed, speed);
     			}
     			else{
-        			setRawFraction(-DRIVE_SPEED * 2, DRIVE_SPEED * 2);
+        			setRawFraction(Math.max(-DRIVE_SPEED * 2, -1), Math.min(DRIVE_SPEED * 2, 1)); //only set to 2 * DRIVE_SPEED if that's within -1 to 1
     			}
     		}
     		else if(direction == 0){
     			if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE * 10){
-    				setRawFraction(.3, -1 * .3 / 2);
+    				double speed = (DRIVE_SPEED * 2 - 0) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0;
+    				setRawFraction(speed, -1 * speed);
     			}
     			else{
-        			setRawFraction(DRIVE_SPEED * 2, -DRIVE_SPEED * 2);
+        			setRawFraction(Math.min(DRIVE_SPEED * 2, 1), Math.max(-DRIVE_SPEED * 2, -1));
     			}
-    		}
-    		else{
-    			return true;
     		}
     		return false;
     	}    
-    	else {
+    	else{
     		DriveBase.setRawFraction(0, 0);
     		return true;
     	}
@@ -501,28 +499,6 @@ public class DriveBase {
 		}
 		
 		setRawSpeed(-1 * Math.pow(leftSpeed, 3) * MAX_SPEED_RPM, -1 * Math.pow(rightSpeed, 3) * MAX_SPEED_RPM);
-	}
-	
-	/**
-	 * Accelerate to DRIVE_SPEED. Without this, the robot jerks itself out of alignment,
-	 * hurting its straight driving accuracy.
-	 * 
-	 * @param forward Whether to accelerate forward (the alternate is obviously accelerating backward)
-	 */
-	public static void accelerate(double finalSpeed, double currentSpeed){
-		double increment = .01;
-		if(finalSpeed < currentSpeed){
-			increment *= -1;
-		}
-		
-		while(Math.abs(currentSpeed - finalSpeed) > .011){
-			currentSpeed += increment;
-			setRawFraction(currentSpeed, currentSpeed);
-			System.out.println("hsdfhsdk");
-			Timer.delay(.025);
-		}
-		
-		setRawFraction(finalSpeed, finalSpeed);
 	}
 	
 	private static boolean angleDriven = false;
@@ -557,7 +533,7 @@ public class DriveBase {
 			setRawSpeed(0, 0);
 		}
 		
-		if(Math.sqrt(Math.pow(currentX - targetX, 2) + Math.pow(currentY - targetY, 2)) < DISTANCE_THRESHOLD){
+		if(Math.sqrt(Math.pow(currentX - targetX, 2) + Math.pow(currentY - targetY, 2)) < DISTANCE_TOLERANCE){
 			return true;
 		}
 		
@@ -645,7 +621,7 @@ public class DriveBase {
 			
 			driveToPoint(target, stopBetweenPoints);
 			
-			if(Math.sqrt(Math.pow(current.getX() - target.getX(), 2) + Math.pow(current.getY() - target.getY(), 2)) <= DISTANCE_THRESHOLD){
+			if(Math.sqrt(Math.pow(current.getX() - target.getX(), 2) + Math.pow(current.getY() - target.getY(), 2)) <= DISTANCE_TOLERANCE){
 				points.poll();
 			}
 		}
