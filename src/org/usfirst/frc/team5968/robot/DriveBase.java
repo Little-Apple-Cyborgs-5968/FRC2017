@@ -64,7 +64,7 @@ public class DriveBase {
 	/**
 	 * Proportion used to drive straight, using P (traditionally PID) control.
 	 */
-	private static final double autoP = .12;
+	private static final double autoP = .01;
 	
 	/**
 	 * Target speed for driving straight
@@ -211,7 +211,7 @@ public class DriveBase {
     			angle -= 360;
     		}
     	}
-    	
+
     	leftSpeed = initialSpeed;
     	rightSpeed = initialSpeed;
     	
@@ -365,23 +365,23 @@ public class DriveBase {
      * @return whether the driving is complete
      */
 	public static boolean driveDistance(double inches) {
-		double distance = ((getLeftDistance() - leftEncoderInitial) + (getRightDistance() - rightEncoderInitial)) / 2;
-		double driveSpeed;
 		
-		if(inches < 12){
-			driveSpeed = .2;
-		}
-		else{
-			driveSpeed = DRIVE_SPEED;
-		}
-		
-		if(System.currentTimeMillis() - driveLastCallMillis >= 30){
+		if(System.currentTimeMillis() - driveLastCallMillis >= 100){
 			leftEncoderInitial = getLeftDistance();
 			rightEncoderInitial = getRightDistance();
 			
 			resetTargetAngle();
 		}
 		
+		double distance = (-1 * (getLeftDistance() - leftEncoderInitial) + (getRightDistance() - rightEncoderInitial)) / 2;
+		double driveSpeed;
+		if(inches < 12){
+			driveSpeed = .2;
+		}
+		else{
+			driveSpeed = DRIVE_SPEED;
+		}
+		System.out.println(distance);
 		if(distance >= 0 && distance <= ACCELERATE_DISTANCE && inches >= ACCELERATE_DISTANCE * 2){
 			driveStraight(.1 + (driveSpeed - .1) / ACCELERATE_DISTANCE * distance, false);
 		}
@@ -455,20 +455,20 @@ public class DriveBase {
     	if(Math.abs(NavXMXP.getYaw() - degrees) >= ANGLE_TOLERANCE){
     		if(direction == 1){
     			if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE * 10){ //yes, 10 is a very magic number
-    				double speed = (DRIVE_SPEED * 2 - 0) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0; //replace speed with a different number if it's too low to reach the target
+    				double speed = (DRIVE_SPEED - 0) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0; //replace speed with a different number if it's too low to reach the target
     				setRawFraction(-1 * speed, speed);
     			}
     			else{
-        			setRawFraction(Math.max(-DRIVE_SPEED * 2, -1), Math.min(DRIVE_SPEED * 2, 1)); //only set to 2 * DRIVE_SPEED if that's within -1 to 1
+        			setRawFraction(Math.max(-DRIVE_SPEED, -1), Math.min(DRIVE_SPEED, 1)); //only set to 2 * DRIVE_SPEED if that's within -1 to 1
     			}
     		}
     		else if(direction == 0){
     			if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE * 10){
-    				double speed = (DRIVE_SPEED * 2 - 0) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0;
+    				double speed = (DRIVE_SPEED - 0) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0;
     				setRawFraction(speed, -1 * speed);
     			}
     			else{
-        			setRawFraction(Math.min(DRIVE_SPEED * 2, 1), Math.max(-DRIVE_SPEED * 2, -1));
+        			setRawFraction(Math.min(DRIVE_SPEED, 1), Math.max(-DRIVE_SPEED, -1));
     			}
     		}
     		return false;

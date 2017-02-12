@@ -111,15 +111,18 @@ public class Dashboard {
 	 * @return The starting point on the field
 	 */
 	public static StartPoint getStartingPoint(){
-		String point = table.getString("startPoint", "");
+		int point = (int) table.getNumber("startPosition", -1);
 		
 		switch(point){
-			case "KEY":
-				return StartPoint.KEY;
-			case "MIDLINE":
-				return StartPoint.MIDLINE;
-			case "RETRIEVAL":
+			case 1:
+			case 4:
 				return StartPoint.RETRIEVAL_ZONE;
+			case 2:
+			case 5:
+				return StartPoint.MIDLINE;
+			case 3:
+			case 6:
+				return StartPoint.KEY;
 			default:
 				return null;
 		}

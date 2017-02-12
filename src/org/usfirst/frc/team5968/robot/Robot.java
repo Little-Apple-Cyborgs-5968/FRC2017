@@ -142,27 +142,24 @@ public class Robot extends RobotBase {
      * because it won't have to wait for updates from the Driver Station, and we should get better
      * precision.
      */
-    private static Thread autoThread;
+    private static Thread autoThread = null;
     
     /**
      * The climber will run in this thread to allow it to stop within 5 ms of hitting the target, instead of 20 ms.
      */
-    private static Thread climberThread;
+    private static Thread climberThread = null;
     
     /**
      * Called when the robot turns on
      */
     public void robotInit(){
-    	Dashboard.init();
     	NavXMXP.init();
     	DriveBase.init();
     	DriveBase.resetEncoders();
     	Pneumatics.init();
-    	Pneumatics.setSolenoidDown();
-    	
-    	RopeClimber climb = new RopeClimber();
-    	Thread climberThread = new Thread(climb);
-    	climberThread.start();
+    	RopeClimber.init();
+    	Dashboard.init();
+    	//Pneumatics.setSolenoidDown();
     	
 		alliance = DriverStation.getInstance().getAlliance();
     	
@@ -191,9 +188,7 @@ public class Robot extends RobotBase {
     			PositionTracker.init(80.9 + .5 * ROBOT_WIDTH, 652 - .5 * ROBOT_LENGTH);
     		}
     	}*/
-    	if(startPoint != StartPoint.KEY && startPoint != StartPoint.MIDLINE && startPoint != StartPoint.RETRIEVAL_ZONE){
-    		DriverStation.reportError("I don't know where I am!!! D: D:", false);
-    	}
+    	
     	
     }
     
@@ -202,9 +197,15 @@ public class Robot extends RobotBase {
      */
     public void autoInit(){
     	NavXMXP.resetYaw();
+    	DriveBase.resetTargetAngle();
+    	Timer.delay(.05);
     	if(alliance != Alliance.Red && alliance != Alliance.Blue){
     		DriverStation.reportError("I don't know what alliance I'm on!", false);
     		autoFinished = true;
+    		return;
+    	}
+    	if(startPoint != StartPoint.KEY && startPoint != StartPoint.MIDLINE && startPoint != StartPoint.RETRIEVAL_ZONE){
+    		DriverStation.reportError("I don't know where I am!!! D: D:", false);
     		return;
     	}
     	
@@ -245,14 +246,21 @@ public class Robot extends RobotBase {
      * Called at the beginning of teleop
      */
     public void teleopInit(){
-    	if(autoThread.isAlive()){
+    	if(autoThread != null && autoThread.isAlive()){
     		autoThread.interrupt(); //stops the auto code if it's for some reason still running
     	}
+    	
+
+    	Runnable climb = new RopeClimber();
+    	climberThread = new Thread(climb);
+    	climberThread.start();
     	
     	NavXMXP.resetYaw();
     	DriveBase.resetTargetAngle();
     	
     }
+    
+    boolean driven = false;
     /**
      * Called periodically during teleop
      */
@@ -261,14 +269,13 @@ public class Robot extends RobotBase {
     		//DriveBase.drivePath(drivePoints, false);
     	//}
     	//else{
-    	DriveBase.teleopDrive(HumanInterface.getLeftStick(), HumanInterface.getRightStick());
+    	//DriveBase.teleopDrive(HumanInterface.getLeftStick(), HumanInterface.getRightStick());
     	//}
     	
-    	HumanInterface.liftControl();
-    	HumanInterface.emergencyStopClimberControl();
+    	//HumanInterface.liftControl();
+    	//HumanInterface.emergencyStopClimberControl();
 		/*lights.pneumatics();
 		lights.climbing();*/
-    	
     }
     
     /**

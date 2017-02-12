@@ -94,11 +94,11 @@ public class Point {
 			case HOPPER2:
 				return new Point(STOP_DISTANCE, 450);
 			case HOPPER3:
-				return new Point(324 - STOP_DISTANCE, 537); //324 = field width in inches
+				return new Point(324 - STOP_DISTANCE, 536); //324 = field width in inches
 			case HOPPER4:
 				return new Point(324 - STOP_DISTANCE, 326);
 			case HOPPER5:
-				return new Point(324 - STOP_DISTANCE, 115);
+				return new Point(324 - STOP_DISTANCE, 116);
 			case RED_BOILER:
 				return new Point(271.9, 51.11); //edge of the key, even with the middle of the low boiler
 			case BLUE_BOILER:

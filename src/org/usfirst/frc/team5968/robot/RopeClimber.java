@@ -1,19 +1,15 @@
 package org.usfirst.frc.team5968.robot;
 
-import org.usfirst.frc.team5968.robot.PortMap.DIO;
-
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.VictorSP;
 
-import com.ctre.CANTalon;
-
 public class RopeClimber implements Runnable {
 	
-	private static VictorSP rightMotor = new VictorSP(PortMap.portOf(PortMap.PWM.CLIMBER_MOTOR_RIGHT));
-	private static VictorSP leftMotor = new VictorSP(PortMap.portOf(PortMap.PWM.CLIMBER_MOTOR_LEFT));
-	private static Encoder climberEncoder = new Encoder(PortMap.portOf(DIO.CLIMBER_ENCODER_A), PortMap.portOf(DIO.CLIMBER_ENCODER_B));  
+	private static VictorSP rightMotor;
+	private static VictorSP leftMotor;
+	private static Encoder climberEncoder;  
   
 	private static PowerDistributionPanel pdp = new PowerDistributionPanel(PortMap.portOf(PortMap.CAN.PDP));
 	
@@ -37,8 +33,10 @@ public class RopeClimber implements Runnable {
 	}
   
 	public static void init(){
-  
-		climberEncoder.setDistancePerPulse(8/2048);		//Inches
+		rightMotor = new VictorSP(PortMap.portOf(PortMap.PWM.CLIMBER_MOTOR_RIGHT));
+		leftMotor = new VictorSP(PortMap.portOf(PortMap.PWM.CLIMBER_MOTOR_LEFT));
+		climberEncoder = new Encoder(PortMap.portOf(PortMap.PWM.CLIMBER_ENCODER_A), PortMap.portOf(PortMap.PWM.CLIMBER_ENCODER_B));  
+		climberEncoder.setDistancePerPulse(8 / 2048); //inches
 	}
 	
 	public static void setSpeed(double motorSpeed){

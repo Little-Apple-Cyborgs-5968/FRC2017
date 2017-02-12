@@ -15,10 +15,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * directory.
  */
 public class Lights {
-	private PWM w = new PWM(0);
-	private PWM b = new PWM(1);
-	private PWM r = new PWM(2);
-	private PWM g = new PWM(3);
+	private PWM w = new PWM(6);
+	private PWM b = new PWM(7);
+	private PWM r = new PWM(8);
+	private PWM g = new PWM(9);
 	private int timer = 0;
 	
 	private static Relay ledRing = new Relay(0);
