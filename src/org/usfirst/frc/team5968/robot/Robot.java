@@ -138,6 +138,13 @@ public class Robot extends RobotBase {
     }
     
     /**
+     * The autonomous code runs in this thread. Should allow the code to be updated faster,
+     * because it won't have to wait for updates from the Driver Station, and we should get better
+     * precision.
+     */
+    private Thread autoThread;
+    
+    /**
      * Called when the robot turns on
      */
     public void robotInit(){
@@ -217,7 +224,7 @@ public class Robot extends RobotBase {
     	}
     	
     	Runnable task = new AutoThread(startPoint, auto, alliance, hopper);
-    	Thread autoThread = new Thread(task);
+    	autoThread = new Thread(task);
     	autoThread.start();
     }
     
@@ -233,8 +240,13 @@ public class Robot extends RobotBase {
      * Called at the beginning of teleop
      */
     public void teleopInit(){
+    	if(autoThread.isAlive()){
+    		autoThread.interrupt(); //stops the auto code if it's for some reason still running
+    	}
+    	
     	NavXMXP.resetYaw();
     	DriveBase.resetTargetAngle();
+    	
     }
     /**
      * Called periodically during teleop

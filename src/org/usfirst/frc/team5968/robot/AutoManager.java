@@ -85,36 +85,40 @@ public class AutoManager implements Runnable{
      */
     public static void doAuto(StartPoint startPoint, AutoMode mode, Alliance alliance, int hopper) throws UnsupportedOperationException{
     	while(autoProgress != AutoProgress.FINISHED){
+    		if(Thread.interrupted()){
+    			return;
+    		}
+    		
     		switch(mode){
-    		case GEAR:
-    			autoProgress = gearAuto(autoProgress, alliance, startPoint);
-    			break;
-    		case HOPPER:
-    			if((alliance == Alliance.Red && hopper == 3) || (alliance == Alliance.Blue && hopper == 5)){
-    				DriverStation.reportError("We'll get a penalty if we go to that hopper! Imma do nothing instead.", false);
-    				throw new UnsupportedOperationException();
-    			}
-    			else if(((hopper == 1 || hopper == 2) && startPoint != StartPoint.RETRIEVAL_ZONE) ||
-    					((hopper == 3 || hopper == 4 || hopper == 5) && startPoint != StartPoint.KEY)){
-    				DriverStation.reportError("I don't know how to go to that hopper from here! Imma do nothing instead", false);
-    				throw new UnsupportedOperationException();
-    			}
-    			else{
-    				autoProgress = hopperAuto(autoProgress, alliance, hopper, startPoint);
-    			}
-    			break;
-    		case CROSS:
-    			autoProgress = crossAuto(autoProgress);
-    			break;
-    		case HOPPER_BOILER:
-    			if(startPoint != StartPoint.KEY){
-    				DriverStation.reportError("I can only do hopper + boiler if I start in the KEY!!", false);
-    				throw new UnsupportedOperationException();
-    			}
-    			else{
-    				autoProgress = hopperBoilerAuto(autoProgress, alliance);
-    			}
-    			break;
+	    		case GEAR:
+	    			autoProgress = gearAuto(autoProgress, alliance, startPoint);
+	    			break;
+	    		case HOPPER:
+	    			if((alliance == Alliance.Red && hopper == 3) || (alliance == Alliance.Blue && hopper == 5)){
+	    				DriverStation.reportError("We'll get a penalty if we go to that hopper! Imma do nothing instead.", false);
+	    				throw new UnsupportedOperationException();
+	    			}
+	    			else if(((hopper == 1 || hopper == 2) && startPoint != StartPoint.RETRIEVAL_ZONE) ||
+	    					((hopper == 3 || hopper == 4 || hopper == 5) && startPoint != StartPoint.KEY)){
+	    				DriverStation.reportError("I don't know how to go to that hopper from here! Imma do nothing instead", false);
+	    				throw new UnsupportedOperationException();
+	    			}
+	    			else{
+	    				autoProgress = hopperAuto(autoProgress, alliance, hopper, startPoint);
+	    			}
+	    			break;
+	    		case CROSS:
+	    			autoProgress = crossAuto(autoProgress);
+	    			break;
+	    		case HOPPER_BOILER:
+	    			if(startPoint != StartPoint.KEY){
+	    				DriverStation.reportError("I can only do hopper + boiler if I start in the KEY!!", false);
+	    				throw new UnsupportedOperationException();
+	    			}
+	    			else{
+	    				autoProgress = hopperBoilerAuto(autoProgress, alliance);
+	    			}
+	    			break;
     		}
     	}
     }
