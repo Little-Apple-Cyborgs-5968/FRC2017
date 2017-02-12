@@ -2,6 +2,7 @@ package org.usfirst.frc.team5968.robot;
 
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.PWM;
+import edu.wpi.first.wpilibj.Relay;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -14,12 +15,14 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * directory.
  */
 public class Lights {
-	PWM w = new PWM(0);
-	PWM b = new PWM(1);
-	PWM r = new PWM(2);
-	PWM g = new PWM(3);
-	Pneumatics p = new Pneumatics();
-	int timer = 0;
+	private PWM w = new PWM(0);
+	private PWM b = new PWM(1);
+	private PWM r = new PWM(2);
+	private PWM g = new PWM(3);
+	private int timer = 0;
+	
+	private static Relay ledRing = new Relay(0);
+	
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
@@ -65,13 +68,13 @@ public class Lights {
      */
     public void pneumatics() {
        
-    	if(p.getIsUp()) {
+    	if(Pneumatics.getIsUp()) {
     		r.setRaw(146);
     		g.setRaw(14);
     		b.setRaw(14);
     		w.setRaw(0);
     	}
-    	if(!p.getIsUp())  {
+    	if(!Pneumatics.getIsUp())  {
     		b.setRaw(87);
     		r.setRaw(0);
     		g.setRaw(0);
@@ -103,4 +106,15 @@ public class Lights {
         }
     }
     
+    /**
+     * Turn the LED ring on/off
+     */
+    public static void toggleLedRing(){
+    	if(ledRing.get() == Relay.Value.kForward){
+    		ledRing.set(Relay.Value.kOff);
+    	}
+    	else{
+    		ledRing.set(Relay.Value.kForward);
+    	}
+    }
 }
