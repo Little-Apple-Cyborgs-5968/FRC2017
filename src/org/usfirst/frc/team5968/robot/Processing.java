@@ -24,16 +24,18 @@ public class Processing {
 	private ArrayList<MatOfPoint> filterContoursOutput = new ArrayList<MatOfPoint>();
 	private int topTape; // Will be the index in the filterContoursOutput ArrayList of the 4 in piece of tape
 	private int bottomTape; // Will be the index in the filterContoursOutput ArrayList of the 2 in piece of tape
+	public double goals[][] = new double[1100][11];
+	public double gears[][] = new double[1100][11];
 	Mat imgWithRect;
 	
 	Mat hslThresholdInput;
-	double[] hslThresholdHue = {33, 85};
-	double[] hslThresholdSaturation = {42, 255.0};
-	double[] hslThresholdLuminance = {13, 255.0};
+	double[] hslThresholdHue = {49, 98};
+	double[] hslThresholdSaturation = {175, 255.0};
+	double[] hslThresholdLuminance = {8, 255.0};
 	
 	ArrayList<MatOfPoint> filterContoursContours;
 	
-	double filterContoursMinArea = 150;
+	double filterContoursMinArea = 100;
 	double filterContoursMinPerimeter = 0.0;
 	double filterContoursMinWidth = 0.0;
 	double filterContoursMaxWidth = 1000.0;
@@ -61,25 +63,49 @@ public class Processing {
 	double bWidth;
 	double tArea;
 	double bArea;
+	
+	double lY;
+	double lX;
+	double rY;
+	double rX;
+	double lHeight;
+	double rHeight;
+	double lWidth;
+	double rWidth;
+	double lArea;
+	double rArea;
+	
 	double height;
-	double distance; // cm
+	double width;
+	double distance; // ft d
 	double angleToCorrect; // goal to the left of center is positive
 	
 	int isGoalScore = 0;
 	
-	double distanceFromGoal;
-	double realDistance;
+	double distanceFromGoal; // H
+	double distanceToOrgin; // t
 	double groundDistance;
+	double realDistance; // D
 	double screenWidth;
+	double screenHeight;
 
+	int goalNum;
+	int realGoalNum;
+	double maxValue;
+	
+	int gearNum;
+	int realGearNum;
+	
 	static {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 	}
 	
 	/**
 	 * This is the primary method that runs the entire pipeline and updates the outputs.
+	 * @param source0 is the image
+	 * @param goalOrNah is true if user wants to find Goal and false if user wants to find gear
 	 */
-	public Mat process(Mat source0) {
+	public Mat process(Mat source0, boolean goalOrNah) {
 		
 		hslThresholdInput = source0;
 		
@@ -93,12 +119,22 @@ public class Processing {
 		
 		System.out.println(filterContoursOutput.size());
 		
-		if(!locateContours(filterContoursOutput, source0)) {
-			System.out.println("goal no");
-			return source0;
+		if(goalOrNah) {
+			if(!locateContours(filterContoursOutput, source0, true)) {
+				System.out.println("goal no");
+				return source0;
+			} else {
+				System.out.println("goal yes");
+				return imgWithRect;
+			}
 		} else {
-			System.out.println("goal yes");
-			return imgWithRect;
+			if(!locateContours(filterContoursOutput, source0, false)) {
+				System.out.println("gear no");
+				return source0;
+			} else {
+				System.out.println("gear yes");
+				return imgWithRect;
+			}
 		}
 	}
 	
@@ -108,27 +144,97 @@ public class Processing {
 	 * NOTE: topTape and bottomTape will be set to -1 of no goal was found
 	 * @param contours is the input list of contours
 	 */
-	public boolean locateContours(List<MatOfPoint> inputContours, Mat imageToSend) {
-		if(inputContours.size() < 2) {
-			topTape = -1;
-			bottomTape = -1;
-		} else {
-			for(int i = 0; i < inputContours.size(); i++) {
-				for(int j = 0; j < inputContours.size(); j++) {
-					if(i != j) {
-						topRect = Imgproc.boundingRect(inputContours.get(i));
-						bottomRect = Imgproc.boundingRect(inputContours.get(j));
-						if(isGoal(topRect, bottomRect, imageToSend)) {
-							topTape = i;
-							bottomTape = j;
-							return true;
+	public boolean locateContours(List<MatOfPoint> inputContours, Mat imageToSend, boolean goalOrNah) {
+		if(goalOrNah) {
+			goalNum = 0;
+			realGoalNum = -1;
+			maxValue = 0;
+			if(inputContours.size() < 2) {
+				topTape = -1;
+				bottomTape = -1;
+				return false;
+			} else {
+				for(int i = 0; i < inputContours.size(); i++) {
+					for(int j = 0; j < inputContours.size(); j++) {
+						if(i != j) {
+							topRect = Imgproc.boundingRect(inputContours.get(i));
+							bottomRect = Imgproc.boundingRect(inputContours.get(j));
+							goalNum++;
+							//System.out.println("Have no fear for I am here");
+							isGoal(topRect, bottomRect, imageToSend, i, j, goalNum);
 						}
+						
 					}
-					
 				}
+				for(int i = 0; i <= goalNum; i++) {
+					if(goals[i][10] > maxValue) {
+						maxValue = goals[i][10];
+						realGoalNum = i;
+					}
+				}
+				height = (goals[realGoalNum][4] + goals[realGoalNum][9]) - goals[realGoalNum][2];
+				distance = (400) / (1 * height * Math.tan(0.5986479));
+				distance = distance * 12;
+				groundDistance = Math.sqrt((distance * distance) - (56.25 * 56.25)); // should be 88 * 88
+				screenWidth = imageToSend.size().width;
+				screenHeight = imageToSend.size().height;
+				distanceFromGoal = (screenWidth / 2) - (goals[realGoalNum][3] + (goals[realGoalNum][6] / 2));
+				distanceToOrgin = (10 * distanceFromGoal) / height;
+				realDistance = Math.sqrt((groundDistance * groundDistance) + (distanceToOrgin * distanceToOrgin));
+				angleToCorrect = Math.atan(distanceToOrgin / groundDistance);
+				angleToCorrect = (angleToCorrect * 180) / Math.PI;
+				Imgproc.rectangle(imageToSend, new Point(goals[realGoalNum][3], goals[realGoalNum][2]), new Point(goals[realGoalNum][3] + goals[realGoalNum][6], goals[realGoalNum][2] + goals[realGoalNum][7]), new Scalar(0, 255, 255, 255), 5);
+				Imgproc.rectangle(imageToSend, new Point(goals[realGoalNum][5], goals[realGoalNum][4]), new Point(goals[realGoalNum][5] + goals[realGoalNum][8], goals[realGoalNum][4] + goals[realGoalNum][9]), new Scalar(0, 0, 255, 255), 5);
+				Imgproc.putText(imageToSend, height + "px", new Point(goals[realGoalNum][3] + goals[realGoalNum][6] + 5, goals[realGoalNum][2]), Core.FONT_HERSHEY_SIMPLEX, 2.6f, new Scalar(255, 255, 255, 255), 3);
+				imgWithRect = imageToSend;
+				System.out.println("********************************** Pixel offset y: " + ((screenHeight / 2 ) - (goals[realGoalNum][2] + (height / 2))));
+				System.out.println("********************************** Angle: " + angleToCorrect);
+				System.out.println("---------------------------------- groundDistance: " + groundDistance);
+				return true;
 			}
 		}
-		return false;
+		else {
+			gearNum = 0;
+			realGearNum = -1;
+			maxValue = 0;
+			if(inputContours.size() < 2) {
+				topTape = -1;
+				bottomTape = -1;
+				return false;
+			} else {
+				for(int i = 0; i < inputContours.size(); i++) {
+					for(int j = 0; j < inputContours.size(); j++) {
+						if(i != j) {
+							Rect topRect = Imgproc.boundingRect(inputContours.get(i));
+							Rect bottomRect = Imgproc.boundingRect(inputContours.get(j));
+							gearNum++;
+							isGearTape(topRect, bottomRect, imageToSend, i, j, gearNum);
+						}
+						
+					}
+				}
+				for(int i = 0; i <= gearNum	; i++) {
+					if(gears[i][0] > maxValue) {
+						maxValue = gears[i][7]; //how do you hack into the US nuclear codes?? Ask one of Yusuf's friend to do it
+						realGearNum = i;
+					}
+				}
+				distance = (.4166667 * 635) / (1 * ((gears[realGearNum][5] + gears[realGearNum][7]) / 2) * Math.tan(0.5986479));
+				distance = distance * 12;
+				System.out.println("********************   " + maxValue);
+				Imgproc.rectangle(imageToSend, new Point(gears[realGearNum][1], gears[realGearNum][0]), new Point(gears[realGearNum][1] + gears[realGearNum][4], gears[realGearNum][0] + gears[realGearNum][5]), new Scalar(0, 255, 255, 255), 2);
+				Imgproc.rectangle(imageToSend, new Point(gears[realGearNum][3], gears[realGearNum][2]), new Point(gears[realGearNum][3] + gears[realGearNum][6], gears[realGearNum][2] + gears[realGearNum][7]), new Scalar(0, 0, 255, 255), 2);
+				Imgproc.putText(imageToSend, distance + "in", new Point(50, 50), Core.FONT_HERSHEY_SIMPLEX, 1.2f, new Scalar(255, 255, 255, 255), 2);
+				//Imgproc.putText(imageToSend, "This is a lot of text", new Point(50, 50), Core.FONT_HERSHEY_SIMPLEX, 2.0f, new Scalar(255, 255, 255, 255), 1);
+				//Imgcodecs.imwrite("C:\\Users\\Nolan Blankenau\\workspace\\GRIPstandAlone\\src\\GearWithRect131.png", imageToSend);
+				return true;
+			}
+		}
+		
+	}
+	
+	public double getGroundDistance(Mat theImage) {
+		return groundDistance;
 	}
 	
 	/**
@@ -138,7 +244,8 @@ public class Processing {
 	 * @param bRect represents what could be the bottom rectangle
 	 * @return true if the rectangle variables do seem to act like the goal and false if otherwise
 	 */
-	public boolean isGoal(Rect tRect, Rect bRect, Mat imageWithRect) {
+	public boolean isGoal(Rect tRect, Rect bRect, Mat imageWithRect, int iIndex, int jIndex, int goalNum) {
+		isGoalScore = 0;
 		tY = tRect.y;
 		tX = tRect.x;
 		bY = bRect.y;
@@ -151,41 +258,66 @@ public class Processing {
 		bArea = bHeight * bWidth;
 		height = (bY + bHeight) - tY;
 		
-		if(tY < bY + height) {
-			isGoalScore++;
-		}
-		if(tHeight < tWidth) {
-			isGoalScore++;
-		}
-		if(bHeight < bWidth) {
-			isGoalScore++;
-		}
-		if(tX > bX - bWidth && tX < bX + bWidth) {
-			isGoalScore++;
-		}
-		if(Math.abs((tY + tHeight) - bY) < tHeight) {
-			isGoalScore++;
-		}
+		if(tY < bY && Math.abs(tX - bX) < (tWidth + bWidth) && tY + tHeight < bY + bHeight) {
 
-		if(isGoalScore == 5) {
-			distance = (23 * 480) / (2 * height * Math.tan(0.6964867));
-			System.out.println("Height " + height);
-			System.out.println("Distance " + distance);
-			distanceFromGoal = 0.0;
-			groundDistance = Math.sqrt((distance * distance) - (88 * 88));
-			screenWidth = imageWithRect.size().width;
-			distanceFromGoal = (screenWidth / 2) - (tY + (tWidth/2));
-			realDistance = (10 * distanceFromGoal) / height;
-			angleToCorrect = Math.sin(realDistance / groundDistance);
-			System.out.println((angleToCorrect * 180) / Math.PI);
-			Imgproc.rectangle(imageWithRect, new Point(tX, tY), new Point(tX + tWidth, tY + tHeight), new Scalar(0, 255, 255, 255), 2);
-			Imgproc.rectangle(imageWithRect, new Point(bX, bY), new Point(bX + bWidth, bY + bHeight), new Scalar(0, 0, 255, 255), 2);
-			Imgproc.putText(imageWithRect, String.valueOf(distance) + "in", new Point(tX + tWidth + 5, tY), Core.FONT_HERSHEY_SIMPLEX, 0.6f, new Scalar(255, 255, 255, 255), 1);
-			imgWithRect = imageWithRect;
-			return true;
-		} else {
-			return false;
+			double groupHeight = tHeight / (height * .4);
+			double bottomHeight = bHeight / (height * .2);
+			double dTop = (tHeight + (bY - (tY +tHeight))) / (height * .6);
+			double lEdge = (tX - bX) / tWidth;
+			double widthRatio = tWidth / bWidth;
+			double heightRatio = tHeight / (bHeight * 2);
+			System.out.println("goalNum " + goalNum);
+			System.out.println("iIndex " + iIndex);
+			goals[goalNum][0] = iIndex;
+			goals[goalNum][1] = jIndex;
+			goals[goalNum][2] = tY;
+			goals[goalNum][3] = tX;
+			goals[goalNum][4] = bY;
+			goals[goalNum][5] = bX;
+			goals[goalNum][6] = tWidth;
+			goals[goalNum][7] = tHeight;
+			goals[goalNum][8] = bWidth;
+			goals[goalNum][9] = bHeight;
+			goals[goalNum][10] = groupHeight + bottomHeight + dTop + lEdge + widthRatio + heightRatio;
+	
+			System.out.println("total " + goalNum + " " + goals[goalNum][10]);
+			
 		}
+		return false;
+	}
+	
+	public boolean isGearTape(Rect lRect, Rect rRect, Mat imageWithRect, int iIndex, int jIndex, int gearNum) {
+		
+		lY = lRect.y;
+		lX = lRect.x;
+		rY = rRect.y;
+		rX = rRect.x;
+		lHeight = lRect.height;
+		rHeight = rRect.height;
+		lWidth = lRect.width;
+		rWidth = rRect.width;
+		lArea = lHeight * lWidth;
+		rArea = rHeight * rWidth;
+		width = (rX + rWidth) - lX;
+		
+		double lWidthRatio = lWidth / (width * .19512195122);
+		double rWidthRatio = rWidth / (width * .19512195122);
+		double heightToWidthRatio = ((lHeight + rHeight) / 2) / (width * .48780487804878);
+		
+		gears[gearNum][0] = lY;
+		gears[gearNum][1] = lX;
+		gears[gearNum][2] = rY;
+		gears[gearNum][3] = rX;
+		gears[gearNum][4] = lWidth;
+		gears[gearNum][5] = lHeight;
+		gears[gearNum][6] = rWidth;
+		gears[gearNum][7] = rHeight;
+		gears[gearNum][8] = lWidthRatio + rWidthRatio + heightToWidthRatio;
+		
+		System.out.println("gears " + gearNum + " " + gears[gearNum][8]);
+		
+		
+		return true;
 	}
 
 	/**
