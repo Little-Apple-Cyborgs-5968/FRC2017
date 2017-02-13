@@ -4,6 +4,7 @@ import org.usfirst.frc.team5968.robot.Point.Setpoint;
 import org.usfirst.frc.team5968.robot.Robot.StartPoint;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 public class AutoManager{
@@ -73,6 +74,8 @@ public class AutoManager{
      */
     private static AutoProgress autoProgress = AutoProgress.STARTING;
     
+    private static boolean hopperDriveComplete = false;
+    
     /**
      * Run autonomous
      * 
@@ -86,7 +89,6 @@ public class AutoManager{
     public static void doAuto(StartPoint startPoint, AutoMode mode, Alliance alliance, int hopper) throws UnsupportedOperationException{
     	while(autoProgress != AutoProgress.FINISHED){
     		if(Thread.interrupted()){
-    			System.out.println("here");
     			return;
     		}
     		switch(mode){
@@ -116,9 +118,21 @@ public class AutoManager{
 	    				throw new UnsupportedOperationException();
 	    			}
 	    			else{
-	    				autoProgress = hopperBoilerAuto(autoProgress, alliance);
+	    				if(!hopperDriveComplete){
+	    					autoProgress = hopperAuto(autoProgress, alliance, hopper, startPoint);
+	    					if(autoProgress == AutoProgress.FINISHED){
+	    						autoProgress = AutoProgress.STARTING;
+	    						hopperDriveComplete = true;
+	    					}
+	    				}
+	    				else{
+	    					autoProgress = hopperBoilerAuto(autoProgress, alliance);
+	    				}
 	    			}
 	    			break;
+    		}
+    		if(autoProgress == AutoProgress.FINISHED){
+    			return;
     		}
     	}
     }
@@ -292,6 +306,8 @@ public class AutoManager{
 		return progress;
 	}
 	
+	private static double currentAngle;
+	
 	/**
      * Get fuel from a hopper and dump it in the boiler in auto
      * 
@@ -300,13 +316,12 @@ public class AutoManager{
      * @return The progress after calling the method
      */
 	private static AutoProgress hopperBoilerAuto(AutoProgress progress, Alliance alliance){
-		
 		//the change in x and y in driving from the hopper to a point STOP_DISTANCE_FROM_BOILER away from the boiler. This is
 		//after backing up DRIVE_BACK_DISTANCE inches.
-		double dx = 14.5 - STOP_DISTANCE_FROM_BOILER * Math.cos(.76271) - (625 - SAFE_TURN_DISTANCE);
-		double dy = 15.2 + STOP_DISTANCE_FROM_BOILER * Math.sin(.76271) - 115;
+		double dx = 637.5 - STOP_DISTANCE_FROM_BOILER * Math.cos(.76271) - (652 - SAFE_TURN_DISTANCE);
+		double dy = 15.2 + STOP_DISTANCE_FROM_BOILER * Math.sin(.76271) - Point.getCoordinates(Setpoint.HOPPER5).getY();
 		double turnAngle;
-		
+		System.out.println(dx + " " + dy);
 		switch(progress){
 			case STARTING:
 				int hopper;
@@ -316,34 +331,38 @@ public class AutoManager{
 				else{
 					hopper = 3;
 				}
-				if(hopperAuto(AutoProgress.STARTING, alliance, hopper, StartPoint.KEY) == AutoProgress.FINISHED){
-					progress = AutoProgress.DRIVE2_DONE;
-				}
+				Timer.delay(2);
+				progress = AutoProgress.DRIVE2_DONE;
 				break;
 			//DRIVE1 and TURN1 are handled in the call to hopperAuto
 			case DRIVE2_DONE:
-				if(DriveBase.driveDistance(24)){ //24 is pretty arbitrary. Could maybe be tweaked to save time.
-					progress = AutoProgress.DRIVE2_DONE;
+				//System.out.println("DRIVE2_DONE");
+				if(DriveBase.driveDistance(-1 * SAFE_TURN_DISTANCE)){ //24 is pretty arbitrary. Could maybe be tweaked to save time.
+					progress = AutoProgress.DRIVE3_DONE;
+					currentAngle = NavXMXP.getYaw();
 				}
 				break;
 			case DRIVE3_DONE:
+				//System.out.println("DRIVE3_DONE");
 				turnAngle = 180 - (Math.atan(dy / dx) * 180 / Math.PI); //degrees
-				
 				if(alliance == Alliance.Blue){
 					turnAngle *= -1; //think about field symmetry if this doesn't make sense
 				}
 				
-				if(DriveBase.driveRotation(NavXMXP.getYaw() + turnAngle)){
+				if(DriveBase.driveRotation(currentAngle + turnAngle)){
 					progress = AutoProgress.TURN2_DONE;
 				}
 				break;
 			case TURN2_DONE:
+				
 				double driveDistance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
 				if(DriveBase.driveDistance(driveDistance)){
 					progress = AutoProgress.DRIVE4_DONE;
 				}
 				break;
 			case DRIVE4_DONE:
+				//System.out.println("DRIVE4_DONE");
+
 				if(alliance == Alliance.Red){
 					if(DriveBase.driveRotation(126.3)){
 						progress = AutoProgress.TURN3_DONE;
@@ -356,6 +375,8 @@ public class AutoManager{
 				}
 				break;
 			case TURN3_DONE:
+				//System.out.println("TURN3_DONE");
+
 				distanceToGoal = 0; //TODO: camera targeting
 				angleToGoal = 0; //TODO: camera targeting
 				
@@ -375,15 +396,21 @@ public class AutoManager{
 				progress = AutoProgress.CAMERA_TARGETING_DONE;
 				break;
 			case CAMERA_TARGETING_DONE:
+				System.out.println("CAMERA_TARGETING_DONE");
+
 				if(DriveBase.driveDistance(distanceToDrive)){
 					progress = AutoProgress.DRIVE5_DONE;
 				}
 			case DRIVE5_DONE:
+				System.out.println("DRIVE5_DONE");
+
 				if(DriveBase.driveRotation(angleToTurn)){
 					progress = AutoProgress.TURN4_DONE;
 				}
 				break;
 			case TURN4_DONE:
+				System.out.println("TURN4_DONE");
+
 				if(DriveBase.driveDistance(SAFE_TURN_DISTANCE - .5 * Robot.getRobotLength())){
 					Pneumatics.DoubleSolenoidTOGGLE();
 					progress = AutoProgress.FINISHED;

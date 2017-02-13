@@ -211,7 +211,6 @@ public class DriveBase {
     			angle -= 360;
     		}
     	}
-
     	leftSpeed = initialSpeed;
     	rightSpeed = initialSpeed;
     	
@@ -240,6 +239,13 @@ public class DriveBase {
     				leftSpeed -= (currentAngle - angle) * autoP;
     			}
     		}
+    	}
+    	
+    	if(leftSpeed > MAX_SPEED){
+    		leftSpeed = MAX_SPEED;
+    	}
+    	if(rightSpeed > MAX_SPEED){
+    		rightSpeed = MAX_SPEED;
     	}
     	setRawFraction(leftSpeed, rightSpeed);
     }
@@ -371,6 +377,7 @@ public class DriveBase {
 			rightEncoderInitial = getRightDistance();
 			
 			resetTargetAngle();
+			Timer.delay(.05);
 		}
 		
 		double distance = (-1 * (getLeftDistance() - leftEncoderInitial) + (getRightDistance() - rightEncoderInitial)) / 2;
@@ -381,7 +388,6 @@ public class DriveBase {
 		else{
 			driveSpeed = DRIVE_SPEED;
 		}
-		System.out.println(distance);
 		if(distance >= 0 && distance <= ACCELERATE_DISTANCE && inches >= ACCELERATE_DISTANCE * 2){
 			driveStraight(.1 + (driveSpeed - .1) / ACCELERATE_DISTANCE * distance, false);
 		}
@@ -431,7 +437,6 @@ public class DriveBase {
 		if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE){
 			return true;
 		}
-		
 		if(degrees < 0){
 			degrees += 360;
 		}

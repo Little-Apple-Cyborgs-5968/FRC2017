@@ -44,12 +44,15 @@ public class Robot extends RobotBase {
     	
     	boolean autoInitialized = false;
     	boolean teleopInitialized = false;
+    	boolean disabledInitialized = false;
     	
     	while (true) {
     		// Call the appropriate function depending upon the current robot mode
     		if (isDisabled()) {
-    			// call DisabledInit() if we are now just entering disabled mode from
-    			// either a different mode or from power-on
+    			if(!disabledInitialized){
+    				disabledInit();
+    				disabledInitialized = true;
+    			}
     			HAL.observeUserProgramDisabled();
     		}
     		else if (isTest()) {
@@ -197,13 +200,13 @@ public class Robot extends RobotBase {
     	DriveBase.resetTargetAngle();
     	Timer.delay(.05);
     	
-    	alliance = DriverStation.getInstance().getAlliance();
+    	alliance = Alliance.Red;//DriverStation.getInstance().getAlliance();
     	
-    	startPoint = Dashboard.getStartingPoint();
+    	startPoint = StartPoint.KEY;//Dashboard.getStartingPoint();
     	
-    	auto = Dashboard.getAutoMode();
+    	auto = AutoMode.HOPPER_BOILER;//Dashboard.getAutoMode();
     	
-    	hopper = Dashboard.getHopper();
+    	hopper = 5;//Dashboard.getHopper();
     	
     	if(alliance != Alliance.Red && alliance != Alliance.Blue){
     		DriverStation.reportError("I don't know what alliance I'm on!", false);
@@ -259,6 +262,7 @@ public class Robot extends RobotBase {
     	
     	NavXMXP.resetYaw();
     	DriveBase.resetTargetAngle();
+    	Timer.delay(.05);
     	
     }
     
@@ -278,6 +282,11 @@ public class Robot extends RobotBase {
     	//HumanInterface.emergencyStopClimberControl();
 		/*lights.pneumatics();
 		lights.climbing();*/
+    	if(!driven){
+    		if(DriveBase.driveRotation(173)){
+    			driven = true;
+    		}
+    	}
     }
     
     /**
@@ -291,6 +300,15 @@ public class Robot extends RobotBase {
         	PositionTracker.updateCoordinates();
     		Dashboard.updateDrivePoints(drivePoints);
     	}*/
+    }
+    
+    public void disabledInit(){
+    	
+    }
+    public void disabledPeriodic(){
+    	if(autoThread.isAlive()){
+    		autoThread.interrupt();
+    	}
     }
     
     private class AutoThread implements Runnable{
@@ -310,7 +328,7 @@ public class Robot extends RobotBase {
     	}
     	
     	public void run(){
-    		AutoManager.doAuto(startPoint, mode, alliance, hopper);
+    		AutoManager.doAuto(startPoint, mode, alliance, 5);
     	}
     }
     
@@ -445,7 +463,7 @@ public class Robot extends RobotBase {
     public static double getDistanceFromWall(StartPoint p){
     	switch(p){
     		case KEY:
-    			return 100.9;
+    			return 82.5;
     		case MIDLINE:
     			return 162;
     		case RETRIEVAL_ZONE:
