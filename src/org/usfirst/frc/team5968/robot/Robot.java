@@ -161,9 +161,6 @@ public class Robot extends RobotBase {
     	Dashboard.init();
     	//Pneumatics.setSolenoidDown();
     	
-		alliance = DriverStation.getInstance().getAlliance();
-    	
-    	startPoint = Dashboard.getStartingPoint();
     	/*if(startPointName == StartPoint.KEY){
     		if(alliance == Alliance.Red){
     			PositionTracker.init(223.1 + .5 * ROBOT_WIDTH, .5 * ROBOT_LENGTH);
@@ -199,6 +196,15 @@ public class Robot extends RobotBase {
     	NavXMXP.resetYaw();
     	DriveBase.resetTargetAngle();
     	Timer.delay(.05);
+    	
+    	alliance = DriverStation.getInstance().getAlliance();
+    	
+    	startPoint = Dashboard.getStartingPoint();
+    	
+    	auto = Dashboard.getAutoMode();
+    	
+    	hopper = Dashboard.getHopper();
+    	
     	if(alliance != Alliance.Red && alliance != Alliance.Blue){
     		DriverStation.reportError("I don't know what alliance I'm on!", false);
     		autoFinished = true;
@@ -208,10 +214,6 @@ public class Robot extends RobotBase {
     		DriverStation.reportError("I don't know where I am!!! D: D:", false);
     		return;
     	}
-    	
-    	auto = Dashboard.getAutoMode();
-    	
-    	hopper = Dashboard.getHopper();
     	
     	if(auto == AutoMode.HOPPER_BOILER){
     		DriverStation.reportWarning("Selected auto is hopper and boiler", false);
@@ -432,5 +434,24 @@ public class Robot extends RobotBase {
      */
     public static Thread getClimberThread(){
     	return climberThread;
+    }
+    
+    /**
+     * Get the distance to the nearest wall from a startpoint
+     * 
+     * @param p The startpoint to find the x coordinate for
+     * @return The distance to the nearest wall
+     */
+    public static double getDistanceFromWall(StartPoint p){
+    	switch(p){
+    		case KEY:
+    			return 100.9;
+    		case MIDLINE:
+    			return 162;
+    		case RETRIEVAL_ZONE:
+    			return 80.9;
+    		default:
+    			return -1;
+    	}
     }
 }

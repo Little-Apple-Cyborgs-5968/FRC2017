@@ -86,9 +86,9 @@ public class AutoManager{
     public static void doAuto(StartPoint startPoint, AutoMode mode, Alliance alliance, int hopper) throws UnsupportedOperationException{
     	while(autoProgress != AutoProgress.FINISHED){
     		if(Thread.interrupted()){
+    			System.out.println("here");
     			return;
     		}
-    		
     		switch(mode){
 	    		case GEAR:
 	    			autoProgress = gearAuto(autoProgress, alliance, startPoint);
@@ -280,7 +280,7 @@ public class AutoManager{
 					}
 					break;
 				case TURN1_DONE:
-					if(DriveBase.driveDistance(Point.getStopDistance() - .5 * Robot.getRobotLength())){
+					if(DriveBase.driveDistance(Robot.getDistanceFromWall(startPoint) - .5 * Robot.getRobotLength())){
 						progress = AutoProgress.FINISHED;
 					}
 					break;

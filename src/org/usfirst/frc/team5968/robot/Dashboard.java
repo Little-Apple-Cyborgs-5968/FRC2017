@@ -112,7 +112,6 @@ public class Dashboard {
 	 */
 	public static StartPoint getStartingPoint(){
 		int point = (int) table.getNumber("startPosition", -1);
-		
 		switch(point){
 			case 1:
 			case 4:
