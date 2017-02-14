@@ -69,7 +69,7 @@ public class DriveBase {
 	/**
 	 * Target speed for driving straight
 	 */
-	private static final double DRIVE_SPEED = .2;
+	private static final double DRIVE_SPEED = .6;
 	
 	/**
 	 * The maximum allowable speed while the robot is driving.
@@ -98,9 +98,11 @@ public class DriveBase {
 	private static final double MAX_SPEED_RPM = 425;
     
     /**
-     * The distance to accelerate/decelerate over when driving a distance, in inches.
+     * The distance to accelerate over when driving a distance, in inches.
      */
     private static final double ACCELERATE_DISTANCE = 6;
+    
+    private static final double DECELERATE_DISTANCE = 10;
 	
 	/**
 	 * All the motors we have in the drive train.
@@ -383,7 +385,7 @@ public class DriveBase {
 		double distance = (-1 * (getLeftDistance() - leftEncoderInitial) + (getRightDistance() - rightEncoderInitial)) / 2;
 		double driveSpeed;
 		if(inches < 12){
-			driveSpeed = .2;
+			driveSpeed = .4;
 		}
 		else{
 			driveSpeed = DRIVE_SPEED;
@@ -411,10 +413,10 @@ public class DriveBase {
 				return true;
 			}
 			else if(inches > 0){
-				driveStraight((driveSpeed - 0) / ACCELERATE_DISTANCE * (inches - distance) + 0, false); //replace 0 with some other number if you want to finish at a different speed
+				driveStraight((driveSpeed - 0) / DECELERATE_DISTANCE * (inches - distance) + 0, false); //replace 0 with some other number if you want to finish at a different speed
 			}
 			else{
-				driveStraight((driveSpeed + 0) / ACCELERATE_DISTANCE * (inches - distance) - 0, false);
+				driveStraight((driveSpeed + 0) / DECELERATE_DISTANCE * (inches - distance) - 0, false);
 			}
 		}
 		
@@ -460,20 +462,20 @@ public class DriveBase {
     	if(Math.abs(NavXMXP.getYaw() - degrees) >= ANGLE_TOLERANCE){
     		if(direction == 1){
     			if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE * 10){ //yes, 10 is a very magic number
-    				double speed = (DRIVE_SPEED - 0) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0; //replace speed with a different number if it's too low to reach the target
+    				double speed = (.25 - 0) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0; //replace speed with a different number if it's too low to reach the target
     				setRawFraction(-1 * speed, speed);
     			}
     			else{
-        			setRawFraction(Math.max(-DRIVE_SPEED, -1), Math.min(DRIVE_SPEED, 1)); //only set to 2 * DRIVE_SPEED if that's within -1 to 1
+        			setRawFraction(Math.max(-.25, -1), Math.min(.25, 1)); //only set to 2 * DRIVE_SPEED if that's within -1 to 1
     			}
     		}
     		else if(direction == 0){
     			if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE * 10){
-    				double speed = (DRIVE_SPEED - 0) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0;
+    				double speed = (.25 - 0) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0;
     				setRawFraction(speed, -1 * speed);
     			}
     			else{
-        			setRawFraction(Math.min(DRIVE_SPEED, 1), Math.max(-DRIVE_SPEED, -1));
+        			setRawFraction(Math.min(.25, 1), Math.max(-.25, -1));
     			}
     		}
     		return false;

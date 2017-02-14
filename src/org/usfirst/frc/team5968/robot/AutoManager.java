@@ -319,7 +319,7 @@ public class AutoManager{
 		//the change in x and y in driving from the hopper to a point STOP_DISTANCE_FROM_BOILER away from the boiler. This is
 		//after backing up DRIVE_BACK_DISTANCE inches.
 		double dx = 637.5 - STOP_DISTANCE_FROM_BOILER * Math.cos(.76271) - (652 - SAFE_TURN_DISTANCE);
-		double dy = 15.2 + STOP_DISTANCE_FROM_BOILER * Math.sin(.76271) - Point.getCoordinates(Setpoint.HOPPER5).getY();
+		double dy = 15.2 + STOP_DISTANCE_FROM_BOILER * Math.sin(.76271) - (Point.getCoordinates(Setpoint.HOPPER5).getY() - .5 * Robot.getRobotLength());
 		double turnAngle;
 		System.out.println(dx + " " + dy);
 		switch(progress){
@@ -331,7 +331,7 @@ public class AutoManager{
 				else{
 					hopper = 3;
 				}
-				Timer.delay(2);
+				Timer.delay(1.5);
 				progress = AutoProgress.DRIVE2_DONE;
 				break;
 			//DRIVE1 and TURN1 are handled in the call to hopperAuto
@@ -364,13 +364,13 @@ public class AutoManager{
 				//System.out.println("DRIVE4_DONE");
 
 				if(alliance == Alliance.Red){
-					if(DriveBase.driveRotation(126.3)){
-						progress = AutoProgress.TURN3_DONE;
+					if(DriveBase.driveRotation(135)){
+						progress = AutoProgress.FINISHED;
 					}
 				}
 				else{
-					if(DriveBase.driveRotation(-126.3)){
-						progress = AutoProgress.TURN3_DONE;
+					if(DriveBase.driveRotation(-135)){
+						progress = AutoProgress.FINISHED;
 					}
 				}
 				break;
