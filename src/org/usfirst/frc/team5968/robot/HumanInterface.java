@@ -23,11 +23,6 @@ public class HumanInterface {
 	private static Joystick rightStick = new Joystick(PortMap.portOf(USB.RIGHT_JOYSTICK));
 	
 	/**
-	 * Operator's xbox controller
-	 */
-	private static Joystick xbox = new Joystick(PortMap.portOf(USB.XBOX));
-	
-	/**
 	 * If the joystick inputs are less than this amount, they will be set to 0.
 	 */
 	private static final double DEADZONE = .02;
@@ -62,17 +57,17 @@ public class HumanInterface {
 	}
 	
 	public static void liftControl(){
-		if((xbox.getRawButton(5) || xbox.getRawButton(6)) && !isPRESSED){
+		if((rightStick.getRawButton(1) || leftStick.getRawButton(1)) && !isPRESSED){
 			Pneumatics.DoubleSolenoidTOGGLE();
 		}
-		isPRESSED = xbox.getRawButton(5) || xbox.getRawButton(6);
+		isPRESSED = rightStick.getRawButton(1) || leftStick.getRawButton(1);
 	}
 	
 	/**
 	 * Stop the climber if it isn't stopping, the robot is falling apart, the field is exploding, etc.
 	 */
 	public static void emergencyStopClimberControl(){
-		if(xbox.getRawButton(1)){
+		if(rightStick.getRawButton(2) || leftStick.getRawButton(2)){
 			Robot.getClimberThread().interrupt();
 		}
 	}
