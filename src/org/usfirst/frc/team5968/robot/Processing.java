@@ -88,6 +88,8 @@ public class Processing {
 	double realDistance; // D
 	double screenWidth;
 	double screenHeight;
+	double maybeGroundDistance;
+	double yOffset;
 
 	int goalNum;
 	int realGoalNum;
@@ -105,7 +107,7 @@ public class Processing {
 	 * @param source0 is the image
 	 * @param goalOrNah is true if user wants to find Goal and false if user wants to find gear
 	 */
-	public Mat process(Mat source0, boolean goalOrNah) {
+	public boolean process(Mat source0, boolean goalOrNah) {
 		
 		hslThresholdInput = source0;
 		
@@ -122,18 +124,18 @@ public class Processing {
 		if(goalOrNah) {
 			if(!locateContours(filterContoursOutput, source0, true)) {
 				System.out.println("goal no");
-				return source0;
+				return false;
 			} else {
 				System.out.println("goal yes");
-				return imgWithRect;
+				return true;
 			}
 		} else {
 			if(!locateContours(filterContoursOutput, source0, false)) {
 				System.out.println("gear no");
-				return source0;
+				return false;
 			} else {
 				System.out.println("gear yes");
-				return imgWithRect;
+				return true;
 			}
 		}
 	}
@@ -182,14 +184,13 @@ public class Processing {
 				distanceToOrgin = (10 * distanceFromGoal) / height;
 				realDistance = Math.sqrt((groundDistance * groundDistance) + (distanceToOrgin * distanceToOrgin));
 				angleToCorrect = Math.atan(distanceToOrgin / groundDistance);
-				angleToCorrect = (angleToCorrect * 180) / Math.PI;
-				Imgproc.rectangle(imageToSend, new Point(goals[realGoalNum][3], goals[realGoalNum][2]), new Point(goals[realGoalNum][3] + goals[realGoalNum][6], goals[realGoalNum][2] + goals[realGoalNum][7]), new Scalar(0, 255, 255, 255), 5);
-				Imgproc.rectangle(imageToSend, new Point(goals[realGoalNum][5], goals[realGoalNum][4]), new Point(goals[realGoalNum][5] + goals[realGoalNum][8], goals[realGoalNum][4] + goals[realGoalNum][9]), new Scalar(0, 0, 255, 255), 5);
-				Imgproc.putText(imageToSend, height + "px", new Point(goals[realGoalNum][3] + goals[realGoalNum][6] + 5, goals[realGoalNum][2]), Core.FONT_HERSHEY_SIMPLEX, 2.6f, new Scalar(255, 255, 255, 255), 3);
-				imgWithRect = imageToSend;
-				System.out.println("********************************** Pixel offset y: " + ((screenHeight / 2 ) - (goals[realGoalNum][2] + (height / 2))));
+				yOffset = ((screenHeight / 2 ) - (goals[realGoalNum][2] + (height / 2)));
+				maybeGroundDistance = (-0.146583 * yOffset) + 54.146594;
+				/*
+				System.out.println("********************************** Pixel offset y: " + yOffset);
 				System.out.println("********************************** Angle: " + angleToCorrect);
-				System.out.println("---------------------------------- groundDistance: " + groundDistance);
+				System.out.println("---------------------------------- groundDistance: " + maybeGroundDistance);
+				*/
 				return true;
 			}
 		}
@@ -225,6 +226,7 @@ public class Processing {
 				Imgproc.rectangle(imageToSend, new Point(gears[realGearNum][1], gears[realGearNum][0]), new Point(gears[realGearNum][1] + gears[realGearNum][4], gears[realGearNum][0] + gears[realGearNum][5]), new Scalar(0, 255, 255, 255), 2);
 				Imgproc.rectangle(imageToSend, new Point(gears[realGearNum][3], gears[realGearNum][2]), new Point(gears[realGearNum][3] + gears[realGearNum][6], gears[realGearNum][2] + gears[realGearNum][7]), new Scalar(0, 0, 255, 255), 2);
 				Imgproc.putText(imageToSend, distance + "in", new Point(50, 50), Core.FONT_HERSHEY_SIMPLEX, 1.2f, new Scalar(255, 255, 255, 255), 2);
+				imgWithRect = imageToSend;
 				//Imgproc.putText(imageToSend, "This is a lot of text", new Point(50, 50), Core.FONT_HERSHEY_SIMPLEX, 2.0f, new Scalar(255, 255, 255, 255), 1);
 				//Imgcodecs.imwrite("C:\\Users\\Nolan Blankenau\\workspace\\GRIPstandAlone\\src\\GearWithRect131.png", imageToSend);
 				return true;
@@ -233,8 +235,32 @@ public class Processing {
 		
 	}
 	
-	public double getGroundDistance(Mat theImage) {
-		return groundDistance;
+	/**
+	 * 
+	 * @param theImage image to be processed
+	 * @param theGoal is true if you want to find the goal and false if you want to find the gear
+	 * @return the distance in inches to the goal
+	 */
+	public double getGroundDistance(Mat theImage, boolean theGoal) {
+		if(process(theImage, theGoal)) {
+			return groundDistance;
+		} else {
+			return -1;
+		}
+	}
+	
+	/**
+	 * 
+	 * @param theImage image to be processed
+	 * @param theGoal is true if you want to find the goal and false if you want to find the gear
+	 * @return the offset angle in radians
+	 */
+	public double getAngleOffset(Mat theImage, boolean theGoal) {
+		if(process(theImage, theGoal)) {
+			return angleToCorrect;
+		} else {
+			return -361;
+		}
 	}
 	
 	/**
@@ -283,6 +309,50 @@ public class Processing {
 			System.out.println("total " + goalNum + " " + goals[goalNum][10]);
 			
 		}
+		
+		/*if(tY < bY + height) {
+			isGoalScore++;
+			System.out.println("1");
+		}
+		if(tHeight < tWidth) {
+			isGoalScore++;
+			System.out.println("2");
+		}
+		if(bHeight < bWidth) {
+			isGoalScore++;
+			System.out.println("3");
+		}
+		if(tX > bX - bWidth && tX < bX + bWidth) {
+			isGoalScore++;
+			System.out.println("4");
+		}
+		if(Math.abs((tY + tHeight) - bY) < tHeight) {
+			isGoalScore++;
+			System.out.println("5");
+		}
+
+		if(isGoalScore == 4) {
+			distance = (400) / (1 * height * Math.tan(0.5986479));
+			System.out.println("Height " + height);
+			System.out.println("Distance " + distance);
+			distanceFromGoal = 0.0;
+			groundDistance = Math.sqrt((distance * distance) - (6.1458333 * 6.1458333)); // should be 88 * 88
+			screenWidth = imageWithRect.size().width;
+			distanceFromGoal = (screenWidth / 2) - (tY + (tWidth / 2));
+			distanceToOrgin = ((5 / 6) * distanceFromGoal) / height;
+			realDistance = Math.sqrt((groundDistance * groundDistance) + (distanceToOrgin * distanceToOrgin));
+			angleToCorrect = Math.sin(distanceToOrgin / groundDistance);
+			
+			System.out.println((angleToCorrect * 180) / Math.PI);
+			Imgproc.rectangle(imageWithRect, new Point(tX, tY), new Point(tX + tWidth, tY + tHeight), new Scalar(0, 255, 255, 255), 2);
+			Imgproc.rectangle(imageWithRect, new Point(bX, bY), new Point(bX + bWidth, bY + bHeight), new Scalar(0, 0, 255, 255), 2);
+			Imgproc.putText(imageWithRect, String.valueOf(groundDistance) + "in", new Point(tX + tWidth + 5, tY), Core.FONT_HERSHEY_SIMPLEX, 0.6f, new Scalar(255, 255, 255, 255), 1);
+			imgWithRect = imageWithRect;
+			return true;
+		} else {
+			//Imgproc.putText(imageWithRect, isGoalScore + "", new Point(tX + tWidth + 5, tY), Core.FONT_HERSHEY_SIMPLEX, 0.4f, new Scalar(255, 255, 255, 255), 1);
+			return false;
+		}*/
 		return false;
 	}
 	
