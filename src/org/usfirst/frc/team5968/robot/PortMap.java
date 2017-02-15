@@ -127,7 +127,7 @@ public class PortMap {
 			case CLIMBER_MOTOR_LEFT:
 				return 2;
 			case CLIMBER_MOTOR_RIGHT:
-				return 3;
+				return 9;
 			default:
 				return -1;
 		}

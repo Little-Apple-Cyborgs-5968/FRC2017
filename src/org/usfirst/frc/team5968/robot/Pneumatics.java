@@ -17,6 +17,7 @@ public class Pneumatics{
 
 		compressor = new Compressor(PortMap.portOf(PortMap.CAN.PCM));   //Same with this?
 		compressor.setClosedLoopControl(true);
+		setSolenoidDown();
 	}
   
 	public static boolean getIsUp() {
@@ -39,6 +40,7 @@ public class Pneumatics{
   
 	public static void setSolenoidDown(){
 		piston1.set(DoubleSolenoid.Value.kForward);
+		Timer.delay(.35);
 		piston2.set(DoubleSolenoid.Value.kForward);
 	}
 	public static void stopCompressor(){

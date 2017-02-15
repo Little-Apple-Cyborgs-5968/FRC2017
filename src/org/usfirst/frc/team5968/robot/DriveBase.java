@@ -497,7 +497,7 @@ public class DriveBase {
 			configureSpeedControl();
 		}
 		
-		setRawSpeed(-1 * Math.pow(leftSpeed, 3) * MAX_SPEED_RPM, -1 * Math.pow(rightSpeed, 3) * MAX_SPEED_RPM);
+		setRawSpeed(-1 * (leftSpeed * .3) * MAX_SPEED_RPM, -1 * (rightSpeed * .3) * MAX_SPEED_RPM);
 	}
 	
 	private static boolean angleDriven = false;

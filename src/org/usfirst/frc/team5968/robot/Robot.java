@@ -53,6 +53,7 @@ public class Robot extends RobotBase {
     				disabledInit();
     				disabledInitialized = true;
     			}
+    			disabledPeriodic();
     			HAL.observeUserProgramDisabled();
     		}
     		else if (isTest()) {
@@ -162,7 +163,7 @@ public class Robot extends RobotBase {
     	Pneumatics.init();
     	RopeClimber.init();
     	Dashboard.init();
-    	//Pneumatics.setSolenoidDown();
+    	Pneumatics.setSolenoidDown();
     	
     	/*if(startPointName == StartPoint.KEY){
     		if(alliance == Alliance.Red){
@@ -200,11 +201,11 @@ public class Robot extends RobotBase {
     	DriveBase.resetTargetAngle();
     	Timer.delay(.05);
     	
-    	alliance = Alliance.Red;//DriverStation.getInstance().getAlliance();
+    	alliance = Alliance.Blue;//DriverStation.getInstance().getAlliance();
     	
-    	startPoint = StartPoint.KEY;//Dashboard.getStartingPoint();
+    	startPoint = StartPoint.MIDLINE;//Dashboard.getStartingPoint();
     	
-    	auto = AutoMode.HOPPER_BOILER;//Dashboard.getAutoMode();
+    	auto = AutoMode.BE_USELESS;//Dashboard.getAutoMode();
     	
     	hopper = 5;//Dashboard.getHopper();
     	
@@ -275,18 +276,14 @@ public class Robot extends RobotBase {
     		//DriveBase.drivePath(drivePoints, false);
     	//}
     	//else{
-    	//DriveBase.teleopDrive(HumanInterface.getLeftStick(), HumanInterface.getRightStick());
+    	DriveBase.teleopDrive(HumanInterface.getLeftStick(), HumanInterface.getRightStick());
     	//}
     	
-    	//HumanInterface.liftControl();
-    	//HumanInterface.emergencyStopClimberControl();
+    	HumanInterface.liftControl();
+    	HumanInterface.emergencyStopClimberControl();
+    	HumanInterface.runClimber();
 		/*lights.pneumatics();
 		lights.climbing();*/
-    	if(!driven){
-    		if(DriveBase.driveRotation(173)){
-    			driven = true;
-    		}
-    	}
     }
     
     /**
@@ -306,8 +303,11 @@ public class Robot extends RobotBase {
     	
     }
     public void disabledPeriodic(){
-    	if(autoThread.isAlive()){
+    	if(autoThread != null && autoThread.isAlive()){
     		autoThread.interrupt();
+    	}
+    	if(climberThread != null && climberThread.isAlive()){
+    		climberThread.interrupt();
     	}
     }
     

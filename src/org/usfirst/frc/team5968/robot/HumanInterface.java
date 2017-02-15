@@ -71,4 +71,13 @@ public class HumanInterface {
 			Robot.getClimberThread().interrupt();
 		}
 	}
+	
+	/*
+	 * Climber will turn on when you press this button
+	 */
+	public static void runClimber(){
+		if(leftStick.getRawButton(3) || rightStick.getRawButton(3)){
+			RopeClimber.manualStartClimber();
+		}
+	}
 }

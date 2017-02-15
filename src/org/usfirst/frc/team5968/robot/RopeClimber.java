@@ -24,6 +24,8 @@ public class RopeClimber implements Runnable {
 	
 	private static int direction = 0;
 	
+	private static boolean manualStart = false;
+	
 	public void run() {
 		while(!motorClimb()){
 			if(Thread.interrupted()){
@@ -41,8 +43,8 @@ public class RopeClimber implements Runnable {
 	
 	public static void setSpeed(double motorSpeed){
 		
-		rightMotor.set(motorSpeed);
-		leftMotor.set(-motorSpeed);
+		rightMotor.set(-motorSpeed);
+		leftMotor.set(motorSpeed);
 	}
 	
 	public static void climbingAcceleration(){
@@ -65,16 +67,15 @@ public class RopeClimber implements Runnable {
 	
  	public static boolean motorClimb(){	//Prepares to climb
 		
-		if(Timer.getMatchTime() < 120){
-			
+		if(Timer.getMatchTime() > 30){
 			return false;
 		}
 		direction = 1;
 		boolean reachedDestination = false;
-  		
+ 
 		if(!isSetToPoint4){
 			
-			setSpeed(.4);
+			setSpeed(.05);
 			isSetToPoint4 = true;
 		}
 		
@@ -125,6 +126,13 @@ public class RopeClimber implements Runnable {
  	 */
  	public static double getClimbHeight(){
  		return distance;
+ 	}
+ 	
+ 	/**
+ 	 * Manually start the climber
+ 	 */
+ 	public static void manualStartClimber(){
+ 		manualStart = true;
  	}
 } 
     
