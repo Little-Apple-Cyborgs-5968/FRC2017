@@ -337,84 +337,37 @@ public class AutoManager{
 			//DRIVE1 and TURN1 are handled in the call to hopperAuto
 			case DRIVE2_DONE:
 				//System.out.println("DRIVE2_DONE");
-				if(DriveBase.driveDistance(-1 * SAFE_TURN_DISTANCE)){ //24 is pretty arbitrary. Could maybe be tweaked to save time.
+				if(DriveBase.driveDistance(-1 * SAFE_TURN_DISTANCE)){ 
 					progress = AutoProgress.DRIVE3_DONE;
 					currentAngle = NavXMXP.getYaw();
 				}
 				break;
 			case DRIVE3_DONE:
 				//System.out.println("DRIVE3_DONE");
-				turnAngle = 180 - (Math.atan(dy / dx) * 180 / Math.PI); //degrees
-				if(alliance == Alliance.Blue){
-					turnAngle *= -1; //think about field symmetry if this doesn't make sense
-				}
-				
-				if(DriveBase.driveRotation(currentAngle + turnAngle)){
+				if(DriveBase.driveRotation(180)){
 					progress = AutoProgress.TURN2_DONE;
 				}
 				break;
 			case TURN2_DONE:
-				
-				double driveDistance = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-				if(DriveBase.driveDistance(driveDistance)){
+				if(DriveBase.driveDistanceWithVision(91.75)){
 					progress = AutoProgress.DRIVE4_DONE;
 				}
 				break;
 			case DRIVE4_DONE:
 				//System.out.println("DRIVE4_DONE");
-
-				if(alliance == Alliance.Red){
-					if(DriveBase.driveRotation(135)){
-						progress = AutoProgress.FINISHED;
-					}
+				boolean driven = false;
+				if(Alliance == Alliance.Red){
+					driven = DriveBase.driveRightDistance(Robot.getRobotWidth() * 0.808087444; //46.3 degrees (angle of the boiler with the wall)
 				}
 				else{
-					if(DriveBase.driveRotation(-135)){
-						progress = AutoProgress.FINISHED;
-					}
-				}
-				break;
-			case TURN3_DONE:
-				//System.out.println("TURN3_DONE");
-
-				distanceToGoal = 0; //TODO: camera targeting
-				angleToGoal = 0; //TODO: camera targeting
-				
-				angleToTurn = 180 / Math.PI * Math.atan((distanceToGoal * Math.cos(angleToGoal * Math.PI / 180) - SAFE_TURN_DISTANCE) / (distanceToGoal * Math.sin(angleToGoal * Math.PI / 180))); //make sure angleToGoal is in degrees
-				
-				if(angleToTurn > 0){
-					angleToTurn = 90 - angleToGoal - angleToTurn; //angle to turn THROUGH
-					angleToTurn += NavXMXP.getYaw(); //angle to turn TO
-				}
-				else{
-					angleToTurn = 90 + angleToGoal + angleToTurn; //angle to turn THROUGH
-					angleToTurn -= NavXMXP.getYaw(); //since the angle will be negative if we're on blue
-				}
-				
-				distanceToDrive = Math.sqrt(Math.pow(distanceToGoal * Math.cos(angleToGoal * Math.PI / 180) - SAFE_TURN_DISTANCE, 2) + Math.pow(distanceToGoal * Math.sin(angleToGoal * Math.PI / 180), 2));
-				
-				progress = AutoProgress.CAMERA_TARGETING_DONE;
-				break;
-			case CAMERA_TARGETING_DONE:
-				System.out.println("CAMERA_TARGETING_DONE");
-
-				if(DriveBase.driveDistance(distanceToDrive)){
-					progress = AutoProgress.DRIVE5_DONE;
-				}
-			case DRIVE5_DONE:
-				System.out.println("DRIVE5_DONE");
-
-				if(DriveBase.driveRotation(angleToTurn)){
-					progress = AutoProgress.TURN4_DONE;
-				}
-				break;
-			case TURN4_DONE:
-				System.out.println("TURN4_DONE");
-
-				if(DriveBase.driveDistance(SAFE_TURN_DISTANCE - .5 * Robot.getRobotLength())){
-					Pneumatics.DoubleSolenoidTOGGLE();
+					driven = DriveBase.driveLeftDistance(Robot.getRobotWidth() * 0.808087444;
+				}	
+														 
+				if(driven){
+					Pneumatics.doubleSolenoidTOGGLE();
 					progress = AutoProgress.FINISHED;
-				}
+				}	
+				break;
 			default:
 				System.out.println("LOLOL I have no idea what to do");
 				break;
