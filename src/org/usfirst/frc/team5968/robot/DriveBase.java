@@ -488,7 +488,7 @@ public class DriveBase {
 	
 	private static double distanceDriven = 0;
 	
-	private static long lastDriveWithVisionCallMillis = System.getCurrentTimeMillis();
+	private static long lastDriveWithVisionCallMillis = System.currentTimeMillis();
 	
 	/**
 	 * Drive a certain distance using a vision closed loop. Will start targeting when you're 72 inches away, and stop
@@ -497,7 +497,7 @@ public class DriveBase {
 	 * @param distance The distance to drive to the goal
 	*/
 	public static boolean driveDistanceWithVision(double distance){
-		if(System.getCurrentTimeMillis() - lastDriveWithVisionCallMillis > 100){
+		if(System.currentTimeMillis() - lastDriveWithVisionCallMillis > 100){
 			distanceDriven = 0;
 			resetTargetAngle();
 			resetEncoders();
@@ -583,7 +583,7 @@ public class DriveBase {
 	
 	private static boolean angleDriven = false;
 	
-	private static boolean distanceDriven = false;
+	private static boolean distanceDriven1 = false;
 	
 	private static long pointDriveLastCallMillis = System.currentTimeMillis();
 	
@@ -661,10 +661,10 @@ public class DriveBase {
 				}
 				angleDriven = true;
 			}
-			else if(!distanceDriven){
+			else if(!distanceDriven1){
 				while(!driveDistance(targetDistance)){
 				}
-				distanceDriven = true;
+				distanceDriven1 = true;
 				pointDriveLastCallMillis = System.currentTimeMillis();
 				return true;
 			}

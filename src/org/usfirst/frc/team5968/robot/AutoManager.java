@@ -356,15 +356,15 @@ public class AutoManager{
 			case DRIVE4_DONE:
 				//System.out.println("DRIVE4_DONE");
 				boolean driven = false;
-				if(Alliance == Alliance.Red){
-					driven = DriveBase.driveRightDistance(Robot.getRobotWidth() * 0.808087444; //46.3 degrees (angle of the boiler with the wall)
+				if(alliance == Alliance.Red){
+					driven = DriveBase.driveRightDistance(Robot.getRobotWidth() * 0.808087444); //46.3 degrees (angle of the boiler with the wall)
 				}
 				else{
-					driven = DriveBase.driveLeftDistance(Robot.getRobotWidth() * 0.808087444;
+					driven = DriveBase.driveLeftDistance(Robot.getRobotWidth() * 0.808087444);
 				}	
 														 
 				if(driven){
-					Pneumatics.doubleSolenoidTOGGLE();
+					Pneumatics.DoubleSolenoidTOGGLE();
 					progress = AutoProgress.FINISHED;
 				}	
 				break;
