@@ -486,6 +486,87 @@ public class DriveBase {
     	}
 	}
 	
+	private static double distanceDriven = 0;
+	
+	private static long lastDriveWithVisionCallMillis = System.getCurrentTimeMillis();
+	
+	/**
+	 * Drive a certain distance using a vision closed loop. Will start targeting when you're 72 inches away, and stop
+	 * when you're x inches away.
+	 *
+	 * @param distance The distance to drive to the goal
+	*/
+	public static boolean driveDistanceWithVision(double distance){
+		if(System.getCurrentTimeMillis() - lastDriveWithVisionCallMillis > 100){
+			distanceDriven = 0;
+			resetTargetAngle();
+			resetEncoders();
+		}
+		if(distanceDriven < distance - 72){
+			driveStraight(DRIVE_SPEED, false);
+			distanceDriven += (Math.abs(getLeftDistance()) + Math.abs(getRightDistance())) / 2;
+		}
+		else if(distanceDriven >= distance - 72 && distanceDriven < distance - 30){
+			distanceDriven = distance - 0; //replace 0 with distance from image processing
+			double angleToGoal = 0; //replace 0 with angle from image processing
+			
+			if(angleToGoal > 0){
+				setRawFraction(DRIVE_SPEED + angleToGoal * .001, DRIVE_SPEED);
+			}	
+			else if(angleToGoal < 0){
+				setRawFraction(DRIVE_SPEED, DRIVE_SPEED + angleToGoal * .001 * -1);
+			}
+			else{
+				setRawFraction(DRIVE_SPEED, DRIVE_SPEED);
+			}
+			distanceDriven += (Math.abs(getLeftDistance()) + Math.abs(getRightDistance())) / 2;
+		}
+		else{
+			if(driveDistance(30)){
+				return true;
+			}	
+		}
+		lastDriveWithVisionCallMillis = System.currentTimeMillis();
+		return false;
+	}	
+	
+	private static double oneSideDistanceLastCallMillis = System.currentTimeMillis();
+	
+	private static double oneSideDistanceDriven = 0;
+	
+	public static boolean driveLeftDistance(double distance){
+		if(System.currentTimeMillis() - oneSideDistanceLastCallMillis > 100){
+			oneSideDistanceDriven = 0;
+			resetEncoders();
+		}
+		oneSideDistanceDriven += (Math.abs(getLeftDistance()) + Math.abs(getRightDistance())) / 2;
+		
+		if(oneSideDistanceDriven >= distance){
+			return true;
+		}	
+		
+		setRawFraction(DRIVE_SPEED, 0);
+		oneSideDistanceLastCallMillis = System.currentTimeMillis();
+		return false;
+	}
+	
+	public static boolean driveRightDistance(double distance){
+		if(System.currentTimeMillis() - oneSideDistanceLastCallMillis > 100){
+			oneSideDistanceDriven = 0;
+			resetEncoders();
+		}
+		
+		oneSideDistanceDriven += (Math.abs(getLeftDistance()) + Math.abs(getRightDistance())) / 2;
+
+		if(oneSideDistanceDriven >= distance){
+			return true;
+		}
+		
+		setRawFraction(0, DRIVE_SPEED);
+		oneSideDistanceLastCallMillis = System.currentTimeMillis();
+		return false;
+	}
+	
 	/**
 	 * Called when the human is in control of the robot, using the joysticks
 	 * 
