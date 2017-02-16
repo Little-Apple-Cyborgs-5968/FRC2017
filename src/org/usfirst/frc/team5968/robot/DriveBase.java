@@ -508,13 +508,7 @@ public class DriveBase {
 		}
 		else if(distanceDriven >= distance - 72 && distanceDriven < distance - 30){
 			double angleToGoal = 0; //replace 0 with angle from image processing
-			
-			if(angleToGoal >= -1 && angleToGoal <= -1){
-				distanceDriven = distance - 0 + (Math.abs(getLeftDistance()) + Math.abs(getRightDistance())) / 2 - 1; //replace 0 with distance from image processing //replace 1 with encoder distance saved when image was taken
-			}
-			else{
-				distanceDriven += (Math.abs(getLeftDistance()) + Math.abs(getRightDistance())) / 2;
-			}	
+			distanceDriven = distance - 0 + (Math.abs(getLeftDistance()) + Math.abs(getRightDistance())) / 2 - 1; //replace 0 with distance from image processing //replace 1 with encoder distance saved when image was taken
 			
 			if(angleToGoal > 0){
 				setRawFraction(DRIVE_SPEED + angleToGoal * .001, DRIVE_SPEED);
