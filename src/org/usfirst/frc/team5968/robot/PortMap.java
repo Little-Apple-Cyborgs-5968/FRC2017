@@ -90,7 +90,7 @@ public class PortMap {
 			case PCM:
 				return 0;
 			case PDP:
-				return 1;
+				return 0;
 			default:
 				return -1;
 		}
@@ -127,7 +127,7 @@ public class PortMap {
 			case CLIMBER_MOTOR_LEFT:
 				return 2;
 			case CLIMBER_MOTOR_RIGHT:
-				return 9;
+				return 3;
 			default:
 				return -1;
 		}

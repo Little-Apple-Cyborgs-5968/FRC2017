@@ -15,16 +15,19 @@ public class RopeClimber implements Runnable {
 	
 	private static final double startAngle = 5;	//Inches
 	private static final double robotLength = 33;	//Inches  
-	private static final double maxCurrent = 40;    //Tune
+	private static final double maxCurrent = 70;    //Tune
+	private static final double maxSpeed = .9;
 	private static double motorSpeed = 0;
-	private static double distance = 0;
+	private static double distance = ((Math.sin(startAngle * (Math.PI / 180))) * robotLength);
 	
-	private static boolean isSetToPoint4 = false;
+	private static boolean isSetToPoint1 = false;
 	private static boolean isAccelerated = false;
 	
 	private static int direction = 0;
 	
 	private static boolean manualStart = false;
+	
+	private static double stopSpeed = .3;
 	
 	public void run() {
 		while(!motorClimb()){
@@ -49,13 +52,14 @@ public class RopeClimber implements Runnable {
 	
 	public static void climbingAcceleration(){
 		
-		if(motorSpeed < .9){
+		if(motorSpeed < maxSpeed){
 			
-			motorSpeed = motorSpeed + .1;
+			motorSpeed = motorSpeed + .01;
+			setSpeed(motorSpeed);
+			Timer.delay(.05);
 			isAccelerated = false;
 		}
-		if(motorSpeed >= .9){
-			
+		if(motorSpeed >= maxSpeed){
 			isAccelerated = true;
 		}
 	}
@@ -66,45 +70,43 @@ public class RopeClimber implements Runnable {
 	}	
 	
  	public static boolean motorClimb(){	//Prepares to climb
-		
-		if(Timer.getMatchTime() > 30){
+		if(Timer.getMatchTime() > 30 || Timer.getMatchTime() == -1){
 			return false;
 		}
-		direction = 1;
 		boolean reachedDestination = false;
  
-		if(!isSetToPoint4){
+		if(!isSetToPoint1){
 			
-			setSpeed(.05);
-			isSetToPoint4 = true;
+			setSpeed(.4);
+			motorSpeed = .4;
+			isSetToPoint1 = true;
 		}
 		
-  		double verticalAngle = NavXMXP.getPitch();
-    
-  		if(verticalAngle > startAngle){
-  			
+  		double verticalAngle = NavXMXP.getRoll();
+  		if(Math.abs(verticalAngle) > startAngle){
+  			System.out.println(getCurrent());
 			DriveBase.setRawFraction(0, 0);
-			
+			climberEncoder.reset();
 			if(!isAccelerated){
 				
 				climbingAcceleration();
 			}
 			
-			distance = climberEncoder.getDistance() + ((Math.sin(startAngle * (Math.PI / 180))) * robotLength);
+			distance += climberEncoder.getDistance();
   			if(distance < 48){
   				
   				reachedDestination = false;
         	}
   			if(distance >= 48){
       
-  				setSpeed(.8);
+  				setSpeed(maxSpeed - .1);
 				reachedDestination = false;
   				
         	} 
 			if(getCurrent() >= maxCurrent){
-					
-					setSpeed(0);
+					setSpeed(stopSpeed);
 					reachedDestination = true;	//Create if statement for boolean when calling method
+					System.out.println("it stopped");
 			}
   		}
   		return reachedDestination;
@@ -128,11 +130,8 @@ public class RopeClimber implements Runnable {
  		return distance;
  	}
  	
- 	/**
- 	 * Manually start the climber
- 	 */
- 	public static void manualStartClimber(){
- 		manualStart = true;
+ 	public static void eStopClimber(){
+ 		setSpeed(stopSpeed);
  	}
 } 
     

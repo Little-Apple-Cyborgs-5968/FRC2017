@@ -25,7 +25,7 @@ public class HumanInterface {
 	/**
 	 * If the joystick inputs are less than this amount, they will be set to 0.
 	 */
-	private static final double DEADZONE = .02;
+	private static final double DEADZONE = .01;
 	
 	private static boolean isPRESSED = false;
 	/**
@@ -68,16 +68,16 @@ public class HumanInterface {
 	 */
 	public static void emergencyStopClimberControl(){
 		if(rightStick.getRawButton(2) || leftStick.getRawButton(2)){
-			Robot.getClimberThread().interrupt();
+			RopeClimber.eStopClimber();
 		}
 	}
 	
-	/*
-	 * Climber will turn on when you press this button
-	 */
-	public static void runClimber(){
-		if(leftStick.getRawButton(3) || rightStick.getRawButton(3)){
-			RopeClimber.manualStartClimber();
+	private static boolean pressed = false;
+	
+	public static void reverseControls(){
+		if((rightStick.getRawButton(5) || leftStick.getRawButton(6)) && !pressed){
+			DriveBase.reverseControls();
 		}
+		pressed = rightStick.getRawButton(5) || leftStick.getRawButton(6);
 	}
 }

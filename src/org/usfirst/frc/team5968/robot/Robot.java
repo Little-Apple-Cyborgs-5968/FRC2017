@@ -256,18 +256,13 @@ public class Robot extends RobotBase {
     		autoThread.interrupt(); //stops the auto code if it's for some reason still running
     	}
     	
-
-    	Runnable climb = new RopeClimber();
-    	climberThread = new Thread(climb);
-    	climberThread.start();
-    	
     	NavXMXP.resetYaw();
     	DriveBase.resetTargetAngle();
     	Timer.delay(.05);
     	
     }
     
-    boolean driven = false;
+    boolean climbed = false;
     /**
      * Called periodically during teleop
      */
@@ -281,7 +276,11 @@ public class Robot extends RobotBase {
     	
     	HumanInterface.liftControl();
     	HumanInterface.emergencyStopClimberControl();
-    	HumanInterface.runClimber();
+    	HumanInterface.reverseControls();
+    	
+    	if(!climbed){
+    		climbed = RopeClimber.motorClimb();
+    	}
 		/*lights.pneumatics();
 		lights.climbing();*/
     }

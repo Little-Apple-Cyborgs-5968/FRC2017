@@ -507,8 +507,8 @@ public class DriveBase {
 			distanceDriven += (Math.abs(getLeftDistance()) + Math.abs(getRightDistance())) / 2;
 		}
 		else if(distanceDriven >= distance - 72 && distanceDriven < distance - 30){
-			double angleToGoal = 0; //replace 0 with angle from image processing
 			distanceDriven = distance - 0 + (Math.abs(getLeftDistance()) + Math.abs(getRightDistance())) / 2 - 1; //replace 0 with distance from image processing //replace 1 with encoder distance saved when image was taken
+			double angleToGoal = 0; //replace 0 with angle from image processing
 			
 			if(angleToGoal > 0){
 				setRawFraction(DRIVE_SPEED + angleToGoal * .001, DRIVE_SPEED);
@@ -519,6 +519,7 @@ public class DriveBase {
 			else{
 				setRawFraction(DRIVE_SPEED, DRIVE_SPEED);
 			}
+			distanceDriven += (Math.abs(getLeftDistance()) + Math.abs(getRightDistance())) / 2;
 		}
 		else{
 			if(driveDistance(30)){
@@ -566,6 +567,9 @@ public class DriveBase {
 		return false;
 	}
 	
+	private static boolean controlsReversed = false;
+
+	
 	/**
 	 * Called when the human is in control of the robot, using the joysticks
 	 * 
@@ -576,8 +580,23 @@ public class DriveBase {
 		if(leftMotorLead.getControlMode() != TalonControlMode.Speed){
 			configureSpeedControl();
 		}
-		
-		setRawSpeed(-1 * (leftSpeed * .3) * MAX_SPEED_RPM, -1 * (rightSpeed * .3) * MAX_SPEED_RPM);
+		if(!controlsReversed){
+			setRawSpeed(-1 * (leftSpeed * .35) * MAX_SPEED_RPM, -1 * (rightSpeed * .3) * MAX_SPEED_RPM);
+		}
+		else{
+			setRawSpeed((rightSpeed * .3) * MAX_SPEED_RPM, (leftSpeed * .35) * MAX_SPEED_RPM);
+
+		}
+	}
+	
+	public static void reverseControls(){
+		if(controlsReversed){
+			controlsReversed = false;
+		}
+		else{
+			controlsReversed = true;
+		}
+		Dashboard.sendControlsReversed(controlsReversed);
 	}
 	
 	private static boolean angleDriven = false;

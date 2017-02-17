@@ -27,7 +27,7 @@ public class Pneumatics{
 	public static void DoubleSolenoidTOGGLE(){
     	if(piston1.get() == DoubleSolenoid.Value.kForward){
     		piston1.set(DoubleSolenoid.Value.kReverse);
-			Timer.delay(.425);
+			Timer.delay(.4);
     		piston2.set(DoubleSolenoid.Value.kReverse);
     	}
     	else{
