@@ -186,4 +186,8 @@ public class Dashboard {
 			table.putString("pneumatics", "red");
 		}
 	}
+	
+	public static void sendControlsReversed(boolean reversed){
+		table.putBoolean("reversed", reversed);
+	}
 }
