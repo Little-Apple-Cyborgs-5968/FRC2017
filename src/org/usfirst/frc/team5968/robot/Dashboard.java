@@ -165,6 +165,7 @@ public class Dashboard {
 		warnings.putBoolean("collision", NavXMXP.getCollisionHappened());
 		warnings.putBoolean("pneumatics", Pneumatics.isPressureLow());
 		warnings.putBoolean("temperature", DriveBase.isAMotorTooHot());
+		System.out.println("pneumatics " + Pneumatics.isPressureLow());
 	}
 	
 	/**

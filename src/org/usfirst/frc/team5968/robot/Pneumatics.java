@@ -2,6 +2,7 @@ package org.usfirst.frc.team5968.robot;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.Compressor;
 
 //TODO: @allen458 fix some stuff and document the code. See the other classes for examples on documentation.
@@ -12,6 +13,9 @@ public class Pneumatics{
 	private static DoubleSolenoid piston2 = new DoubleSolenoid(PortMap.portOf(PortMap.PCM.FRONT_PISTON_1), PortMap.portOf(PortMap.PCM.FRONT_PISTON_2));    //Eric maybe put this in PortMap?
 	
 	private static Compressor compressor;
+	
+	private static final double pressureSensorSupplyVoltage = 5;
+	private static AnalogInput pressureSensor = new AnalogInput(0);
 	
 	public static void init(){
 
@@ -53,7 +57,17 @@ public class Pneumatics{
 	 */
 	public static boolean isPressureLow(){
 		
-		return false;
+		boolean pressureTooLow = true;
+		double outputVoltage = pressureSensor.getVoltage();
+		double pressure = 250.0 * (outputVoltage/pressureSensorSupplyVoltage) - 25.0; 
+		
+		if(pressure >= 45){
+			pressureTooLow = false;
+		}else{
+			pressureTooLow = true;
+		}
+		
+		return pressureTooLow;
 	}
 }
     
