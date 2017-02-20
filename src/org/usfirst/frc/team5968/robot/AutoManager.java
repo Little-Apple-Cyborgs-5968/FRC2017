@@ -76,6 +76,10 @@ public class AutoManager{
     
     private static boolean hopperDriveComplete = false;
     
+    public static double getSafeTurnDistance(){
+    	return SAFE_TURN_DISTANCE;
+    }
+    
     /**
      * Run autonomous
      * 

@@ -294,6 +294,7 @@ public class Robot extends RobotBase {
     	HumanInterface.reverseControls();
     	HumanInterface.backUpForGear();
     	HumanInterface.manualClimb();
+    	HumanInterface.turnAroundForFuel();
 
     	if(!climbed){
     		climbed = RopeClimber.motorClimb();

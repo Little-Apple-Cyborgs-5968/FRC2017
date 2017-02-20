@@ -93,19 +93,56 @@ public class HumanInterface {
 		pressed = rightStick.getRawButton(5) || leftStick.getRawButton(6);
 	}
 	
-	private static boolean drive = false;
+	private static boolean driveBack = false;
 	
 	private static long startTime = System.currentTimeMillis();
+	
+	private enum TurnAroundState{
+		DRIVE1,
+		TURN,
+		DRIVE2,
+		DILE;
+	}
 	
 	public static void backUpForGear(){
 		if((leftStick.getRawButton(4) || rightStick.getRawButton(3))){
 			startTime = System.currentTimeMillis();
-			drive = true;
+			driveBack = true;
 		}
 		
-		if(drive){
+		if(driveBack){
 			if(DriveBase.driveDistance(6, .3) || System.currentTimeMillis() - startTime > 1500){
-				drive = false;
+				driveBack = false;
+			}
+		}
+	}
+	
+	private static boolean turnState = TurnAroundState.IDLE;
+	
+	public static void turnAroundForFuel(){
+		if((leftStick.getRawButton(2) || rightStick.getRawButton(2))){
+			startTime = System.currentTimeMillis();
+			turnState = TurnAroundState.DRIVE1;
+		}
+		
+		if(turnState != TurnAroundState.IDLE){
+			if(System.currentTimeMillis() - startTime >= 3000){
+				turnState = TurnAroundState.IDLE;
+			}
+			else if(turnState == TurnAroundState.DRIVE1){
+				if(DriveBase.driveDistance(AutoManager.getSafeTurnDistance())){
+					turnState = TurnAroundState.TURN;
+				}
+			}
+			else if(turnState == TurnAroundState.TURN){
+				if(DriveBase.driveRotation(180)){
+					turnState = TurnAroundState.DRIVE2;
+				}
+			}
+			else if(turnState = TurnAroundState.DRIVE2){
+				if(DriveBase.driveDistance(AutoManager.getSafeTurnDistance())){
+					turnState = TurnAroundState.IDLE;
+				}
 			}
 		}
 	}
