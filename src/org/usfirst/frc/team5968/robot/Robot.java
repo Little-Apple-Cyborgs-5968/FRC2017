@@ -99,12 +99,12 @@ public class Robot extends RobotBase {
     /**
      * The length of the robot in inches
      */
-    private static final double ROBOT_LENGTH = 38;
+    private static final double ROBOT_LENGTH = 38.5;
     
     /**
      * The width of the robot in inches, measured between the centers of the wheels
      */
-    private static final double ROBOT_WIDTH = 25.1875;
+    private static final double ROBOT_WIDTH = 36;
     
     /**
      * The alliance we're on
@@ -153,6 +153,9 @@ public class Robot extends RobotBase {
      */
     private static Thread climberThread = null;
     
+    Processing processing = new Processing();
+    
+    private static boolean shouldProcessImage = false;
     /**
      * Called when the robot turns on
      */
@@ -164,6 +167,7 @@ public class Robot extends RobotBase {
     	RopeClimber.init();
     	Dashboard.init();
     	Pneumatics.setSolenoidDown();
+    	UsbCamera.init();
     	
     	/*if(startPointName == StartPoint.KEY){
     		if(alliance == Alliance.Red){
@@ -200,14 +204,15 @@ public class Robot extends RobotBase {
     	NavXMXP.resetYaw();
     	DriveBase.resetTargetAngle();
     	Timer.delay(.05);
+    	Lights.toggleLedRing();
     	
-    	alliance = Alliance.Blue;//DriverStation.getInstance().getAlliance();
+    	alliance = DriverStation.getInstance().getAlliance();
     	
-    	startPoint = StartPoint.MIDLINE;//Dashboard.getStartingPoint();
+    	startPoint = StartPoint.KEY;//Dashboard.getStartingPoint();
     	
-    	auto = AutoMode.BE_USELESS;//Dashboard.getAutoMode();
+    	auto = Dashboard.getAutoMode();
     	
-    	hopper = 5;//Dashboard.getHopper();
+    	hopper = Dashboard.getHopper();
     	
     	if(alliance != Alliance.Red && alliance != Alliance.Blue){
     		DriverStation.reportError("I don't know what alliance I'm on!", false);
@@ -240,12 +245,22 @@ public class Robot extends RobotBase {
     	autoThread.start();
     }
     
-    
+    boolean driven = false;
     /**
      * Called periodically during autonomous
      */
 	public void autoPeriodic(){
     	//hehe this is all in a separate thread. It won't have to wait for Driver Station updates!! :D
+
+		//if(shouldProcessImage){
+			double initialDistance = DriveBase.getDistanceToGo();
+			//Processing
+			processing.process(UsbCamera.getImage(), true);
+			if(processing.getGroundDistance() > 0.0) {
+				DriveBase.putNewMeasurements(processing.getGroundDistance(), processing.getAngle(), initialDistance);
+				System.out.println("********* " + processing.getGroundDistance() + " " + processing.getAngle());
+			}
+		//}
     }
     
     /**
@@ -271,16 +286,20 @@ public class Robot extends RobotBase {
     		//DriveBase.drivePath(drivePoints, false);
     	//}
     	//else{
-    	DriveBase.teleopDrive(HumanInterface.getLeftStick(), HumanInterface.getRightStick());
+    	DriveBase.teleopDrive(HumanInterface.getLeftStick(), HumanInterface.getLeftStick());
     	//}
     	
     	HumanInterface.liftControl();
     	HumanInterface.emergencyStopClimberControl();
     	HumanInterface.reverseControls();
-    	
+    	HumanInterface.backUpForGear();
+    	HumanInterface.manualClimb();
+
     	if(!climbed){
     		climbed = RopeClimber.motorClimb();
     	}
+    	DriveBase.driveStraight(.2, false);
+    	//System.out.println(DriveBase.getLeftDistance() + " " + DriveBase.getRightDistance());
 		/*lights.pneumatics();
 		lights.climbing();*/
     }
@@ -327,7 +346,10 @@ public class Robot extends RobotBase {
     	}
     	
     	public void run(){
-    		AutoManager.doAuto(startPoint, mode, alliance, 5);
+    		//AutoManager.doAuto(startPoint, mode, alliance, hopper);
+    		while(!DriveBase.driveDistanceWithVision(100, .2)){
+    			
+    		}
     	}
     }
     
@@ -470,5 +492,13 @@ public class Robot extends RobotBase {
     		default:
     			return -1;
     	}
+    }
+    
+    public static void startProcessingImage(){
+    	shouldProcessImage = true;
+    }
+    
+    public static void stopProcessingImage(){
+    	shouldProcessImage = false;
     }
 }

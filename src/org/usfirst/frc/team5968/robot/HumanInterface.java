@@ -28,6 +28,8 @@ public class HumanInterface {
 	private static final double DEADZONE = .01;
 	
 	private static boolean isPRESSED = false;
+	
+	private static boolean climberManual = false;
 	/**
 	 * Gets the value from the Y axis of the left stick, since that's
 	 * the only value we use
@@ -72,6 +74,16 @@ public class HumanInterface {
 		}
 	}
 	
+	public static void manualClimb(){
+		if(leftStick.getRawButton(5) || rightStick.getRawButton(6)){
+			RopeClimber.manualClimb();
+			climberManual = true;
+		}
+		else if(climberManual){
+			RopeClimber.eStopClimber();
+		}
+	}
+	
 	private static boolean pressed = false;
 	
 	public static void reverseControls(){
@@ -79,5 +91,22 @@ public class HumanInterface {
 			DriveBase.reverseControls();
 		}
 		pressed = rightStick.getRawButton(5) || leftStick.getRawButton(6);
+	}
+	
+	private static boolean drive = false;
+	
+	private static long startTime = System.currentTimeMillis();
+	
+	public static void backUpForGear(){
+		if((leftStick.getRawButton(4) || rightStick.getRawButton(3))){
+			startTime = System.currentTimeMillis();
+			drive = true;
+		}
+		
+		if(drive){
+			if(DriveBase.driveDistance(6, .3) || System.currentTimeMillis() - startTime > 1500){
+				drive = false;
+			}
+		}
 	}
 }

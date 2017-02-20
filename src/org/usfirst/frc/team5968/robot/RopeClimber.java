@@ -1,5 +1,6 @@
 package org.usfirst.frc.team5968.robot;
 
+import edu.wpi.first.wpilibj.CounterBase;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.Timer;
@@ -15,7 +16,7 @@ public class RopeClimber implements Runnable {
 	
 	private static final double startAngle = 5;	//Inches
 	private static final double robotLength = 33;	//Inches  
-	private static final double maxCurrent = 70;    //Tune
+	private static final double maxCurrent = 60;    //Tune
 	private static final double maxSpeed = .9;
 	private static double motorSpeed = 0;
 	private static double distance = ((Math.sin(startAngle * (Math.PI / 180))) * robotLength);
@@ -25,9 +26,9 @@ public class RopeClimber implements Runnable {
 	
 	private static int direction = 0;
 	
-	private static boolean manualStart = false;
+	private static boolean manualControl = false;
 	
-	private static double stopSpeed = .3;
+	private static double stopSpeed = .55;
 	
 	public void run() {
 		while(!motorClimb()){
@@ -40,8 +41,8 @@ public class RopeClimber implements Runnable {
 	public static void init(){
 		rightMotor = new VictorSP(PortMap.portOf(PortMap.PWM.CLIMBER_MOTOR_RIGHT));
 		leftMotor = new VictorSP(PortMap.portOf(PortMap.PWM.CLIMBER_MOTOR_LEFT));
-		climberEncoder = new Encoder(PortMap.portOf(PortMap.PWM.CLIMBER_ENCODER_A), PortMap.portOf(PortMap.PWM.CLIMBER_ENCODER_B));  
-		climberEncoder.setDistancePerPulse(8 / 2048); //inches
+		climberEncoder = new Encoder(PortMap.portOf(PortMap.PWM.CLIMBER_ENCODER_A), PortMap.portOf(PortMap.PWM.CLIMBER_ENCODER_B), false, CounterBase.EncodingType.k4X);  
+		climberEncoder.setDistancePerPulse(2.5 * Math.PI / 360); //inches
 	}
 	
 	public static void setSpeed(double motorSpeed){
@@ -64,17 +65,21 @@ public class RopeClimber implements Runnable {
 		}
 	}
 		
+	
 	public static double getCurrent(){
 		
 		return Math.abs(pdp.getCurrent(14)); //right motor
 	}	
 	
  	public static boolean motorClimb(){	//Prepares to climb
-		if(Timer.getMatchTime() > 30 || Timer.getMatchTime() == -1){
+		if((Timer.getMatchTime() > 30 || Timer.getMatchTime() == -1)){
+			if(!manualControl){
+				setSpeed(0);
+				isAccelerated = false;
+			}
 			return false;
 		}
 		boolean reachedDestination = false;
- 
 		if(!isSetToPoint1){
 			
 			setSpeed(.4);
@@ -103,7 +108,7 @@ public class RopeClimber implements Runnable {
 				reachedDestination = false;
   				
         	} 
-			if(getCurrent() >= maxCurrent){
+			if(getCurrent() >= maxCurrent) {
 					setSpeed(stopSpeed);
 					reachedDestination = true;	//Create if statement for boolean when calling method
 					System.out.println("it stopped");
@@ -132,6 +137,12 @@ public class RopeClimber implements Runnable {
  	
  	public static void eStopClimber(){
  		setSpeed(stopSpeed);
+ 		manualControl = true;
+ 	}
+ 	
+ 	public static void manualClimb(){
+ 		setSpeed(1);
+ 		manualControl = true;
  	}
 } 
     

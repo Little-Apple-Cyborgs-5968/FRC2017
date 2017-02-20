@@ -78,6 +78,7 @@ public class Processing {
 	double height;
 	double width;
 	double distance; // ft d
+	static double angleToCorrect; // goal to the left of center is positive
 	
 	int isGoalScore = 0;
 	
@@ -87,6 +88,7 @@ public class Processing {
 	double realDistance; // D
 	double screenWidth;
 	double screenHeight;
+	static double maybeGroundDistance;
 	double yOffset;
 
 	int goalNum;
@@ -95,10 +97,6 @@ public class Processing {
 	
 	int gearNum;
 	int realGearNum;
-	
-	public static volatile double maybeGroundDistance; // should be the actual groundDistance
-	public static volatile double angleToCorrect; // goal to the left of center is positive
-	public static volatile double encoderDistance = (Math.abs(DriveBase.getLeftDistance()) + Math.abs(DriveBase.getRightDistance())) / 2;
 	
 	static {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
@@ -109,7 +107,7 @@ public class Processing {
 	 * @param source0 is the image
 	 * @param goalOrNah is true if user wants to find Goal and false if user wants to find gear
 	 */
-	public boolean process(Mat source0, boolean goalOrNah) {
+	public Mat process(Mat source0, boolean goalOrNah) {
 		
 		hslThresholdInput = source0;
 		
@@ -125,19 +123,19 @@ public class Processing {
 		
 		if(goalOrNah) {
 			if(!locateContours(filterContoursOutput, source0, true)) {
-				System.out.println("goal no");
-				return false;
+				//System.out.println("goal no");
+				return source0;
 			} else {
-				System.out.println("goal yes");
-				return true;
+				//System.out.println("goal yes");
+				return imgWithRect;
 			}
 		} else {
 			if(!locateContours(filterContoursOutput, source0, false)) {
-				System.out.println("gear no");
-				return false;
+				//System.out.println("gear no");
+				return source0;
 			} else {
-				System.out.println("gear yes");
-				return true;
+				//System.out.println("gear yes");
+				return imgWithRect;
 			}
 		}
 	}
@@ -156,7 +154,6 @@ public class Processing {
 			if(inputContours.size() < 2) {
 				topTape = -1;
 				bottomTape = -1;
-				System.out.println("Nothing was found");
 				return false;
 			} else {
 				for(int i = 0; i < inputContours.size(); i++) {
@@ -165,6 +162,7 @@ public class Processing {
 							topRect = Imgproc.boundingRect(inputContours.get(i));
 							bottomRect = Imgproc.boundingRect(inputContours.get(j));
 							goalNum++;
+							//System.out.println("Have no fear for I am here");
 							isGoal(topRect, bottomRect, imageToSend, i, j, goalNum);
 						}
 						
@@ -176,31 +174,35 @@ public class Processing {
 						realGoalNum = i;
 					}
 				}
-				if(maxValue < 3) {
-					System.out.println("Something was found but it was not the goal");
-					return false;
+				height = (goals[realGoalNum][4] + goals[realGoalNum][9]) - goals[realGoalNum][2];
+				distance = (400) / (1 * height * Math.tan(0.5986479));
+				distance = distance * 12;
+				groundDistance = Math.sqrt((distance * distance) - (56.25 * 56.25)); // should be 88 * 88
+				screenWidth = imageToSend.size().width;
+				screenHeight = imageToSend.size().height;
+				distanceFromGoal = (screenWidth / 2) - (goals[realGoalNum][3] + (goals[realGoalNum][6] / 2));
+				distanceToOrgin = (10 * distanceFromGoal) / height;
+				realDistance = Math.sqrt((groundDistance * groundDistance) + (distanceToOrgin * distanceToOrgin));
+				angleToCorrect = Math.atan(distanceToOrgin / groundDistance);
+				angleToCorrect = (angleToCorrect * 180) / Math.PI;
+				Imgproc.rectangle(imageToSend, new Point(goals[realGoalNum][3], goals[realGoalNum][2]), new Point(goals[realGoalNum][3] + goals[realGoalNum][6], goals[realGoalNum][2] + goals[realGoalNum][7]), new Scalar(0, 255, 255, 255), 5);
+				Imgproc.rectangle(imageToSend, new Point(goals[realGoalNum][5], goals[realGoalNum][4]), new Point(goals[realGoalNum][5] + goals[realGoalNum][8], goals[realGoalNum][4] + goals[realGoalNum][9]), new Scalar(0, 0, 255, 255), 5);
+				Imgproc.putText(imageToSend, height + "px", new Point(goals[realGoalNum][3] + goals[realGoalNum][6] + 5, goals[realGoalNum][2]), Core.FONT_HERSHEY_SIMPLEX, 2.6f, new Scalar(255, 255, 255, 255), 3);
+				//imgWithRect = imageToSend;
+				yOffset = ((screenHeight / 2 ) - (goals[realGoalNum][2] + (height / 2)));
+				if(yOffset <= 0) {
+					maybeGroundDistance = (-0.19234 * yOffset) + 45.654019;
 				} else {
-					height = (goals[realGoalNum][4] + goals[realGoalNum][9]) - goals[realGoalNum][2];
-					distance = (400) / (1 * height * Math.tan(0.5986479));
-					distance = distance * 12;
-					groundDistance = Math.sqrt((distance * distance) - (56.25 * 56.25)); // should be 88 * 88
-					screenWidth = imageToSend.size().width;
-					screenHeight = imageToSend.size().height;
-					distanceFromGoal = (screenWidth / 2) - (goals[realGoalNum][3] + (goals[realGoalNum][6] / 2));
-					distanceToOrgin = (10 * distanceFromGoal) / height;
-					angleToCorrect = Math.atan(distanceToOrgin / groundDistance);
-					angleToCorrect = (angleToCorrect * 180) / Math.PI;
-					yOffset = ((screenHeight / 2 ) - (goals[realGoalNum][2] + (height / 2)));
-					if(yOffset <= 0) {
-						maybeGroundDistance = (-0.19234 * yOffset) + 45.654019;
-					} else {
-						maybeGroundDistance = (-0.117797 * yOffset) + 46.735152;
-					}
-					System.out.println("********************************** Pixel offset y: " + yOffset);
-					System.out.println("********************************** Angle: " + angleToCorrect);
-					System.out.println("---------------------------------- groundDistance: " + maybeGroundDistance);
-					return true;
+					maybeGroundDistance = (-0.117797 * yOffset) + 46.735152;
 				}
+				maybeGroundDistance -= 4;
+				// works pretty well y = (-0.164866 * yOffset) + 48.0599;
+				//y = 49.7082665 e^-2.825784521*10-3 x
+				// real y = 7.000825 + (1.099995 - 7.000825)/(1 + (x/3.072862)^31.03071)
+				//System.out.println("********************************** Pixel offset y: " + yOffset);
+				//System.out.println("********************************** Angle: " + angleToCorrect);
+				//System.out.println("---------------------------------- groundDistance: " + maybeGroundDistance);
+				return true;
 			}
 		}
 		else {
@@ -231,19 +233,27 @@ public class Processing {
 				}
 				distance = (.4166667 * 635) / (1 * ((gears[realGearNum][5] + gears[realGearNum][7]) / 2) * Math.tan(0.5986479));
 				distance = distance * 12;
+				//System.out.println("********************   " + maxValue);
+				Imgproc.rectangle(imageToSend, new Point(gears[realGearNum][1], gears[realGearNum][0]), new Point(gears[realGearNum][1] + gears[realGearNum][4], gears[realGearNum][0] + gears[realGearNum][5]), new Scalar(0, 255, 255, 255), 2);
+				Imgproc.rectangle(imageToSend, new Point(gears[realGearNum][3], gears[realGearNum][2]), new Point(gears[realGearNum][3] + gears[realGearNum][6], gears[realGearNum][2] + gears[realGearNum][7]), new Scalar(0, 0, 255, 255), 2);
+				Imgproc.putText(imageToSend, distance + "in", new Point(50, 50), Core.FONT_HERSHEY_SIMPLEX, 1.2f, new Scalar(255, 255, 255, 255), 2);
+				imgWithRect = imageToSend;
+				//Imgproc.putText(imageToSend, "This is a lot of text", new Point(50, 50), Core.FONT_HERSHEY_SIMPLEX, 2.0f, new Scalar(255, 255, 255, 255), 1);
+				//Imgcodecs.imwrite("C:\\Users\\Nolan Blankenau\\workspace\\GRIPstandAlone\\src\\GearWithRect131.png", imageToSend);
 				return true;
 			}
 		}
 		
 	}
 	
-	public double getGroundDistance() {
-		return maybeGroundDistance;
+	public double getGroundDistance(Mat theImage) {
+		//if(process(theImage)) {
+			return groundDistance;
+		//} else {
+		//	return -1;
+		//}
 	}
 	
-	public double getAngle() {
-		return angleToCorrect;
-	}
 	/**
 	 * This method determines if the two rectangles represents the goal or not
 	 * NOTE: Assume that Rect.x and Rect.y correspond to the top-right corner of the rectangle
@@ -273,8 +283,8 @@ public class Processing {
 			double lEdge = (tX - bX) / tWidth;
 			double widthRatio = tWidth / bWidth;
 			double heightRatio = tHeight / (bHeight * 2);
-			System.out.println("goalNum " + goalNum);
-			System.out.println("iIndex " + iIndex);
+			//System.out.println("goalNum " + goalNum);
+			//System.out.println("iIndex " + iIndex);
 			goals[goalNum][0] = iIndex;
 			goals[goalNum][1] = jIndex;
 			goals[goalNum][2] = tY;
@@ -285,8 +295,55 @@ public class Processing {
 			goals[goalNum][7] = tHeight;
 			goals[goalNum][8] = bWidth;
 			goals[goalNum][9] = bHeight;
-			goals[goalNum][10] = groupHeight + bottomHeight + dTop + lEdge + widthRatio + heightRatio;	
+			goals[goalNum][10] = groupHeight + bottomHeight + dTop + lEdge + widthRatio + heightRatio;
+	
+			//System.out.println("total " + goalNum + " " + goals[goalNum][10]);
+			
 		}
+		
+		/*if(tY < bY + height) {
+			isGoalScore++;
+			System.out.println("1");
+		}
+		if(tHeight < tWidth) {
+			isGoalScore++;
+			System.out.println("2");
+		}
+		if(bHeight < bWidth) {
+			isGoalScore++;
+			System.out.println("3");
+		}
+		if(tX > bX - bWidth && tX < bX + bWidth) {
+			isGoalScore++;
+			System.out.println("4");
+		}
+		if(Math.abs((tY + tHeight) - bY) < tHeight) {
+			isGoalScore++;
+			System.out.println("5");
+		}
+
+		if(isGoalScore == 4) {
+			distance = (400) / (1 * height * Math.tan(0.5986479));
+			System.out.println("Height " + height);
+			System.out.println("Distance " + distance);
+			distanceFromGoal = 0.0;
+			groundDistance = Math.sqrt((distance * distance) - (6.1458333 * 6.1458333)); // should be 88 * 88
+			screenWidth = imageWithRect.size().width;
+			distanceFromGoal = (screenWidth / 2) - (tY + (tWidth / 2));
+			distanceToOrgin = ((5 / 6) * distanceFromGoal) / height;
+			realDistance = Math.sqrt((groundDistance * groundDistance) + (distanceToOrgin * distanceToOrgin));
+			angleToCorrect = Math.sin(distanceToOrgin / groundDistance);
+			
+			System.out.println((angleToCorrect * 180) / Math.PI);
+			Imgproc.rectangle(imageWithRect, new Point(tX, tY), new Point(tX + tWidth, tY + tHeight), new Scalar(0, 255, 255, 255), 2);
+			Imgproc.rectangle(imageWithRect, new Point(bX, bY), new Point(bX + bWidth, bY + bHeight), new Scalar(0, 0, 255, 255), 2);
+			Imgproc.putText(imageWithRect, String.valueOf(groundDistance) + "in", new Point(tX + tWidth + 5, tY), Core.FONT_HERSHEY_SIMPLEX, 0.6f, new Scalar(255, 255, 255, 255), 1);
+			imgWithRect = imageWithRect;
+			return true;
+		} else {
+			//Imgproc.putText(imageWithRect, isGoalScore + "", new Point(tX + tWidth + 5, tY), Core.FONT_HERSHEY_SIMPLEX, 0.4f, new Scalar(255, 255, 255, 255), 1);
+			return false;
+		}*/
 		return false;
 	}
 	
@@ -322,6 +379,14 @@ public class Processing {
 		
 		
 		return true;
+	}
+	
+	public static double getGroundDistance() {
+		return maybeGroundDistance;
+	}
+	
+	public static double getAngle() {
+		return angleToCorrect;
 	}
 
 	/**

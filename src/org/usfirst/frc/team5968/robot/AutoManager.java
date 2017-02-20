@@ -146,37 +146,40 @@ public class AutoManager{
 	private static AutoProgress gearAuto(AutoProgress progress, Alliance alliance, StartPoint startPoint){
 		if(startPoint == StartPoint.MIDLINE){
 			
-			if(progress != AutoProgress.FINISHED && DriveBase.driveDistance(114.8)){
+			if(progress != AutoProgress.FINISHED && DriveBase.driveDistance(-114.8, .3)){
 				progress = AutoProgress.FINISHED;
 			}
 			
 		}
 		else if(startPoint == StartPoint.KEY){
 			
-			double firstDriveDistance = -1 * Math.tan(Math.PI / 6) * (223.1 + .5 * Robot.getRobotWidth() - 150) + 162;
-			double secondDriveDistance = Math.sqrt(Math.pow(180.5 - (223.1 + .5 * Robot.getRobotWidth()), 2) + Math.pow(114.375 - firstDriveDistance, 2) - .5 * Robot.getRobotLength());
-			secondDriveDistance -= 2; //just so we don't crash into the wall too badly
-			
+			double firstDriveDistance = Math.tan(5 * Math.PI / 6) * (223.06 + 0.5 * Robot.getRobotWidth() - 162) + 149.5;
+			firstDriveDistance -= .5 * Robot.getRobotLength();
+			firstDriveDistance -= 6;
+			double secondDriveDistance = Math.sqrt(Math.pow(223.06 + 0.5 * Robot.getRobotWidth() - 192.53, 2) + Math.pow(firstDriveDistance + .5 * Robot.getRobotLength() - 131.88, 2));
+			secondDriveDistance -= .5 * Robot.getRobotLength();
+			secondDriveDistance += 6;
+			//secondDriveDistance -= 2; //just so we don't crash into the wall too badly
 			switch(progress){
 				case STARTING:
-					if(DriveBase.driveDistance(firstDriveDistance)){
+					if(DriveBase.driveDistance(-1 * firstDriveDistance, .2)){
 						progress = AutoProgress.DRIVE1_DONE;
 					}
 					break;
 				case DRIVE1_DONE:
 					if(alliance == Alliance.Red){
-						if(DriveBase.driveRotation(-60)){
+						if(DriveBase.driveRotation(-65)){
 							progress = AutoProgress.TURN1_DONE;
 						}
 					}
 					else{
-						if(DriveBase.driveRotation(60)){
+						if(DriveBase.driveRotation(65)){
 							progress = AutoProgress.TURN1_DONE;
 						}
 					}
 					break;
 				case TURN1_DONE:
-					if(DriveBase.driveDistance(secondDriveDistance)){
+					if(DriveBase.driveDistance(-1 * secondDriveDistance, .2)){
 						progress = AutoProgress.FINISHED;
 					}
 					break;
@@ -186,11 +189,14 @@ public class AutoManager{
 			}
 		}
 		else if(startPoint == StartPoint.RETRIEVAL_ZONE){
-			double firstDriveDistance = Math.tan(Math.PI / 6) * (80.9 + .5 * Robot.getRobotWidth()) + 150;
-			double secondDriveDistance = Math.sqrt(Math.pow(119.5 - (223.1 + .5 * Robot.getRobotWidth()), 2) + Math.pow(114.375 - firstDriveDistance, 2) - .5 * Robot.getRobotLength());
+			double firstDriveDistance = Math.tan(Math.PI / 6) * (118.43 + .5 * Robot.getRobotWidth() - 162) + 149.5;
+			firstDriveDistance -= .5 * Robot.getRobotLength();
+			double secondDriveDistance = Math.sqrt(Math.pow(118.43 + .5 * Robot.getRobotWidth() - 131.47, 2) + Math.pow(firstDriveDistance + .5 * Robot.getRobotLength() - 131.88, 2));
+			secondDriveDistance -= .5 * Robot.getRobotLength();
+			secondDriveDistance -= 2;
 			switch(progress){
 				case STARTING:
-					if(DriveBase.driveDistance(firstDriveDistance)){
+					if(DriveBase.driveDistance(-1 * firstDriveDistance, .3)){
 						progress = AutoProgress.DRIVE1_DONE;
 					}
 					break;
@@ -207,7 +213,7 @@ public class AutoManager{
 					}
 					break;
 				case TURN1_DONE:
-					if(DriveBase.driveDistance(secondDriveDistance)){
+					if(DriveBase.driveDistance(-1 * secondDriveDistance, .3)){
 						progress = AutoProgress.FINISHED;
 					}
 					break;
@@ -276,7 +282,7 @@ public class AutoManager{
 			switch(progress){
 				case STARTING:
 					Pneumatics.setSolenoidDown();
-					if(DriveBase.driveDistance(firstDriveDistance)){
+					if(DriveBase.driveDistance(firstDriveDistance, .2)){
 						progress = AutoProgress.DRIVE1_DONE;
 					}
 					break;
@@ -294,7 +300,7 @@ public class AutoManager{
 					}
 					break;
 				case TURN1_DONE:
-					if(DriveBase.driveDistance(Robot.getDistanceFromWall(startPoint) - .5 * Robot.getRobotLength())){
+					if(DriveBase.driveDistance(Robot.getDistanceFromWall(startPoint) - 0.5 * Robot.getRobotLength(), 0.2)){
 						progress = AutoProgress.FINISHED;
 					}
 					break;
@@ -321,7 +327,6 @@ public class AutoManager{
 		double dx = 637.5 - STOP_DISTANCE_FROM_BOILER * Math.cos(.76271) - (652 - SAFE_TURN_DISTANCE);
 		double dy = 15.2 + STOP_DISTANCE_FROM_BOILER * Math.sin(.76271) - (Point.getCoordinates(Setpoint.HOPPER5).getY() - .5 * Robot.getRobotLength());
 		double turnAngle;
-		System.out.println(dx + " " + dy);
 		switch(progress){
 			case STARTING:
 				int hopper;
@@ -337,24 +342,24 @@ public class AutoManager{
 			//DRIVE1 and TURN1 are handled in the call to hopperAuto
 			case DRIVE2_DONE:
 				//System.out.println("DRIVE2_DONE");
-				if(DriveBase.driveDistance(-1 * SAFE_TURN_DISTANCE)){ 
+				if(DriveBase.driveDistance(-1 * SAFE_TURN_DISTANCE, 0.2)){ 
 					progress = AutoProgress.DRIVE3_DONE;
 					currentAngle = NavXMXP.getYaw();
 				}
 				break;
 			case DRIVE3_DONE:
 				//System.out.println("DRIVE3_DONE");
-				if(DriveBase.driveRotation(180)){
+				if(DriveBase.driveRotation(147)){
 					progress = AutoProgress.TURN2_DONE;
 				}
 				break;
 			case TURN2_DONE:
-				if(DriveBase.driveDistanceWithVision(91.75)){
+				if(DriveBase.driveDistanceWithVision(91.75, 0.2)){
 					progress = AutoProgress.DRIVE4_DONE;
 				}
 				break;
 			case DRIVE4_DONE:
-				//System.out.println("DRIVE4_DONE");
+				System.out.println("DRIVE4_DONE");
 				boolean driven = false;
 				if(alliance == Alliance.Red){
 					driven = DriveBase.driveRightDistance(Robot.getRobotWidth() * 0.808087444); //46.3 degrees (angle of the boiler with the wall)
@@ -364,7 +369,7 @@ public class AutoManager{
 				}	
 														 
 				if(driven){
-					Pneumatics.DoubleSolenoidTOGGLE();
+					//Pneumatics.DoubleSolenoidTOGGLE();
 					progress = AutoProgress.FINISHED;
 				}	
 				break;
@@ -383,7 +388,7 @@ public class AutoManager{
      * @return The progress after calling the method
      */
 	private static AutoProgress crossAuto(AutoProgress progress){
-		if(progress != AutoProgress.FINISHED && DriveBase.driveDistance(96)){
+		if(progress != AutoProgress.FINISHED && DriveBase.driveDistance(96, 0.3)){
 			progress = AutoProgress.FINISHED;
 		}
 		return progress;

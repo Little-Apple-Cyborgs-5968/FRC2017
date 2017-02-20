@@ -21,18 +21,18 @@ public class Pneumatics{
 	}
   
 	public static boolean getIsUp() {
-		return piston1.get() == DoubleSolenoid.Value.kReverse;
+		return false;//piston1.get() == DoubleSolenoid.Value.kReverse;
 	}
 	
 	public static void DoubleSolenoidTOGGLE(){
     	if(piston1.get() == DoubleSolenoid.Value.kForward){
     		piston1.set(DoubleSolenoid.Value.kReverse);
-			Timer.delay(.4);
+			//Timer.delay(.4);
     		piston2.set(DoubleSolenoid.Value.kReverse);
     	}
     	else{
     		piston2.set(DoubleSolenoid.Value.kForward);
-			Timer.delay(.35);
+			//Timer.delay(.35);
     		piston1.set(DoubleSolenoid.Value.kForward);
     	}
     
@@ -40,7 +40,7 @@ public class Pneumatics{
   
 	public static void setSolenoidDown(){
 		piston1.set(DoubleSolenoid.Value.kForward);
-		Timer.delay(.35);
+		//Timer.delay(.35);
 		piston2.set(DoubleSolenoid.Value.kForward);
 	}
 	public static void stopCompressor(){
@@ -52,6 +52,7 @@ public class Pneumatics{
 	 * we actually do this.
 	 */
 	public static boolean isPressureLow(){
+		
 		return false;
 	}
 }

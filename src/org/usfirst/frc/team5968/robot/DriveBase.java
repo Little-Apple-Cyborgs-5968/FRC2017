@@ -59,7 +59,7 @@ public class DriveBase {
 	/**
 	 * How close the robot needs to be when turning to be considered at the target angle
 	 */
-	private static final double ANGLE_TOLERANCE = .5; //degrees
+	private static final double ANGLE_TOLERANCE = 1; //degrees
 	
 	/**
 	 * Proportion used to drive straight, using P (traditionally PID) control.
@@ -69,7 +69,9 @@ public class DriveBase {
 	/**
 	 * Target speed for driving straight
 	 */
-	private static final double DRIVE_SPEED = .6;
+	private static final double DRIVE_SPEED = .3;
+	
+	private static final double TURN_SPEED = .25;
 	
 	/**
 	 * The maximum allowable speed while the robot is driving.
@@ -196,6 +198,13 @@ public class DriveBase {
 	
 	public static void resetTargetAngle(){
 		angle = NavXMXP.getYaw();
+		if(angle >= 180){
+			angle -= 360;
+		}
+	}
+	
+	public static void setTargetAngle(double angle){
+		DriveBase.angle = angle;
 		if(angle >= 180){
 			angle -= 360;
 		}
@@ -372,23 +381,22 @@ public class DriveBase {
      * @param inches The number of inches to drive
      * @return whether the driving is complete
      */
-	public static boolean driveDistance(double inches) {
+	public static boolean driveDistance(double inches, double speed) {
 		
 		if(System.currentTimeMillis() - driveLastCallMillis >= 100){
 			leftEncoderInitial = getLeftDistance();
 			rightEncoderInitial = getRightDistance();
-			
 			resetTargetAngle();
 			Timer.delay(.05);
 		}
 		
 		double distance = (-1 * (getLeftDistance() - leftEncoderInitial) + (getRightDistance() - rightEncoderInitial)) / 2;
 		double driveSpeed;
-		if(inches < 12){
-			driveSpeed = .4;
+		if(Math.abs(inches) < 12){
+			driveSpeed = speed * .5;
 		}
 		else{
-			driveSpeed = DRIVE_SPEED;
+			driveSpeed = speed;
 		}
 		if(distance >= 0 && distance <= ACCELERATE_DISTANCE && inches >= ACCELERATE_DISTANCE * 2){
 			driveStraight(.1 + (driveSpeed - .1) / ACCELERATE_DISTANCE * distance, false);
@@ -462,20 +470,20 @@ public class DriveBase {
     	if(Math.abs(NavXMXP.getYaw() - degrees) >= ANGLE_TOLERANCE){
     		if(direction == 1){
     			if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE * 10){ //yes, 10 is a very magic number
-    				double speed = (.25 - 0) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0; //replace speed with a different number if it's too low to reach the target
+    				double speed = (TURN_SPEED - 0) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0; //replace speed with a different number if it's too low to reach the target
     				setRawFraction(-1 * speed, speed);
     			}
     			else{
-        			setRawFraction(Math.max(-.25, -1), Math.min(.25, 1)); //only set to 2 * DRIVE_SPEED if that's within -1 to 1
+        			setRawFraction(Math.max(-TURN_SPEED, -1), Math.min(.1, 1)); //only set to 2 * DRIVE_SPEED if that's within -1 to 1
     			}
     		}
     		else if(direction == 0){
     			if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE * 10){
-    				double speed = (.25 - 0) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0;
+    				double speed = (TURN_SPEED - 0) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0;
     				setRawFraction(speed, -1 * speed);
     			}
     			else{
-        			setRawFraction(Math.min(.25, 1), Math.max(-.25, -1));
+        			setRawFraction(Math.min(TURN_SPEED, 1), Math.max(-TURN_SPEED, -1));
     			}
     		}
     		return false;
@@ -486,9 +494,19 @@ public class DriveBase {
     	}
 	}
 	
-	private static double distanceDriven = 0;
+	private static volatile double distanceDriven = 0;
+		
+	private static volatile boolean newAngle = false;
 	
-	private static long lastDriveWithVisionCallMillis = System.currentTimeMillis();
+	private static volatile double distanceFromCamera = 0;
+	
+	private static volatile double angleFromCamera = 0;
+	
+	private static volatile double lastDistance = 0;
+	
+	private static volatile double distanceToGo;
+	
+	private static boolean firstCall = true;
 	
 	/**
 	 * Drive a certain distance using a vision closed loop. Will start targeting when you're 72 inches away, and stop
@@ -496,39 +514,55 @@ public class DriveBase {
 	 *
 	 * @param distance The distance to drive to the goal
 	*/
-	public static boolean driveDistanceWithVision(double distance){
-		if(System.currentTimeMillis() - lastDriveWithVisionCallMillis > 100){
+	public static boolean driveDistanceWithVision(double distance, double speed){
+		if(firstCall){
+			NavXMXP.resetYaw();
+			Timer.delay(.05);
 			distanceDriven = 0;
 			resetTargetAngle();
 			resetEncoders();
+			System.out.println("here");
+			firstCall = false;
 		}
+		distanceDriven = (Math.abs(-1 * getLeftDistance()) + Math.abs(getRightDistance())) / 2;
 		if(distanceDriven < distance - 72){
+			System.out.println("firstDrive");
 			driveStraight(DRIVE_SPEED, false);
-			distanceDriven += (Math.abs(getLeftDistance()) + Math.abs(getRightDistance())) / 2;
+			System.out.println(distanceDriven);
 		}
 		else if(distanceDriven >= distance - 72 && distanceDriven < distance - 30){
-			distanceDriven = distance - 0 + (Math.abs(getLeftDistance()) + Math.abs(getRightDistance())) / 2 - 1; //replace 0 with distance from image processing //replace 1 with encoder distance saved when image was taken
-			double angleToGoal = 0; //replace 0 with angle from image processing
-			
-			if(angleToGoal > 0){
-				setRawFraction(DRIVE_SPEED + angleToGoal * .001, DRIVE_SPEED);
-			}	
-			else if(angleToGoal < 0){
-				setRawFraction(DRIVE_SPEED, DRIVE_SPEED + angleToGoal * .001 * -1);
+			Robot.startProcessingImage();
+			if(newAngle){
+				if(Math.abs(distance - distanceDriven - distanceFromCamera) < 5){
+					double displacement = Math.abs(distance - distanceDriven - lastDistance);
+					distanceDriven = lastDistance + displacement;
+					setTargetAngle(angleFromCamera);
+				}
+				newAngle = false;
 			}
-			else{
-				setRawFraction(DRIVE_SPEED, DRIVE_SPEED);
-			}
-			distanceDriven += (Math.abs(getLeftDistance()) + Math.abs(getRightDistance())) / 2;
+			driveStraight(speed, false);
+			distanceDriven = (Math.abs(getLeftDistance()) + Math.abs(getRightDistance())) / 2;
 		}
 		else{
-			if(driveDistance(30)){
+			Robot.stopProcessingImage();
+			if(driveDistance(30, speed)){
 				return true;
 			}	
 		}
-		lastDriveWithVisionCallMillis = System.currentTimeMillis();
+		distanceToGo = distance - distanceDriven;
 		return false;
 	}	
+	
+	public static double getDistanceToGo(){
+		return distanceToGo;
+	}
+	
+	public static void putNewMeasurements(double distanceToGoal, double angle, double lastDistance){
+		DriveBase.distanceFromCamera = distanceToGoal;
+		DriveBase.angleFromCamera = angle;
+		DriveBase.lastDistance = lastDistance;
+		newAngle = true;
+	}
 	
 	private static double oneSideDistanceLastCallMillis = System.currentTimeMillis();
 	
@@ -581,10 +615,10 @@ public class DriveBase {
 			configureSpeedControl();
 		}
 		if(!controlsReversed){
-			setRawSpeed(-1 * (leftSpeed * .35) * MAX_SPEED_RPM, -1 * (rightSpeed * .3) * MAX_SPEED_RPM);
+			setRawSpeed(-1 * (leftSpeed * .3) * MAX_SPEED_RPM, -1 * (rightSpeed * .3) * MAX_SPEED_RPM);
 		}
 		else{
-			setRawSpeed((rightSpeed * .3) * MAX_SPEED_RPM, (leftSpeed * .35) * MAX_SPEED_RPM);
+			setRawSpeed((rightSpeed * .3) * MAX_SPEED_RPM, (leftSpeed * .3) * MAX_SPEED_RPM);
 
 		}
 	}
@@ -680,7 +714,7 @@ public class DriveBase {
 				angleDriven = true;
 			}
 			else if(!distanceDriven1){
-				while(!driveDistance(targetDistance)){
+				while(!driveDistance(targetDistance, 0.2)){
 				}
 				distanceDriven1 = true;
 				pointDriveLastCallMillis = System.currentTimeMillis();
@@ -706,11 +740,11 @@ public class DriveBase {
 			if(destination == Setpoint.RED_BOILER || destination == Setpoint.BLUE_BOILER){
 				driveRotation(Point.getCorrectAngle(destination));
 				//correct for error with vision processing
-				driveDistance(52 - .5 * Robot.getRobotLength());
+				driveDistance(52 - .5 * Robot.getRobotLength(), 0.2);
 			}
 			else{
 				driveRotation(Point.getCorrectAngle(destination));
-				driveDistance(Point.getStopDistance() - .5 * Robot.getRobotLength());
+				driveDistance(Point.getStopDistance() - .5 * Robot.getRobotLength(), 0.2);
 			}
 		}
 		else{			
