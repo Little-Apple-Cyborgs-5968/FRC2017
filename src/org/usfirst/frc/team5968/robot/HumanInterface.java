@@ -97,11 +97,11 @@ public class HumanInterface {
 	
 	private static long startTime = System.currentTimeMillis();
 	
-	private enum TurnAroundState{
+	public enum TurnAroundState{
 		DRIVE1,
 		TURN,
 		DRIVE2,
-		DILE;
+		IDLE;
 	}
 	
 	public static void backUpForGear(){
@@ -117,7 +117,7 @@ public class HumanInterface {
 		}
 	}
 	
-	private static boolean turnState = TurnAroundState.IDLE;
+	private static TurnAroundState turnState = TurnAroundState.IDLE;
 	
 	public static void turnAroundForFuel(){
 		if((leftStick.getRawButton(2) || rightStick.getRawButton(2))){
@@ -130,7 +130,7 @@ public class HumanInterface {
 				turnState = TurnAroundState.IDLE;
 			}
 			else if(turnState == TurnAroundState.DRIVE1){
-				if(DriveBase.driveDistance(AutoManager.getSafeTurnDistance())){
+				if(DriveBase.driveDistance(AutoManager.getSafeTurnDistance(), 0.25)){
 					turnState = TurnAroundState.TURN;
 				}
 			}
@@ -139,8 +139,8 @@ public class HumanInterface {
 					turnState = TurnAroundState.DRIVE2;
 				}
 			}
-			else if(turnState = TurnAroundState.DRIVE2){
-				if(DriveBase.driveDistance(AutoManager.getSafeTurnDistance())){
+			else if(turnState == TurnAroundState.DRIVE2){
+				if(DriveBase.driveDistance(AutoManager.getSafeTurnDistance(), 0.25)){
 					turnState = TurnAroundState.IDLE;
 				}
 			}

@@ -25,7 +25,7 @@ public class Pneumatics{
 	}
   
 	public static boolean getIsUp() {
-		return false;//piston1.get() == DoubleSolenoid.Value.kReverse;
+		return piston1.get() == DoubleSolenoid.Value.kReverse;
 	}
 	
 	public static void DoubleSolenoidTOGGLE(){

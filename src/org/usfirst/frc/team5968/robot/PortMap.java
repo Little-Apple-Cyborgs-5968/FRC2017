@@ -39,7 +39,11 @@ public class PortMap {
 		CLIMBER_MOTOR_LEFT,
 		CLIMBER_MOTOR_RIGHT,
 		CLIMBER_ENCODER_A,
-		CLIMBER_ENCODER_B;
+		CLIMBER_ENCODER_B,
+		LEFT_DRIVE_ENCODER_A,
+		LEFT_DRIVE_ENCODER_B,
+		RIGHT_DRIVE_ENCODER_A,
+		RIGHT_DRIVE_ENCODER_B;
 	}
 	
 	/**
@@ -128,6 +132,14 @@ public class PortMap {
 				return 2;
 			case CLIMBER_MOTOR_RIGHT:
 				return 3;
+			case LEFT_DRIVE_ENCODER_A:
+				return 4;
+			case LEFT_DRIVE_ENCODER_B:
+				return 5;
+			case RIGHT_DRIVE_ENCODER_A:
+				return 6;
+			case RIGHT_DRIVE_ENCODER_B:
+				return 7;
 			default:
 				return -1;
 		}

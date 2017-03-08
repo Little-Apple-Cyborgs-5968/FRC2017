@@ -6,11 +6,13 @@ import javax.swing.text.Position;
 
 import org.usfirst.frc.team5968.robot.Point.Setpoint;
 import org.usfirst.frc.team5968.robot.PortMap.CAN;
+import org.usfirst.frc.team5968.robot.PortMap.PWM;
 
 import com.ctre.CANTalon;
 import com.ctre.CANTalon.FeedbackDevice;
 import com.ctre.CANTalon.TalonControlMode;
 
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Timer;
 
 /**
@@ -40,6 +42,16 @@ public class DriveBase {
 	 * The Follow right motor
 	 */
 	private static CANTalon rightMotorFollow = new CANTalon(PortMap.portOf(CAN.RIGHT_MOTOR_FOLLOW));
+	
+	/**
+	 * The left side drive encder
+	 */
+	private static Encoder leftEncoder = new Encoder(PortMap.portOf(PWM.LEFT_DRIVE_ENCODER_A), PortMap.portOf(PWM.LEFT_DRIVE_ENCODER_B));
+	
+	/**
+	 * The right side drive encoder
+	 */
+	private static Encoder rightEncoder = new Encoder(PortMap.portOf(PWM.RIGHT_DRIVE_ENCODER_A), PortMap.portOf(PWM.RIGHT_DRIVE_ENCODER_B));
 	
 	/**
 	 * Used in 2 cases. Could be multiple constants, but having a ton of constants looks kind of bad. 
@@ -85,7 +97,7 @@ public class DriveBase {
 	private static final double MOTOR_MAX_TEMP = 70;
 	
 	/**
-	 * The resolution of the encoder readings in counts/revolution
+	 * The resolution of the drive encoders, in counts/revolution
 	 */
 	private static final int ENCODER_RESOLUTION = 2048;
 	
@@ -124,27 +136,22 @@ public class DriveBase {
 		rightMotorFollow.changeControlMode(CANTalon.TalonControlMode.Follower);
 		leftMotorFollow.set(PortMap.portOf(CAN.LEFT_MOTOR_LEAD));
 		rightMotorFollow.set(PortMap.portOf(CAN.RIGHT_MOTOR_LEAD));
-		
-		leftMotorLead.setFeedbackDevice(FeedbackDevice.QuadEncoder);
-		
-		leftMotorLead.configEncoderCodesPerRev(ENCODER_RESOLUTION);
-		
+						
 		leftMotorLead.configNominalOutputVoltage(0.0f, -0.0f);
 		leftMotorFollow.configNominalOutputVoltage(0.0f, -0.0f);
 		
 		leftMotorLead.setStatusFrameRateMs(CANTalon.StatusFrameRate.Feedback, 4); //250 Hz
 		
-		
-		rightMotorLead.setFeedbackDevice(FeedbackDevice.QuadEncoder);
-		
-		rightMotorLead.configEncoderCodesPerRev(ENCODER_RESOLUTION);
-		
+				
 		rightMotorLead.configPeakOutputVoltage(12.0f, -12.0f);
 		rightMotorFollow.configPeakOutputVoltage(12.0f, -12.0f);
 
 		rightMotorLead.setStatusFrameRateMs(CANTalon.StatusFrameRate.Feedback, 4); //250 Hz
 		
-		configureSpeedControl();
+		configurePercentControl();
+		
+		leftEncoder.setDistancePerPulse(Math.PI * WHEEL_DIAMETER / ENCODER_RESOLUTION);
+		rightEncoder.setDistancePerPulse(Math.PI * WHEEL_DIAMETER / ENCODER_RESOLUTION);
 		
 		if(NavXMXP.getYaw() >= 180){
 			angle -= 360;
@@ -155,6 +162,7 @@ public class DriveBase {
 	/**
 	 * Set the motors for speed control mode (with PID), with the proper parameters. For use while driving with
 	 * joysticks
+	 * @deprecated This won't work right now. I'm going to try to rewrite it though
 	 */
 	private static void configureSpeedControl(){
 		leftMotorLead.changeControlMode(TalonControlMode.Speed);
@@ -289,45 +297,23 @@ public class DriveBase {
     	rightMotorLead.set(-1 * rightSpeed);    	
     }
     
-    /**
-     * Set the left and right motors to a certain absolute speed
-     * 
-     * @param leftSpeed The absolute speed (in RPM) the left motors should be set to.
-     * @param rightSpeed The absolute speed (in RPM) the right motors should be set to.
-     */
-    @SuppressWarnings("unused")
-	public static void setRawSpeed(double leftSpeed, double rightSpeed){
-    	leftMotorLead.set(leftSpeed);
-    	rightMotorLead.set(-rightSpeed);
-    }
-    
     /*
      * Reset the encoders to 0 displacement
      */
     public static void resetEncoders(){
-    	leftMotorLead.setPosition(0);
-    	rightMotorLead.setPosition(0);
+    	leftEncoder.reset();
+    	rightEncoder.reset();
     }
-    
-    /**
-     * Get the average distance traveled, as measured by the left and right encoders
-     * 
-     * @return The average distance measured by the encoders. NOTE: this won't mean anything if the robot has turned.
-     */
-    private static double getDistance(){
-    	return leftMotorLead.getPosition() - rightMotorLead.getPosition() / 2.0;
-	}
     
     /**
      * Gets the speed currently measured by the left encoder
      * 
-     * @return The speed currently measured by the left encoder
+     * @return The speed in inches per second currently measured by the left encoder
      */
     public static double getLeftSpeed(){
-    	double rpm = leftMotorLead.getSpeed();
-    	double inchesPerSecond = rpm * 1 / 60 * Math.PI * WHEEL_DIAMETER;
+    	double speed = leftEncoder.getRate();
     	
-    	return inchesPerSecond; //returns inches/second
+    	return speed; //returns inches/second
     }
     
     /**
@@ -336,28 +322,27 @@ public class DriveBase {
      * @return The speed currently measured by the right encoder
      */
     public static double getRightSpeed(){
-    	double rpm = rightMotorLead.getSpeed();
-    	double inchesPerSecond = rpm * 1 / 60 * Math.PI * WHEEL_DIAMETER;
+    	double speed = rightEncoder.getRate();
     	
-    	return inchesPerSecond; //returns inches/second
+    	return speed; //returns inches/second
     }
     
     /**
      * Gets the distance traveled by the left side of the robot. Negative when driving forward.
      * 
-     * @return The distance traveled by the left side of the robot
+     * @return The distance traveled by the left side of the robot in inches
      */
 	public static double getLeftDistance(){
-    	return leftMotorLead.getPosition() * Math.PI * WHEEL_DIAMETER; //returns inches
+    	return leftEncoder.getDistance(); //returns inches
     }
     
 	/**
      * Gets the distance traveled by the right side of the robot. Positive when driving forward.
      * 
-     * @return The distance traveled by the right side of the robot
+     * @return The distance traveled by the right side of the robot in inches
      */
     public static double getRightDistance(){
-    	return rightMotorLead.getPosition() * Math.PI * WHEEL_DIAMETER; //returns inches
+    	return rightEncoder.getDistance(); //returns inches
     }
     
     /**
@@ -611,14 +596,14 @@ public class DriveBase {
 	 * @param rightSpeed The fraction of full speed to set the right motors to
 	 */
 	public static void teleopDrive(double leftSpeed, double rightSpeed){
-		if(leftMotorLead.getControlMode() != TalonControlMode.Speed){
-			configureSpeedControl();
+		if(leftMotorLead.getControlMode() != TalonControlMode.PercentVbus){
+			configurePercentControl();
 		}
 		if(!controlsReversed){
-			setRawSpeed(-1 * (leftSpeed * .3) * MAX_SPEED_RPM, -1 * (rightSpeed * .3) * MAX_SPEED_RPM);
+			setRawFraction(-1 * Math.pow(leftSpeed, 3), -1 * Math.pow(rightSpeed, 3));
 		}
 		else{
-			setRawSpeed((rightSpeed * .3) * MAX_SPEED_RPM, (leftSpeed * .3) * MAX_SPEED_RPM);
+			setRawFraction(Math.pow(rightSpeed, 3), Math.pow(leftSpeed, 3));
 
 		}
 	}
@@ -659,10 +644,10 @@ public class DriveBase {
 		final double PROPORTION = .2;
 		final double MAX_SPEED = .6;
 		
-		double leftSpeed = leftMotorLead.getSpeed();
-		double rightSpeed = rightMotorLead.getSpeed();
+		double leftSpeed = getLeftSpeed();
+		double rightSpeed = getRightSpeed();
 		if(stop){
-			setRawSpeed(0, 0);
+			setRawFraction(0, 0);
 		}
 		
 		if(Math.sqrt(Math.pow(currentX - targetX, 2) + Math.pow(currentY - targetY, 2)) < DISTANCE_TOLERANCE){
