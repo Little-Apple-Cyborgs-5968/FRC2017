@@ -148,12 +148,9 @@ public class Robot extends RobotBase {
      */
     private static Thread autoThread = null;
     
-    /**
-     * The climber will run in this thread to allow it to stop within 5 ms of hitting the target, instead of 20 ms.
-     */
-    private static Thread climberThread = null;
+    private static Thread teleopThread = null;
     
-    Processing processing = new Processing();
+    private Processing processing = new Processing();
     
     private static boolean shouldProcessImage = false;
     /**
@@ -208,7 +205,7 @@ public class Robot extends RobotBase {
     	
     	alliance = DriverStation.getInstance().getAlliance();
     	
-    	startPoint = StartPoint.KEY;//Dashboard.getStartingPoint();
+    	startPoint = Dashboard.getStartingPoint();
     	
     	auto = Dashboard.getAutoMode();
     	
@@ -252,15 +249,15 @@ public class Robot extends RobotBase {
 	public void autoPeriodic(){
     	//hehe this is all in a separate thread. It won't have to wait for Driver Station updates!! :D
 
-		//if(shouldProcessImage){
+		if(shouldProcessImage){
 			double initialDistance = DriveBase.getDistanceToGo();
-			//Processing
+
 			processing.process(UsbCamera.getImage(), true);
-			if(processing.getGroundDistance() > 0.0) {
-				DriveBase.putNewMeasurements(processing.getGroundDistance(), processing.getAngle(), initialDistance);
-				System.out.println("********* " + processing.getGroundDistance() + " " + processing.getAngle());
+			if(Processing.getGroundDistance() > 0.0) {
+				DriveBase.putNewMeasurements(Processing.getGroundDistance(), Processing.getAngle(), initialDistance);
+				System.out.println("********* " + Processing.getGroundDistance() + " " + Processing.getAngle());
 			}
-		//}
+		}
     }
     
     /**
@@ -274,7 +271,10 @@ public class Robot extends RobotBase {
     	NavXMXP.resetYaw();
     	DriveBase.resetTargetAngle();
     	Timer.delay(.05);
+    	Lights.toggleLedRing();
     	
+    	teleopThread = new Thread(new TeleopThread());
+    	teleopThread.start();
     }
     
     boolean climbed = false;
@@ -282,27 +282,12 @@ public class Robot extends RobotBase {
      * Called periodically during teleop
      */
     public void teleopPeriodic(){
-    	//if(!drivePoints.isEmpty() && HumanInterface.getLeftStick() != 0 && HumanInterface.getRightStick() != 0){
-    		//DriveBase.drivePath(drivePoints, false);
-    	//}
-    	//else{
-    	DriveBase.teleopDrive(HumanInterface.getLeftStick(), HumanInterface.getLeftStick());
-    	//}
     	
-    	HumanInterface.liftControl();
-    	HumanInterface.emergencyStopClimberControl();
-    	HumanInterface.reverseControls();
-    	HumanInterface.backUpForGear();
-    	HumanInterface.manualClimb();
-    	HumanInterface.turnAroundForFuel();
-
+    	HumanInterface.buttonControls();
+    	
     	if(!climbed){
     		climbed = RopeClimber.motorClimb();
     	}
-    	DriveBase.driveStraight(.2, false);
-    	//System.out.println(DriveBase.getLeftDistance() + " " + DriveBase.getRightDistance());
-		/*lights.pneumatics();
-		lights.climbing();*/
     }
     
     /**
@@ -311,25 +296,30 @@ public class Robot extends RobotBase {
      */
     public void robotPeriodic(){
     	Dashboard.updateDashboardValues();
-    	
-    	/*if(!isDisabled()){
-        	PositionTracker.updateCoordinates();
-    		Dashboard.updateDrivePoints(drivePoints);
-    	}*/
     }
     
+    /**
+     * Called the first time the robot is disabled
+     */
     public void disabledInit(){
     	
     }
+    
+    /**
+     * Called periodically while disabled
+     */
     public void disabledPeriodic(){
     	if(autoThread != null && autoThread.isAlive()){
     		autoThread.interrupt();
     	}
-    	if(climberThread != null && climberThread.isAlive()){
-    		climberThread.interrupt();
+    	if(teleopThread != null && teleopThread.isAlive()){
+    		teleopThread.interrupt();
     	}
     }
     
+    /**
+     * Runs the autonomous code. This means the code doesn't have to wait for driver station updates.
+     */
     private class AutoThread implements Runnable{
     	private StartPoint startPoint;
     	
@@ -347,94 +337,31 @@ public class Robot extends RobotBase {
     	}
     	
     	public void run(){
-    		//AutoManager.doAuto(startPoint, mode, alliance, hopper);
-    		while(!DriveBase.driveDistanceWithVision(100, .2)){
-    			
-    		}
+    		AutoManager.doAuto(startPoint, mode, alliance, hopper);
     	}
     }
     
-    private LinkedBlockingQueue<Point> processAutoPath(AutoMode mode, int hopper) throws InterruptedException{
-    	LinkedBlockingQueue<Point> path = new LinkedBlockingQueue<Point>();
+    /**
+     * Runs the PID code in teleop. This probably needs testing if we want to use it.
+     *
+     */
+    private class TeleopThread implements Runnable{
     	
-    	if(alliance == Alliance.Red && hopper == 3){
-    		DriverStation.reportError("We aren't allowed to go to that hopper", false);
-    		hopper = -1;
-    		return path;
-    	}
-    	else if(alliance == Alliance.Blue && hopper == 5){
-    		DriverStation.reportError("We aren't allowed to go to that hopper", false);
-    		hopper = -1;
-    		return path;
-    	}
-    	
-    	if(mode == AutoMode.GEAR){
-    		if(startPoint == StartPoint.KEY){
-    			if(alliance == Alliance.Red){
-    				path.put(Point.getCoordinates(Setpoint.RED_GEAR3));
-    			}
-    			else if(alliance == Alliance.Blue){
-    				path.put(Point.getCoordinates(Setpoint.BLUE_GEAR3));
-    			}
-    		}
-    		else if(startPoint == StartPoint.MIDLINE){
-    			if(alliance == Alliance.Red){
-    				path.put(Point.getCoordinates(Setpoint.RED_GEAR2));
-    			}
-    			else if(alliance == Alliance.Blue){
-    				path.put(Point.getCoordinates(Setpoint.BLUE_GEAR2));
-    			}
-    		}
-    		else if(startPoint == StartPoint.RETRIEVAL_ZONE){
-    			if(alliance == Alliance.Red){
-    				path.put(Point.getCoordinates(Setpoint.RED_GEAR1));
-    			}
-    			else if(alliance == Alliance.Blue){
-    				path.put(Point.getCoordinates(Setpoint.BLUE_GEAR1));
-    			}
+    	public void run(){
+    		while(!Thread.interrupted()){
+    			double leftFraction = HumanInterface.getLeftStick();
+        		double leftSpeed = DriveBase.getLeftSpeed();
+        		double leftTargetSpeed = leftFraction * DriveBase.MAX_SPEED_INCHES;
+        		leftSpeed += 0.09 * (leftTargetSpeed - leftSpeed);
+        		
+        		double rightFraction = HumanInterface.getRightStick();
+        		double rightSpeed = DriveBase.getRightSpeed();
+        		double rightTargetSpeed = rightFraction * DriveBase.MAX_SPEED_INCHES;
+        		rightSpeed += 0.09 * (rightTargetSpeed - rightSpeed);
+        		
+        		DriveBase.teleopDrive(leftSpeed, rightSpeed);
     		}
     	}
-    	
-    	if(mode == AutoMode.HOPPER_BOILER){
-    		if(alliance == Alliance.Red){
-    			path.put(new Point(295 + .5 * ROBOT_WIDTH, 115));
-    			path.put(new Point(324 - .5 * ROBOT_WIDTH, 115));
-    			path.put(new Point(29, 28.9));
-    		}
-    		else if(alliance == Alliance.Blue){
-    			path.put(new Point(295 + .5 * ROBOT_WIDTH, 537));
-    			path.put(new Point(324 - .5 * ROBOT_WIDTH, 537));
-    			path.put(new Point(29, 622.2));
-    		}
-    	}
-    	
-    	if(mode == AutoMode.HOPPER){
-    		if(startPoint == StartPoint.KEY && (hopper == 3 || hopper == 4 || hopper == 5)){
-    			switch(hopper){
-    				case 3:
-    					path.put(new Point(295 + .5 * ROBOT_WIDTH, 537));
-    					break;
-    				case 4:
-    					path.put(new Point(295 + .5 * ROBOT_WIDTH, 326));
-    					break;
-    				case 5:
-    					path.put(new Point(295 + .5 * ROBOT_WIDTH, 115));
-    					break;
-    			}
-    		}
-    		else if(startPoint == StartPoint.RETRIEVAL_ZONE && (hopper == 1 || hopper == 2)){
-    			switch(hopper){
-    				case 1:
-    					path.put(new Point(33.9 + .5 * ROBOT_WIDTH, 202));
-    					break;
-    				case 2:
-    					path.put(new Point(33.9 + .5 * ROBOT_WIDTH, 450));
-    					break;
-    			}
-    		}
-    	}
-    	
-    	return path;
     }
     
     /**
@@ -465,15 +392,6 @@ public class Robot extends RobotBase {
      */
     public static double getRobotLength(){
     	return ROBOT_LENGTH;
-    }
-    
-    /**
-     * Get the climber thread
-     * 
-     * @return The thread the climber code is running in.
-     */
-    public static Thread getClimberThread(){
-    	return climberThread;
     }
     
     /**

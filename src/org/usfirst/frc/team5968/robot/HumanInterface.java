@@ -27,9 +27,17 @@ public class HumanInterface {
 	 */
 	private static final double DEADZONE = .01;
 	
-	private static boolean isPRESSED = false;
+	/**
+	 * Whether the lift control button was pressed on the last loop. This means it will only change
+	 * the lift state if the button was previously unpressed, and is now pressed.
+	 */
+	private static boolean liftControlPressed = false;
 	
+	/**
+	 * Whether the driver has taken over manual control of the climber
+	 */
 	private static boolean climberManual = false;
+	
 	/**
 	 * Gets the value from the Y axis of the left stick, since that's
 	 * the only value we use
@@ -58,23 +66,34 @@ public class HumanInterface {
 		return y;
 	}
 	
-	public static void liftControl(){
-		if((rightStick.getRawButton(1) || leftStick.getRawButton(1)) && !isPRESSED){
-			Pneumatics.DoubleSolenoidTOGGLE();
-		}
-		isPRESSED = rightStick.getRawButton(1) || leftStick.getRawButton(1);
+	/**
+	 * Checks all the button controls
+	 */
+	public static void buttonControls(){
+		liftControl();
+		manualClimb();
+		reverseControls();
+		backUpForGear();
+		turnAroundForFuel();
 	}
 	
 	/**
-	 * Stop the climber if it isn't stopping, the robot is falling apart, the field is exploding, etc.
+	 * Control the bin bottom
+	 * Uses Button 1 on either joystick
 	 */
-	public static void emergencyStopClimberControl(){
-		if(rightStick.getRawButton(2) || leftStick.getRawButton(2)){
-			RopeClimber.eStopClimber();
+	private static void liftControl(){
+		if((rightStick.getRawButton(1) || leftStick.getRawButton(1)) && !liftControlPressed){
+			Pneumatics.DoubleSolenoidTOGGLE();
 		}
+		liftControlPressed = rightStick.getRawButton(1) || leftStick.getRawButton(1);
 	}
 	
-	public static void manualClimb(){
+	/**
+	 * Control the climber manually. If it's still being controlled automatically, the human
+	 * will take over control.
+	 * Uses Button 5 on Left, Button 6 on Right
+	 */
+	private static void manualClimb(){
 		if(leftStick.getRawButton(5) || rightStick.getRawButton(6)){
 			RopeClimber.manualClimb();
 			climberManual = true;
@@ -84,42 +103,85 @@ public class HumanInterface {
 		}
 	}
 	
-	private static boolean pressed = false;
+	/**
+	 * Whether the reverse controls button was pressed on the last iteration. This means the controls will
+	 * only be reversed if the button wasn't pressed on the last iteration.
+	 */
+	private static boolean reverseControlsPressed = false;
 	
-	public static void reverseControls(){
-		if((rightStick.getRawButton(5) || leftStick.getRawButton(6)) && !pressed){
+	/**
+	 * "Reverse" the front of the robot. I.e. if forward is toward the dump side, this will change it so
+	 * forward is toward the climb side, or vice versa.
+	 */
+	private static void reverseControls(){
+		if((rightStick.getRawButton(5) || leftStick.getRawButton(6)) && !reverseControlsPressed){
 			DriveBase.reverseControls();
 		}
-		pressed = rightStick.getRawButton(5) || leftStick.getRawButton(6);
+		reverseControlsPressed = rightStick.getRawButton(5) || leftStick.getRawButton(6);
 	}
 	
+	/**
+	 * Whether the robot should be driving back to get a gear right now
+	 */
 	private static boolean driveBack = false;
 	
+	/**
+	 * The start time of the last backUpForGear. The drive will stop after 1.5 seconds if the robot
+	 * hasn't reached its target by then. (There was an issue where the controls would freeze up after
+	 * calling this because the robot never reached the target distance)
+	 */
 	private static long startTime = System.currentTimeMillis();
 	
-	public enum TurnAroundState{
+	/**
+	 * The distance to reverse to collect a gear;
+	 */
+	private static final double BACK_UP_DISTANCE = 6.0;
+	
+	/**
+	 * The state of the last turn around. This should be used when you go to the retrieval zone to collect
+	 * a gear then push a button, and the robot will turn around to immediately collect fuel.
+	 */
+	private enum TurnAroundState{
 		DRIVE1,
 		TURN,
 		DRIVE2,
 		IDLE;
 	}
 	
-	public static void backUpForGear(){
+	/**
+	 * Back up a set distance to collect a gear. The robot should be against the wall when this
+	 * button is pressed. This will be canceled if the driver moves either joystick.
+	 * Button 4 on Left, Button 5 on Right
+	 */
+	private static void backUpForGear(){
 		if((leftStick.getRawButton(4) || rightStick.getRawButton(3))){
 			startTime = System.currentTimeMillis();
 			driveBack = true;
 		}
 		
 		if(driveBack){
-			if(DriveBase.driveDistance(6, .3) || System.currentTimeMillis() - startTime > 1500){
+			if(DriveBase.driveDistance(BACK_UP_DISTANCE, .3) || System.currentTimeMillis() - startTime > 1500 || getLeftStick() != 0 || getRightStick() != 0){
 				driveBack = false;
 			}
 		}
 	}
 	
+	/**
+	 * The state of turning around for a gear
+	 */
 	private static TurnAroundState turnState = TurnAroundState.IDLE;
 	
-	public static void turnAroundForFuel(){
+	/**
+	 * Turn around to collect fuel. This should be used when the robot is at the retrieval zone collecting
+	 * a gear. The driver will press this button, and the robot will back up, turn around, and drive forward
+	 * again and will be in position to collect fuel. This will cancel if the driver moves either joystick.
+	 * Button 2 on Left, Button 3 on Right
+	 */
+	private static void turnAroundForFuel(){
+		if(getLeftStick() != 0 || getRightStick() != 0){
+			turnState = TurnAroundState.IDLE;
+		}
+		
 		if((leftStick.getRawButton(2) || rightStick.getRawButton(2))){
 			startTime = System.currentTimeMillis();
 			turnState = TurnAroundState.DRIVE1;
@@ -130,7 +192,7 @@ public class HumanInterface {
 				turnState = TurnAroundState.IDLE;
 			}
 			else if(turnState == TurnAroundState.DRIVE1){
-				if(DriveBase.driveDistance(AutoManager.getSafeTurnDistance(), 0.25)){
+				if(DriveBase.driveDistance(AutoManager.getSafeTurnDistance() - BACK_UP_DISTANCE, 0.25)){
 					turnState = TurnAroundState.TURN;
 				}
 			}

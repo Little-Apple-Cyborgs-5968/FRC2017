@@ -100,7 +100,6 @@ public class PortMap {
 		}
 	}
 	
-	
 	/**
 	 * Get the port a specific pneumatic cylinder is plugged into on the PCM
 	 * 
@@ -122,6 +121,13 @@ public class PortMap {
 		}
 	}
 	
+
+	/**
+	 * Get the port a specific device is plugged into on the roboRIO PWM ports
+	 * 
+	 * @param p The device to get the PWM port for
+	 * @return The port the device is plugged into
+	 */
 	public static int portOf(PWM p){
 		switch(p){
 			case CLIMBER_ENCODER_A:

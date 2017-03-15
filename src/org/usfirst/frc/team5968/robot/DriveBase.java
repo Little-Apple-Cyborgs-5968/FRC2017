@@ -1,15 +1,9 @@
 package org.usfirst.frc.team5968.robot;
 
-import java.util.concurrent.LinkedBlockingQueue;
-
-import javax.swing.text.Position;
-
-import org.usfirst.frc.team5968.robot.Point.Setpoint;
 import org.usfirst.frc.team5968.robot.PortMap.CAN;
 import org.usfirst.frc.team5968.robot.PortMap.PWM;
 
 import com.ctre.CANTalon;
-import com.ctre.CANTalon.FeedbackDevice;
 import com.ctre.CANTalon.TalonControlMode;
 
 import edu.wpi.first.wpilibj.Encoder;
@@ -83,6 +77,9 @@ public class DriveBase {
 	 */
 	private static final double DRIVE_SPEED = .3;
 	
+	/**
+	 * Target speed for turning
+	 */
 	private static final double TURN_SPEED = .25;
 	
 	/**
@@ -107,17 +104,20 @@ public class DriveBase {
 	private static final double WHEEL_DIAMETER = 6.6;
 	
 	/**
-	 * The maximum speed the robot can drive. Used to scale the joystick inputs to an absolute speed.
+	 * The maximum speed the robot can drive in inches per second
 	 */
-	private static final double MAX_SPEED_RPM = 425;
+	public static final double MAX_SPEED_INCHES = 146.87; //inches per second, based on 425 RPM max
     
     /**
      * The distance to accelerate over when driving a distance, in inches.
      */
     private static final double ACCELERATE_DISTANCE = 6;
     
+    /**
+     * The distance to decelerate over when driving a distance, in inches
+     */
     private static final double DECELERATE_DISTANCE = 10;
-	
+    
 	/**
 	 * All the motors we have in the drive train.
 	 */
@@ -204,6 +204,9 @@ public class DriveBase {
 	 */
 	private static double angle = NavXMXP.getYaw();
 	
+	/**
+	 * Set the angle to maintain while driving straight to the current angle read by the NavX
+	 */
 	public static void resetTargetAngle(){
 		angle = NavXMXP.getYaw();
 		if(angle >= 180){
@@ -211,6 +214,11 @@ public class DriveBase {
 		}
 	}
 	
+	/**
+	 * Set the angle to maintain while driving straight to a certain angle
+	 * 
+	 * @param angle The angle to maintain, in degrees
+	 */
 	public static void setTargetAngle(double angle){
 		DriveBase.angle = angle;
 		if(angle >= 180){
@@ -383,15 +391,15 @@ public class DriveBase {
 		else{
 			driveSpeed = speed;
 		}
-		if(distance >= 0 && distance <= ACCELERATE_DISTANCE && inches >= ACCELERATE_DISTANCE * 2){
+		if(distance >= 0 && distance <= ACCELERATE_DISTANCE && inches >= ACCELERATE_DISTANCE + DECELERATE_DISTANCE){
 			driveStraight(.1 + (driveSpeed - .1) / ACCELERATE_DISTANCE * distance, false);
 		}
 		
-		else if(distance <= 0 && distance >= -1 * ACCELERATE_DISTANCE && inches <= -1 * ACCELERATE_DISTANCE * 2){
+		else if(distance <= 0 && distance >= -1 * ACCELERATE_DISTANCE && inches <= -1 * (ACCELERATE_DISTANCE + DECELERATE_DISTANCE)){
 			driveStraight(-.1 + (driveSpeed - .1) / ACCELERATE_DISTANCE * distance, false);
 		}
 		
-		else if(Math.abs(distance) < Math.abs(inches) - ACCELERATE_DISTANCE){
+		else if(Math.abs(distance) > ACCELERATE_DISTANCE && Math.abs(distance) < Math.abs(inches) - DECELERATE_DISTANCE){
 			if(inches < 0){
 				driveStraight(-driveSpeed, false);
 			}
@@ -406,10 +414,10 @@ public class DriveBase {
 				return true;
 			}
 			else if(inches > 0){
-				driveStraight((driveSpeed - 0) / DECELERATE_DISTANCE * (inches - distance) + 0, false); //replace 0 with some other number if you want to finish at a different speed
+				driveStraight((driveSpeed - 0.1) / DECELERATE_DISTANCE * (inches - distance) + 0.1, false); //replace 0 with some other number if you want to finish at a different speed
 			}
 			else{
-				driveStraight((driveSpeed + 0) / DECELERATE_DISTANCE * (inches - distance) - 0, false);
+				driveStraight((driveSpeed + 0.1) / DECELERATE_DISTANCE * (inches - distance) - 0.1, false);
 			}
 		}
 		
@@ -430,6 +438,7 @@ public class DriveBase {
 	 */
 	public static boolean driveRotation(double degrees) {
 		if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE){
+			setRawFraction(0, 0);
 			return true;
 		}
 		if(degrees < 0){
@@ -451,46 +460,61 @@ public class DriveBase {
 				direction = 1;
 			}
 		}
-		
-    	if(Math.abs(NavXMXP.getYaw() - degrees) >= ANGLE_TOLERANCE){
-    		if(direction == 1){
-    			if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE * 10){ //yes, 10 is a very magic number
-    				double speed = (TURN_SPEED - 0) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0; //replace speed with a different number if it's too low to reach the target
-    				setRawFraction(-1 * speed, speed);
-    			}
-    			else{
-        			setRawFraction(Math.max(-TURN_SPEED, -1), Math.min(.1, 1)); //only set to 2 * DRIVE_SPEED if that's within -1 to 1
-    			}
-    		}
-    		else if(direction == 0){
-    			if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE * 10){
-    				double speed = (TURN_SPEED - 0) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0;
-    				setRawFraction(speed, -1 * speed);
-    			}
-    			else{
-        			setRawFraction(Math.min(TURN_SPEED, 1), Math.max(-TURN_SPEED, -1));
-    			}
-    		}
-    		return false;
-    	}    
-    	else{
-    		DriveBase.setRawFraction(0, 0);
-    		return true;
-    	}
+		if(direction == 1){
+			if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE * 10){ //yes, 10 is a very magic number
+				double speed = (TURN_SPEED - 0.1) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0.1; //replace speed with a different number if it's too low to reach the target
+				setRawFraction(-1 * speed, speed);
+			}
+			else{
+    			setRawFraction(-1 * TURN_SPEED, TURN_SPEED); 
+			}
+		}
+		else if(direction == 0){
+			if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE * 10){
+				double speed = (TURN_SPEED - 0.1) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0.1;
+				setRawFraction(speed, -1 * speed);
+			}
+			else{
+    			setRawFraction(TURN_SPEED, -1 * TURN_SPEED);
+			}
+		}
+		return false; 
 	}
 	
+	/**
+	 * The distance driven so far in the driveDistanceWithVision
+	 */
 	private static volatile double distanceDriven = 0;
 		
+	/**
+	 * Whether distanceFromCamera and angleFromCamera are new values (alternative is that they have
+	 * already been processed)
+	 */
 	private static volatile boolean newAngle = false;
 	
+	/**
+	 * The distance to the goal read by the camera
+	 */
 	private static volatile double distanceFromCamera = 0;
 	
+	/**
+	 * The angle to the goal read by the camera
+	 */
 	private static volatile double angleFromCamera = 0;
 	
+	/**
+	 * The distance that had been driven when the last image was taken
+	 */
 	private static volatile double lastDistance = 0;
 	
+	/**
+	 * The distance remaining in the driveDistanceWithVision
+	 */
 	private static volatile double distanceToGo;
 	
+	/**
+	 * Whether it is the first call to driveDistanceWithVision
+	 */
 	private static boolean firstCall = true;
 	
 	/**
@@ -536,12 +560,24 @@ public class DriveBase {
 		}
 		distanceToGo = distance - distanceDriven;
 		return false;
-	}	
+	}
 	
+	/**
+	 * Get the distance remaining in the driveDistanceWithVision
+	 * 
+	 * @return The distance remaining
+	 */
 	public static double getDistanceToGo(){
 		return distanceToGo;
 	}
 	
+	/**
+	 * Save new measurements read from the camera
+	 * 
+	 * @param distanceToGoal The distance to the goal
+	 * @param angle The angle to the goal
+	 * @param lastDistance The distance to the goal when the picture was taken, from the encoders
+	 */
 	public static void putNewMeasurements(double distanceToGoal, double angle, double lastDistance){
 		DriveBase.distanceFromCamera = distanceToGoal;
 		DriveBase.angleFromCamera = angle;
@@ -549,10 +585,22 @@ public class DriveBase {
 		newAngle = true;
 	}
 	
+	/**
+	 * The last call to a one-side drive method
+	 */
 	private static double oneSideDistanceLastCallMillis = System.currentTimeMillis();
 	
+	/**
+	 * The distance driven in the last one-side drive
+	 */
 	private static double oneSideDistanceDriven = 0;
 	
+	/**
+	 * Drive a distance with only the right side
+	 * 
+	 * @param distance The distance to drive
+	 * @return Whether the drive is finished
+	 */
 	public static boolean driveLeftDistance(double distance){
 		if(System.currentTimeMillis() - oneSideDistanceLastCallMillis > 100){
 			oneSideDistanceDriven = 0;
@@ -569,6 +617,12 @@ public class DriveBase {
 		return false;
 	}
 	
+	/**
+	 * Drive a distance with only the right side
+	 * 
+	 * @param distance The distance to drive
+	 * @return Whether the drive is done
+	 */
 	public static boolean driveRightDistance(double distance){
 		if(System.currentTimeMillis() - oneSideDistanceLastCallMillis > 100){
 			oneSideDistanceDriven = 0;
@@ -608,6 +662,10 @@ public class DriveBase {
 		}
 	}
 	
+	/**
+	 * "Reverse" the front side of the robot. I.e. if forward is toward the dump side, this will
+	 * change it so forward is toward the gear side, or vice versa.
+	 */
 	public static void reverseControls(){
 		if(controlsReversed){
 			controlsReversed = false;
@@ -616,131 +674,5 @@ public class DriveBase {
 			controlsReversed = true;
 		}
 		Dashboard.sendControlsReversed(controlsReversed);
-	}
-	
-	private static boolean angleDriven = false;
-	
-	private static boolean distanceDriven1 = false;
-	
-	private static long pointDriveLastCallMillis = System.currentTimeMillis();
-	
-	private static double targetAngle;
-	
-	private static double targetDistance;
-	
-	/**
-	 * Drive to a point on the field. At the moment, this is somewhat imprecise (not to mention untested),
-	 * and uses what might be called P control.
-	 * 
-	 * @param p The point to drive to
-	 * @param stop Whether top stop before driving to the point
-	 */
-	public static boolean driveToPoint(Point p, boolean stop){
-		double currentX = PositionTracker.getCurrentPoint().getX();
-		double currentY = PositionTracker.getCurrentPoint().getY();
-		double targetX = p.getX();
-		double targetY = p.getY();
-		
-		final double PROPORTION = .2;
-		final double MAX_SPEED = .6;
-		
-		double leftSpeed = getLeftSpeed();
-		double rightSpeed = getRightSpeed();
-		if(stop){
-			setRawFraction(0, 0);
-		}
-		
-		if(Math.sqrt(Math.pow(currentX - targetX, 2) + Math.pow(currentY - targetY, 2)) < DISTANCE_TOLERANCE){
-			return true;
-		}
-		
-		if(leftMotorLead.getSpeed() >= DISTANCE_TOLERANCE && !stop){
-			System.out.println("uhhh lol");
-			double robotPathSlope;
-			if(NavXMXP.getYaw() == 0 || NavXMXP.getYaw() == 180 || NavXMXP.getYaw() == -180){
-				robotPathSlope = 0.0001;
-			}
-			else{
-				robotPathSlope = Math.tan(NavXMXP.convertAngleToRadians(NavXMXP.getYaw()));
-			}
-			
-			//This assumes the robot is traveling in a straight line, which may be somewhat inaccurate.
-			//I'm hoping the refresh rate is high enough that it won't matter, but we'll have to see.
-			double projectedY = robotPathSlope * (targetX - currentX) + currentY;
-			
-			if((NavXMXP.getYaw() < 0 && targetY > projectedY) || (NavXMXP.getYaw() >= 0 && targetY < projectedY)){
-				if(leftSpeed < MAX_SPEED){
-					leftSpeed += PROPORTION * (targetY - projectedY);
-				}
-				else{
-					rightSpeed -= PROPORTION * (targetY - projectedY);
-				}
-			}
-			else{
-				if(rightSpeed < MAX_SPEED){
-					rightSpeed += PROPORTION * (targetY - projectedY);
-				}
-				else{
-					leftSpeed -= PROPORTION * (targetY - projectedY);
-				}
-			}
-			
-			setRawFraction(leftSpeed, rightSpeed);
-		}
-		else{
-			if(System.currentTimeMillis() - pointDriveLastCallMillis >= 50){
-				targetAngle = Math.atan((targetX - currentX) / (targetY - currentY)) * 180 / Math.PI;
-				targetDistance = Math.sqrt(Math.pow(targetX - currentX, 2) + Math.pow(targetY - currentY, 2));
-			}
-			
-			if(!angleDriven){
-				while(!driveRotation(targetAngle)){
-				}
-				angleDriven = true;
-			}
-			else if(!distanceDriven1){
-				while(!driveDistance(targetDistance, 0.2)){
-				}
-				distanceDriven1 = true;
-				pointDriveLastCallMillis = System.currentTimeMillis();
-				return true;
-			}
-		}
-		
-		pointDriveLastCallMillis = System.currentTimeMillis();
-		return false;
-	}
-	
-	/**
-	 * Drive along a path. It's nonblocking, so call it from the main control loop
-	 * 
-	 * @param points The list of points defining the path to drive.
-	 * @param stopBetweenPoints Whether to stop between driving to each point
-	 */
-	public static void drivePath(LinkedBlockingQueue<Point> points, boolean stopBetweenPoints){
-		if(points.isEmpty()){
-			Setpoint destination = PositionTracker.findNearestSetpoint(PositionTracker.getCurrentPoint());
-			driveToPoint(Point.getCoordinates(destination), stopBetweenPoints);
-			
-			if(destination == Setpoint.RED_BOILER || destination == Setpoint.BLUE_BOILER){
-				driveRotation(Point.getCorrectAngle(destination));
-				//correct for error with vision processing
-				driveDistance(52 - .5 * Robot.getRobotLength(), 0.2);
-			}
-			else{
-				driveRotation(Point.getCorrectAngle(destination));
-				driveDistance(Point.getStopDistance() - .5 * Robot.getRobotLength(), 0.2);
-			}
-		}
-		else{			
-			Point current = PositionTracker.getCurrentPoint();
-			Point target = points.peek();
-			
-			driveToPoint(target, stopBetweenPoints);
-			
-			if(Math.sqrt(Math.pow(current.getX() - target.getX(), 2) + Math.pow(current.getY() - target.getY(), 2)) <= DISTANCE_TOLERANCE){
-				points.poll();
-			}
-		}
 	}
 }
