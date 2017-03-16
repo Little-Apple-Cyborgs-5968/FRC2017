@@ -70,6 +70,7 @@ public class Dashboard {
 		putWarnings();
 		putRopeClimbData();
 		putPneumaticsUpOrDown();
+		putPressureLabel(Pneumatics.getPressureLabel());
 	}
 	
 	/**
@@ -190,5 +191,9 @@ public class Dashboard {
 	
 	public static void sendControlsReversed(boolean reversed){
 		table.putBoolean("reversed", reversed);
+	}
+	
+	public static void putPressureLabel(double pressure) {
+		table.putNumber("pressureLabel", pressure);
 	}
 }

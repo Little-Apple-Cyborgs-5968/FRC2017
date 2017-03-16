@@ -3,6 +3,7 @@ package org.usfirst.frc.team5968.robot;
 import org.usfirst.frc.team5968.robot.PortMap.USB;
 
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Timer;
 
 /**
  * Appropriately, this class handles interfacing with the drivers. It only does the joysticks and Xbox controller

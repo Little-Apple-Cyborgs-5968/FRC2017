@@ -16,6 +16,9 @@ public class Pneumatics{
 	
 	private static final double pressureSensorSupplyVoltage = 5;
 	private static AnalogInput pressureSensor = new AnalogInput(0);
+	private static double pressureLabel;
+	
+	//public double getPressureLabel
 	
 	public static void init(){
 
@@ -67,6 +70,7 @@ public class Pneumatics{
 			pressureTooLow = true;
 		}
 		
+		pressureLabel = pressure;
 		return pressureTooLow;
 	}
 }

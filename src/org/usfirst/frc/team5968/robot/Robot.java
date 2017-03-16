@@ -423,4 +423,8 @@ public class Robot extends RobotBase {
     public static void stopProcessingImage(){
     	shouldProcessImage = false;
     }
+    
+    public static Lights getLights(){
+    	return lights;
+    }
 }
