@@ -248,7 +248,7 @@ public class Robot extends RobotBase {
      */
 	public void autoPeriodic(){
     	//hehe this is all in a separate thread. It won't have to wait for Driver Station updates!! :D
-
+		lights.pneumatics();
 		if(shouldProcessImage){
 			double initialDistance = DriveBase.getDistanceToGo();
 
@@ -287,6 +287,9 @@ public class Robot extends RobotBase {
     	
     	if(!climbed){
     		climbed = RopeClimber.motorClimb();
+    	}
+    	if(!RopeClimber.motorClimb() && !HumanInterface.isLightsFlashing()) {
+    		lights.pneumatics();
     	}
     }
     

@@ -30,6 +30,8 @@ public class RopeClimber implements Runnable {
 	
 	private static double stopSpeed = .55;
 	
+	private static Lights lights = Robot.getLights();
+	
 	public void run() {
 		while(!motorClimb()){
 			if(Thread.interrupted()){
@@ -81,7 +83,7 @@ public class RopeClimber implements Runnable {
 		}
 		boolean reachedDestination = false;
 		if(!isSetToPoint1){
-			
+			lights.purple();
 			setSpeed(.4);
 			motorSpeed = .4;
 			isSetToPoint1 = true;

@@ -38,6 +38,12 @@ public class HumanInterface {
 	 */
 	private static boolean climberManual = false;
 	
+	private static Lights lights = Robot.getLights();
+	private static Timer systemTimer = new Timer();
+	private static double flashEndTime = 0.0;
+	private static int remainingFlashCount = 0;
+	private static boolean flashOnCycle = false;
+	
 	/**
 	 * Gets the value from the Y axis of the left stick, since that's
 	 * the only value we use
@@ -164,6 +170,33 @@ public class HumanInterface {
 				driveBack = false;
 			}
 		}
+	}
+	
+	public static boolean isLightsFlashing() {
+		final double flashTime = 0.1;
+		
+		if((leftStick.getRawButton(8) || rightStick.getRawButton(8))) {
+			flashEndTime = systemTimer.get() + flashTime;
+			remainingFlashCount = 10;
+			flashOnCycle = true;
+		}
+		
+		if (systemTimer.get() >= flashEndTime) {
+			remainingFlashCount--;
+			flashEndTime = systemTimer.get() + flashTime;
+			flashOnCycle = !flashOnCycle;
+		}
+		
+		if (remainingFlashCount <= 0) {
+			return false;
+		}
+		
+		if(flashOnCycle) {
+			lights.yellow();
+			return true;
+		}
+		
+		return false;
 	}
 	
 	/**
