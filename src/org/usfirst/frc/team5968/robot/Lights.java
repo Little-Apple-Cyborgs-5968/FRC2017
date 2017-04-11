@@ -18,10 +18,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * directory.
  */
 public class Lights {
-	private DigitalOutput w = new DigitalOutput(2);
-	private DigitalOutput b = new DigitalOutput(4);
-	private DigitalOutput r = new DigitalOutput(3);
-	private DigitalOutput g = new DigitalOutput(5);
+	private DigitalOutput w = new DigitalOutput(0);
+	private DigitalOutput b = new DigitalOutput(8);
+	private DigitalOutput r = new DigitalOutput(1);
+	private DigitalOutput g = new DigitalOutput(9);
 	
 	private static Relay ledRing = new Relay(0);
     
@@ -91,16 +91,6 @@ public class Lights {
     	}
     }
     
-    public void pneumatics() {
-       
-    	if(Pneumatics.getIsUp()) {
-    		green();
-    	}
-    	else {
-    		allianceColor();
-    	}
-    	
-    }
     public void climbFlashing() {
     	if(((int)Timer.getMatchTime()) % 2 == 0) {
     		turquoise();

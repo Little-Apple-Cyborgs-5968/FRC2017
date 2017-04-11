@@ -139,11 +139,11 @@ public class PortMap {
 			case CLIMBER_MOTOR_RIGHT:
 				return 3;
 			case LEFT_DRIVE_ENCODER_A:
-				return 4;
+				return 2;
 			case LEFT_DRIVE_ENCODER_B:
-				return 5;
+				return 3;
 			case RIGHT_DRIVE_ENCODER_A:
-				return 6;
+				return 5;
 			case RIGHT_DRIVE_ENCODER_B:
 				return 7;
 			default:

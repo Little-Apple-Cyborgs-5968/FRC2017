@@ -89,10 +89,10 @@ public class HumanInterface {
 	 * Uses Button 1 on either joystick
 	 */
 	private static void liftControl(){
-		if((rightStick.getRawButton(1) || leftStick.getRawButton(1)) && !liftControlPressed){
+		/*if((rightStick.getRawButton(1) || leftStick.getRawButton(1)) && !liftControlPressed){
 			Pneumatics.DoubleSolenoidTOGGLE();
 		}
-		liftControlPressed = rightStick.getRawButton(1) || leftStick.getRawButton(1);
+		liftControlPressed = rightStick.getRawButton(1) || leftStick.getRawButton(1);*/
 	}
 	
 	/**
@@ -132,6 +132,10 @@ public class HumanInterface {
 	 */
 	private static boolean driveBack = false;
 	
+	public static boolean isDrivingBack(){
+		return driveBack;
+	}
+	
 	/**
 	 * The start time of the last backUpForGear. The drive will stop after 1.5 seconds if the robot
 	 * hasn't reached its target by then. (There was an issue where the controls would freeze up after
@@ -142,7 +146,9 @@ public class HumanInterface {
 	/**
 	 * The distance to reverse to collect a gear;
 	 */
-	private static final double BACK_UP_DISTANCE = 6.0;
+	private static final double BACK_UP_DISTANCE = 0.75;
+	
+	private static double distanceDriven = 0;
 	
 	/**
 	 * The state of the last turn around. This should be used when you go to the retrieval zone to collect
@@ -163,13 +169,22 @@ public class HumanInterface {
 	private static void backUpForGear(){
 		if((leftStick.getRawButton(4) || rightStick.getRawButton(3))){
 			startTime = System.currentTimeMillis();
+			DriveBase.resetEncoders();
 			driveBack = true;
 		}
 		
 		if(driveBack){
-			if(DriveBase.driveDistance(BACK_UP_DISTANCE, .3) || System.currentTimeMillis() - startTime > 1500 || getLeftStick() != 0 || getRightStick() != 0){
+			if(System.currentTimeMillis() - startTime > 1000){
 				driveBack = false;
 			}
+			
+			distanceDriven = (DriveBase.getRightDistance() - DriveBase.getLeftDistance()) / 2;
+			System.out.println(distanceDriven);
+			DriveBase.setRawFraction(0.25, 0.25);
+			driveBack = distanceDriven < BACK_UP_DISTANCE;
+		}
+		else{
+			DriveBase.setRawFraction(0.0, 0.0);
 		}
 	}
 	

@@ -159,31 +159,30 @@ public class AutoManager{
 			
 			double firstDriveDistance = Math.tan(5 * Math.PI / 6) * (223.06 + 0.5 * Robot.getRobotWidth() - 162) + 149.5;
 			firstDriveDistance -= .5 * Robot.getRobotLength();
-			firstDriveDistance -= 6;
+			//firstDriveDistance += 9;
 			double secondDriveDistance = Math.sqrt(Math.pow(223.06 + 0.5 * Robot.getRobotWidth() - 192.53, 2) + Math.pow(firstDriveDistance + .5 * Robot.getRobotLength() - 131.88, 2));
 			secondDriveDistance -= .5 * Robot.getRobotLength();
 			secondDriveDistance += 6;
-			//secondDriveDistance -= 2; //just so we don't crash into the wall too badly
 			switch(progress){
 				case STARTING:
-					if(DriveBase.driveDistance(-1 * firstDriveDistance, .2)){
+					if(DriveBase.driveDistance(-1 * firstDriveDistance, .3)){
 						progress = AutoProgress.DRIVE1_DONE;
 					}
 					break;
 				case DRIVE1_DONE:
 					if(alliance == Alliance.Red){
-						if(DriveBase.driveRotation(-65)){
+						if(DriveBase.driveRotation(298)){
 							progress = AutoProgress.TURN1_DONE;
 						}
 					}
 					else{
-						if(DriveBase.driveRotation(65)){
+						if(DriveBase.driveRotation(61)){
 							progress = AutoProgress.TURN1_DONE;
 						}
 					}
 					break;
 				case TURN1_DONE:
-					if(DriveBase.driveDistance(-1 * secondDriveDistance, .2)){
+					if(DriveBase.driveDistance(-1 * secondDriveDistance, .3)){
 						progress = AutoProgress.FINISHED;
 					}
 					break;
@@ -211,13 +210,13 @@ public class AutoManager{
 						}
 					}
 					else{
-						if(DriveBase.driveRotation(-60)){
+						if(DriveBase.driveRotation(300)){
 							progress = AutoProgress.TURN1_DONE;
 						}
 					}
 					break;
 				case TURN1_DONE:
-					if(DriveBase.driveDistance(-1 * secondDriveDistance, .3)){
+					if(DriveBase.driveDistance(secondDriveDistance, .3)){
 						progress = AutoProgress.FINISHED;
 					}
 					break;
@@ -285,7 +284,7 @@ public class AutoManager{
 		if(startPoint == StartPoint.KEY || startPoint == StartPoint.RETRIEVAL_ZONE){
 			switch(progress){
 				case STARTING:
-					Pneumatics.setSolenoidDown();
+					//Pneumatics.setSolenoidDown();
 					if(DriveBase.driveDistance(firstDriveDistance, .2)){
 						progress = AutoProgress.DRIVE1_DONE;
 					}

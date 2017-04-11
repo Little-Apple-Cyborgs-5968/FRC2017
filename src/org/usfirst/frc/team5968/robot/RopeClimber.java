@@ -10,14 +10,14 @@ public class RopeClimber implements Runnable {
 	
 	private static VictorSP rightMotor;
 	private static VictorSP leftMotor;
-	private static Encoder climberEncoder;  
+	//private static Encoder climberEncoder;  
   
 	private static PowerDistributionPanel pdp = new PowerDistributionPanel(PortMap.portOf(PortMap.CAN.PDP));
 	
 	private static final double startAngle = 5;	//Inches
 	private static final double robotLength = 33;	//Inches  
 	private static final double maxCurrent = 60;    //Tune
-	private static final double maxSpeed = .9;
+	private static final double maxSpeed = 1.0;
 	private static double motorSpeed = 0;
 	private static double distance = ((Math.sin(startAngle * (Math.PI / 180))) * robotLength);
 	
@@ -43,8 +43,8 @@ public class RopeClimber implements Runnable {
 	public static void init(){
 		rightMotor = new VictorSP(PortMap.portOf(PortMap.PWM.CLIMBER_MOTOR_RIGHT));
 		leftMotor = new VictorSP(PortMap.portOf(PortMap.PWM.CLIMBER_MOTOR_LEFT));
-		climberEncoder = new Encoder(PortMap.portOf(PortMap.PWM.CLIMBER_ENCODER_A), PortMap.portOf(PortMap.PWM.CLIMBER_ENCODER_B), false, CounterBase.EncodingType.k4X);  
-		climberEncoder.setDistancePerPulse(2.5 * Math.PI / 360); //inches
+		//climberEncoder = new Encoder(PortMap.portOf(PortMap.PWM.CLIMBER_ENCODER_A), PortMap.portOf(PortMap.PWM.CLIMBER_ENCODER_B), false, CounterBase.EncodingType.k4X);  
+		//climberEncoder.setDistancePerPulse(2.5 * Math.PI / 360); //inches
 	}
 	
 	public static void setSpeed(double motorSpeed){
@@ -59,7 +59,7 @@ public class RopeClimber implements Runnable {
 			
 			motorSpeed = motorSpeed + .01;
 			setSpeed(motorSpeed);
-			Timer.delay(.05);
+			Timer.delay(.04);
 			isAccelerated = false;
 		}
 		if(motorSpeed >= maxSpeed){
@@ -93,13 +93,13 @@ public class RopeClimber implements Runnable {
   		if(Math.abs(verticalAngle) > startAngle){
   			System.out.println(getCurrent());
 			DriveBase.setRawFraction(0, 0);
-			climberEncoder.reset();
+			//climberEncoder.reset();
 			if(!isAccelerated){
 				
 				climbingAcceleration();
 			}
 			
-			distance += climberEncoder.getDistance();
+			distance += 0;//climberEncoder.getDistance();
   			if(distance < 48){
   				
   				reachedDestination = false;

@@ -70,7 +70,7 @@ public class Dashboard {
 		putWarnings();
 		putRopeClimbData();
 		putPneumaticsUpOrDown();
-		putPressureLabel(Pneumatics.getPressureLabel());
+		//putPressureLabel(Pneumatics.getPressureLabel());
 	}
 	
 	/**
@@ -164,9 +164,7 @@ public class Dashboard {
 	 */
 	private static void putWarnings(){
 		warnings.putBoolean("collision", NavXMXP.getCollisionHappened());
-		warnings.putBoolean("pneumatics", Pneumatics.isPressureLow());
 		warnings.putBoolean("temperature", DriveBase.isAMotorTooHot());
-		System.out.println("pneumatics " + Pneumatics.isPressureLow());
 	}
 	
 	/**
@@ -181,7 +179,7 @@ public class Dashboard {
 	 * Put whether the pneumatics are up or down (the color that should show on the dashboard).
 	 */
 	public static void putPneumaticsUpOrDown(){
-		if(Pneumatics.getIsUp()){
+		if(false){
 			table.putString("pneumatics", "green");
 		}
 		else{

@@ -158,13 +158,13 @@ public class Robot extends RobotBase {
      */
     public void robotInit(){
     	NavXMXP.init();
-    	DriveBase.init();
-    	DriveBase.resetEncoders();
-    	Pneumatics.init();
+    	//Pneumatics.init();
     	RopeClimber.init();
     	Dashboard.init();
-    	Pneumatics.setSolenoidDown();
+    	//Pneumatics.setSolenoidDown();
     	UsbCamera.init();
+    	DriveBase.init();
+    	DriveBase.resetEncoders();
     	
     	/*if(startPointName == StartPoint.KEY){
     		if(alliance == Alliance.Red){
@@ -198,18 +198,20 @@ public class Robot extends RobotBase {
      * Called at the beginning of autonomous.
      */
     public void autoInit(){
+    	
     	NavXMXP.resetYaw();
     	DriveBase.resetTargetAngle();
     	Timer.delay(.05);
     	Lights.toggleLedRing();
     	
-    	alliance = DriverStation.getInstance().getAlliance();
     	
-    	startPoint = Dashboard.getStartingPoint();
+    	alliance = Alliance.Blue;//DriverStation.getInstance().getAlliance();
     	
-    	auto = Dashboard.getAutoMode();
+    	startPoint = StartPoint.MIDLINE;//Dashboard.getStartingPoint();
     	
-    	hopper = Dashboard.getHopper();
+    	auto = AutoMode.GEAR;//Dashboard.getAutoMode();
+    	
+    	hopper = 5;//Dashboard.getHopper();
     	
     	if(alliance != Alliance.Red && alliance != Alliance.Blue){
     		DriverStation.reportError("I don't know what alliance I'm on!", false);
@@ -248,8 +250,8 @@ public class Robot extends RobotBase {
      */
 	public void autoPeriodic(){
     	//hehe this is all in a separate thread. It won't have to wait for Driver Station updates!! :D
-		lights.pneumatics();
-		if(shouldProcessImage){
+		//lights.pneumatics();
+		/*if(shouldProcessImage){
 			double initialDistance = DriveBase.getDistanceToGo();
 
 			processing.process(UsbCamera.getImage(), true);
@@ -257,13 +259,14 @@ public class Robot extends RobotBase {
 				DriveBase.putNewMeasurements(Processing.getGroundDistance(), Processing.getAngle(), initialDistance);
 				System.out.println("********* " + Processing.getGroundDistance() + " " + Processing.getAngle());
 			}
-		}
+		}*/
     }
     
     /**
      * Called at the beginning of teleop
      */
     public void teleopInit(){
+    	
     	if(autoThread != null && autoThread.isAlive()){
     		autoThread.interrupt(); //stops the auto code if it's for some reason still running
     	}
@@ -273,8 +276,8 @@ public class Robot extends RobotBase {
     	Timer.delay(.05);
     	Lights.toggleLedRing();
     	
-    	teleopThread = new Thread(new TeleopThread());
-    	teleopThread.start();
+    	/*teleopThread = new Thread(new TeleopThread());
+    	teleopThread.start();*/
     }
     
     boolean climbed = false;
@@ -284,13 +287,17 @@ public class Robot extends RobotBase {
     public void teleopPeriodic(){
     	
     	HumanInterface.buttonControls();
-    	
+    	if(!HumanInterface.isDrivingBack()){
+        	DriveBase.teleopDrive(HumanInterface.getLeftStick(), HumanInterface.getRightStick());
+    	}
+    	//System.out.println(DriveBase.getLeftDistance() + " " + DriveBase.getRightDistance());
     	if(!climbed){
     		climbed = RopeClimber.motorClimb();
     	}
     	if(!RopeClimber.motorClimb() && !HumanInterface.isLightsFlashing()) {
-    		lights.pneumatics();
+    		//lights.pneumatics();
     	}
+    	System.out.println(DriveBase.getLeftDistance() + " " + DriveBase.getRightDistance());
     }
     
     /**
@@ -298,7 +305,8 @@ public class Robot extends RobotBase {
      * at all times, to avoid pasting it twice.
      */
     public void robotPeriodic(){
-    	Dashboard.updateDashboardValues();
+    	
+    	//Dashboard.updateDashboardValues();
     }
     
     /**
@@ -348,24 +356,32 @@ public class Robot extends RobotBase {
      * Runs the PID code in teleop. This probably needs testing if we want to use it.
      *
      */
-    private class TeleopThread implements Runnable{
+    /*private class TeleopThread implements Runnable{
     	
     	public void run(){
     		while(!Thread.interrupted()){
+    			
     			double leftFraction = HumanInterface.getLeftStick();
         		double leftSpeed = DriveBase.getLeftSpeed();
         		double leftTargetSpeed = leftFraction * DriveBase.MAX_SPEED_INCHES;
-        		leftSpeed += 0.09 * (leftTargetSpeed - leftSpeed);
+        		leftSpeed += 0.03 * (leftTargetSpeed - leftSpeed);
         		
         		double rightFraction = HumanInterface.getRightStick();
         		double rightSpeed = DriveBase.getRightSpeed();
         		double rightTargetSpeed = rightFraction * DriveBase.MAX_SPEED_INCHES;
-        		rightSpeed += 0.09 * (rightTargetSpeed - rightSpeed);
+        		rightSpeed += 0.03 * (rightTargetSpeed - rightSpeed);
         		
-        		DriveBase.teleopDrive(leftSpeed, rightSpeed);
+        		if(leftFraction == 0){
+        			leftSpeed = 0;
+        		}
+        		if(rightFraction == 0){
+        			rightSpeed = 0;
+        		}
+        		
+        		DriveBase.teleopDrive(leftFraction, rightFraction);
     		}
     	}
-    }
+    }*/
     
     /**
      * Wait for a specified duration in milliseconds. This should not be used for any extended period

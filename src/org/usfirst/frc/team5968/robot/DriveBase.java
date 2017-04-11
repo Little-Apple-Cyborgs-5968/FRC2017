@@ -20,32 +20,32 @@ public class DriveBase {
 	/**
 	 * The Lead left motor
 	 */
-	private static CANTalon leftMotorLead = new CANTalon(PortMap.portOf(CAN.LEFT_MOTOR_LEAD));
+	private static CANTalon leftMotorLead;
 	
 	/**
 	 * The Follow left motor
 	 */
-	private static CANTalon leftMotorFollow = new CANTalon(PortMap.portOf(CAN.LEFT_MOTOR_FOLLOW));
+	private static CANTalon leftMotorFollow;
 	
 	/**
 	 * The Lead right motor
 	 */
-	private static CANTalon rightMotorLead = new CANTalon(PortMap.portOf(CAN.RIGHT_MOTOR_LEAD));
+	private static CANTalon rightMotorLead;
 	
 	/**
 	 * The Follow right motor
 	 */
-	private static CANTalon rightMotorFollow = new CANTalon(PortMap.portOf(CAN.RIGHT_MOTOR_FOLLOW));
+	private static CANTalon rightMotorFollow;
 	
 	/**
 	 * The left side drive encder
 	 */
-	private static Encoder leftEncoder = new Encoder(PortMap.portOf(PWM.LEFT_DRIVE_ENCODER_A), PortMap.portOf(PWM.LEFT_DRIVE_ENCODER_B));
+	private static Encoder leftEncoder;
 	
 	/**
 	 * The right side drive encoder
 	 */
-	private static Encoder rightEncoder = new Encoder(PortMap.portOf(PWM.RIGHT_DRIVE_ENCODER_A), PortMap.portOf(PWM.RIGHT_DRIVE_ENCODER_B));
+	private static Encoder rightEncoder;
 	
 	/**
 	 * Used in 2 cases. Could be multiple constants, but having a ton of constants looks kind of bad. 
@@ -65,7 +65,7 @@ public class DriveBase {
 	/**
 	 * How close the robot needs to be when turning to be considered at the target angle
 	 */
-	private static final double ANGLE_TOLERANCE = 1; //degrees
+	private static final double ANGLE_TOLERANCE = 3; //degrees
 	
 	/**
 	 * Proportion used to drive straight, using P (traditionally PID) control.
@@ -118,6 +118,12 @@ public class DriveBase {
      */
     private static final double DECELERATE_DISTANCE = 10;
     
+    public static boolean initialized = false;
+    
+    public static boolean getInitialized(){
+    	return initialized;
+    }
+    
 	/**
 	 * All the motors we have in the drive train.
 	 */
@@ -132,31 +138,37 @@ public class DriveBase {
 	 * Initializes the drive base.
 	 */
 	public static void init(){
+		leftMotorLead = new CANTalon(PortMap.portOf(PortMap.CAN.LEFT_MOTOR_LEAD));
+		leftMotorFollow = new CANTalon(PortMap.portOf(PortMap.CAN.LEFT_MOTOR_FOLLOW));
+
+		rightMotorLead = new CANTalon(PortMap.portOf(PortMap.CAN.RIGHT_MOTOR_LEAD));
+		rightMotorFollow = new CANTalon(PortMap.portOf(PortMap.CAN.RIGHT_MOTOR_FOLLOW));
+			
+			leftEncoder = new Encoder(PortMap.portOf(PortMap.PWM.LEFT_DRIVE_ENCODER_A), PortMap.portOf(PortMap.PWM.LEFT_DRIVE_ENCODER_B));
+			rightEncoder = new Encoder(PortMap.portOf(PortMap.PWM.RIGHT_DRIVE_ENCODER_A), PortMap.portOf(PortMap.PWM.RIGHT_DRIVE_ENCODER_B));
+
+			leftEncoder.setDistancePerPulse(Math.PI * WHEEL_DIAMETER / ENCODER_RESOLUTION);
+			rightEncoder.setDistancePerPulse(Math.PI * WHEEL_DIAMETER / ENCODER_RESOLUTION);
+		
+		
 		leftMotorFollow.changeControlMode(CANTalon.TalonControlMode.Follower);
 		rightMotorFollow.changeControlMode(CANTalon.TalonControlMode.Follower);
 		leftMotorFollow.set(PortMap.portOf(CAN.LEFT_MOTOR_LEAD));
 		rightMotorFollow.set(PortMap.portOf(CAN.RIGHT_MOTOR_LEAD));
 						
 		leftMotorLead.configNominalOutputVoltage(0.0f, -0.0f);
-		leftMotorFollow.configNominalOutputVoltage(0.0f, -0.0f);
-		
-		leftMotorLead.setStatusFrameRateMs(CANTalon.StatusFrameRate.Feedback, 4); //250 Hz
-		
+		leftMotorFollow.configNominalOutputVoltage(0.0f, -0.0f);		
 				
 		rightMotorLead.configPeakOutputVoltage(12.0f, -12.0f);
 		rightMotorFollow.configPeakOutputVoltage(12.0f, -12.0f);
-
-		rightMotorLead.setStatusFrameRateMs(CANTalon.StatusFrameRate.Feedback, 4); //250 Hz
 		
 		configurePercentControl();
 		
-		leftEncoder.setDistancePerPulse(Math.PI * WHEEL_DIAMETER / ENCODER_RESOLUTION);
-		rightEncoder.setDistancePerPulse(Math.PI * WHEEL_DIAMETER / ENCODER_RESOLUTION);
 		
 		if(NavXMXP.getYaw() >= 180){
 			angle -= 360;
 		}
-		
+		initialized = true;
 	}
 	
 	/**
@@ -341,7 +353,7 @@ public class DriveBase {
      * @return The distance traveled by the left side of the robot in inches
      */
 	public static double getLeftDistance(){
-    	return leftEncoder.getDistance(); //returns inches
+    	return leftEncoder.getDistance() * -1; //returns inches
     }
     
 	/**
@@ -350,7 +362,7 @@ public class DriveBase {
      * @return The distance traveled by the right side of the robot in inches
      */
     public static double getRightDistance(){
-    	return rightEncoder.getDistance(); //returns inches
+    	return rightEncoder.getDistance() * -1; //returns inches
     }
     
     /**
@@ -386,17 +398,17 @@ public class DriveBase {
 		double distance = (-1 * (getLeftDistance() - leftEncoderInitial) + (getRightDistance() - rightEncoderInitial)) / 2;
 		double driveSpeed;
 		if(Math.abs(inches) < 12){
-			driveSpeed = speed * .5;
+			driveSpeed = speed * .75;
 		}
 		else{
 			driveSpeed = speed;
 		}
 		if(distance >= 0 && distance <= ACCELERATE_DISTANCE && inches >= ACCELERATE_DISTANCE + DECELERATE_DISTANCE){
-			driveStraight(.1 + (driveSpeed - .1) / ACCELERATE_DISTANCE * distance, false);
+			driveStraight(.2 + (driveSpeed - .2) / ACCELERATE_DISTANCE * distance, false);
 		}
 		
 		else if(distance <= 0 && distance >= -1 * ACCELERATE_DISTANCE && inches <= -1 * (ACCELERATE_DISTANCE + DECELERATE_DISTANCE)){
-			driveStraight(-.1 + (driveSpeed - .1) / ACCELERATE_DISTANCE * distance, false);
+			driveStraight(-.2 + (driveSpeed - .2) / ACCELERATE_DISTANCE * distance, false);
 		}
 		
 		else if(Math.abs(distance) > ACCELERATE_DISTANCE && Math.abs(distance) < Math.abs(inches) - DECELERATE_DISTANCE){
@@ -437,6 +449,7 @@ public class DriveBase {
 	 * @return Whether the turning is finished
 	 */
 	public static boolean driveRotation(double degrees) {
+		System.out.println(NavXMXP.getYaw());
 		if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE){
 			setRawFraction(0, 0);
 			return true;
@@ -462,7 +475,7 @@ public class DriveBase {
 		}
 		if(direction == 1){
 			if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE * 10){ //yes, 10 is a very magic number
-				double speed = (TURN_SPEED - 0.1) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0.1; //replace speed with a different number if it's too low to reach the target
+				double speed = (TURN_SPEED - 0.18) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0.18; //replace speed with a different number if it's too low to reach the target
 				setRawFraction(-1 * speed, speed);
 			}
 			else{
@@ -471,7 +484,7 @@ public class DriveBase {
 		}
 		else if(direction == 0){
 			if(Math.abs(NavXMXP.getYaw() - degrees) <= ANGLE_TOLERANCE * 10){
-				double speed = (TURN_SPEED - 0.1) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0.1;
+				double speed = (TURN_SPEED - 0.18) / (ANGLE_TOLERANCE * 10) * Math.abs(NavXMXP.getYaw() - degrees) + 0.18;
 				setRawFraction(speed, -1 * speed);
 			}
 			else{
@@ -653,11 +666,11 @@ public class DriveBase {
 		if(leftMotorLead.getControlMode() != TalonControlMode.PercentVbus){
 			configurePercentControl();
 		}
-		if(!controlsReversed){
-			setRawFraction(-1 * Math.pow(leftSpeed, 3), -1 * Math.pow(rightSpeed, 3));
+		if(controlsReversed){
+			setRawFraction(-1 * leftSpeed * 0.7, -1 * rightSpeed * 0.7);
 		}
 		else{
-			setRawFraction(Math.pow(rightSpeed, 3), Math.pow(leftSpeed, 3));
+			setRawFraction(rightSpeed * 0.7, leftSpeed * 0.7);
 
 		}
 	}
