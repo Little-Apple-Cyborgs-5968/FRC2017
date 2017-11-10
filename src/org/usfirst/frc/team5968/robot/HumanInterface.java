@@ -79,7 +79,7 @@ public class HumanInterface {
 	public static void buttonControls(){
 		liftControl();
 		manualClimb();
-		reverseControls();
+		//reverseControls();
 		backUpForGear();
 		turnAroundForFuel();
 	}
@@ -120,12 +120,12 @@ public class HumanInterface {
 	 * "Reverse" the front of the robot. I.e. if forward is toward the dump side, this will change it so
 	 * forward is toward the climb side, or vice versa.
 	 */
-	private static void reverseControls(){
+	/*private static void reverseControls(){
 		if((rightStick.getRawButton(5) || leftStick.getRawButton(6)) && !reverseControlsPressed){
 			DriveBase.reverseControls();
 		}
 		reverseControlsPressed = rightStick.getRawButton(5) || leftStick.getRawButton(6);
-	}
+	}*/
 	
 	/**
 	 * Whether the robot should be driving back to get a gear right now
